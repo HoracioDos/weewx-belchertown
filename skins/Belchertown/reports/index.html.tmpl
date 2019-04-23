@@ -9,19 +9,19 @@
             var month = getSearchParams("mo");
             var year = getSearchParams("yr");
             if ( ( year !== undefined ) && ( month !== undefined ) ) {
-                url = '$belchertown_root_url/NOAA/NOAA-'+year+'-'+month+'.txt';
+                url = '$belchertown_root_url/stats/stats-'+year+'-'+month+'.txt';
             } else if ( year !== undefined ) {
-                url = '$belchertown_root_url/NOAA/NOAA-'+year+'.txt';
+                url = '$belchertown_root_url/stats/stats-'+year+'.txt';
             } else {
-                url = '$belchertown_root_url/NOAA/$default_noaa_file';
+                url = '$belchertown_root_url/stats/$default_noaa_file';
             }
             
             // Load the file into the pre
-            //jQuery('#noaa_contents').load( url );
+            //jQuery('#stats_contents').load( url );
             populatePre( url );
             
             // Change the direct href link
-            jQuery(".noaa_direct_link").attr( "href", url );
+            jQuery(".stats_direct_link").attr( "href", url );
         });
 
         // Get the URL Var so we can show the right NOAA file.
@@ -32,7 +32,7 @@
             return k?p[k]:p;
         }
         
-        // Change the div to the right NOAA file
+        // Change the div to the right STATS file
         // I normally use PHP for this, but JavaScript seems to work well for the skin
         // Source: https://stackoverflow.com/a/18933218/1177153
         function populatePre(url) {
@@ -40,7 +40,7 @@
             xhr.onload = function () {
                 raw_content = this.responseText;
                 updated_content = raw_content.replace('<sup>','').replace('</sup>','').replace('&deg;','');
-                document.getElementById('noaa_contents').textContent = updated_content;
+                document.getElementById('stats_contents').textContent = updated_content;
             };
             xhr.open('GET', url);
             xhr.send();
@@ -52,28 +52,23 @@
             <main class="content">	
                 <article class="weewx reports page type-page status-publish entry" itemscope itemtype="https://schema.org/CreativeWork">
                     <div class="entry-content" itemprop="text">
-
                         #include "page-header.inc"
-
-                        <div class="noaa_reports">
-                            <H1>NOAA Reports</H1>
+                        <div class="stats_reports">
                             <div class="row">
                                 <div class="col-sm-12 wx-year-row">
-                                    $noaa_header_html
+                                    $stats_header_html
                                 </div>
                             </div>
-                            <a href="#" class="noaa_direct_link">Click here</a> to view this report directly, or click on a month or year to change the NOAA report.
-                            <br><br>
-                            <div class="noaa_report_container">
-                                <pre id="noaa_contents"></pre>
-                            </div> <!-- END noaa_report_container -->
-                        </div> <!-- END noaa_reports -->
-
+                            <a href="#" class="stats_direct_link" download>Click here</a> to download this report, or click on a month or year to select the statistic report.
+                            <br>
+                            <p><strong>Important!</strong> These reports are subject to revision and adjustment - <strong>Apr-2019</strong></p>
+                            <div class="stats_report_container">
+                                <pre id="stats_contents"></pre>
+                            </div> <!-- END stats_report_container -->
+                        </div> <!-- END stats_reports -->
                     </div>
                 </article>
             </main>
         </div>
     </div>
-
-
     #include "footer.html.tmpl"

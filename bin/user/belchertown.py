@@ -325,19 +325,19 @@ class getData(SearchList):
         
         
         """
-        Get NOAA Data
+        Get Stats Data
         """
         years = []
-        noaa_header_html = ""
-        default_noaa_file = ""
-        noaa_dir = local_root + "/NOAA/"
+        stats_header_html = ""
+        default_stats_file = ""
+        stats_dir = local_root + "/stats/"
         
         try:
-            noaa_file_list = os.listdir( noaa_dir )
+            stats_file_list = os.listdir( stats_dir )
 
             # Generate a list of years based on file name
-            for f in noaa_file_list:
-                filename = f.split(".")[0] # Drop the .txt
+            for f in stats_file_list:
+                filename = f.split(".")[0] # Drop the .inc
                 year = filename.split("-")[1]
                 years.append(year)
 
@@ -347,36 +347,36 @@ class getData(SearchList):
             
             for y in years:
                 # Link to the year file
-                if os.path.exists( noaa_dir + "NOAA-%s.txt" % y ):
-                    noaa_header_html += '<a href="?yr=%s" class="noaa_rep_nav"><b>%s</b></a>:' % ( y, y )
+                if os.path.exists( stats_dir + "stats-%s.txt" % y ):
+                    stats_header_html += '<a href="?yr=%s" class="stats_rep_nav"><b>%s</b></a>:' % ( y, y )
                 else:
-                    noaa_header_html += '<span class="noaa_rep_nav"><b>%s</b></span>:' % y
+                    stats_header_html += '<span class="stats_rep_nav"><b>%s</b></span>:' % y
                     
                 # Loop through all 12 months and find if the file exists. 
                 # If the file doesn't exist, just show the month name in the header without a href link.
                 # There is no month 13, but we need to loop to 12, so 13 is where it stops.
                 for i in range(1, 13):
-                    month_num = format( i, '02' ) # Pad the number with a 0 since the NOAA files use 2 digit month
+                    month_num = format( i, '02' ) # Pad the number with a 0 since the Stats files use 2 digit month
                     month_abbr = calendar.month_abbr[ i ]
-                    if os.path.exists( noaa_dir + "NOAA-%s-%s.txt" % ( y, month_num ) ):
-                        noaa_header_html += ' <a href="?yr=%s&amp;mo=%s" class="noaa_rep_nav"><b>%s</b></a>' % ( y, month_num, month_abbr )
+                    if os.path.exists( stats_dir + "stats-%s-%s.txt" % ( y, month_num ) ):
+                        stats_header_html += ' <a href="?yr=%s&amp;mo=%s" class="stats_rep_nav"><b>%s</b></a>' % ( y, month_num, month_abbr )
                     else:
-                        noaa_header_html += ' <span class="noaa_rep_nav"><b>%s</b></span>' % month_abbr
+                        stats_header_html += ' <span class="stats_rep_nav"><b>%s</b></span>' % month_abbr
                 
                 # Row build complete, push next row to new line
-                noaa_header_html += "<br>"
+                stats_header_html += "<br>"
                 
-            # Find the current month's NOAA file for the default file to show on JavaScript page load. 
-            # The NOAA files are generated as part of this skin, but if for some reason that the month file doesn't exist, use the year file.
+            # Find the current month's Stats file for the default file to show on JavaScript page load. 
+            # The Stats files are generated as part of this skin, but if for some reason that the month file doesn't exist, use the year file.
             now = datetime.datetime.now()
             current_year = str( now.year )
             current_month = str( format( now.month, '02' ) )
-            if os.path.exists( noaa_dir + "NOAA-%s-%s.txt" % ( current_year, current_month ) ):
-                default_noaa_file = "NOAA-%s-%s.txt" % ( current_year, current_month )
+            if os.path.exists( stats_dir + "stats-%s-%s.txt" % ( current_year, current_month ) ):
+                default_stats_file = "stats-%s-%s.txt" % ( current_year, current_month )
             else:
-                default_noaa_file = "NOAA-%s.txt" % current_year
+                default_stats_file = "stats-%s.txt" % current_year
         except:
-            # There's an error - I've seen this on first run and the NOAA folder is not created yet. Skip this section.
+            # There's an error - I've seen this on first run and the Stats folder is not created yet. Skip this section.
             pass
 
             
@@ -620,8 +620,8 @@ class getData(SearchList):
                                   'at_days_with_rain': at_days_with_rain,
                                   'at_days_without_rain': at_days_without_rain,
                                   'windSpeedUnitLabel': windSpeedUnitLabel,
-                                  'noaa_header_html': noaa_header_html,
-                                  'default_noaa_file': default_noaa_file,
+                                  'stats_header_html': stats_header_html,
+                                  'default_stats_file': default_stats_file,
                                   'forecast_json_url': forecast_json_url,
                                   'current_obs_icon': current_obs_icon,
                                   'current_obs_summary': current_obs_summary,
