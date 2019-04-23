@@ -1793,7 +1793,8 @@ li.comment {
 }
 
 .mph { 
-	padding-top:10px !important;
+	padding-top: 5px !important;
+	padding-bottom: 10px !important;
 	font-size:18px !important;
 }
 
@@ -1819,7 +1820,7 @@ li.comment {
 .small-almanac {
 	/* padding-top:5px; */
 	border-top:1px solid #D7D7D7;
-    padding:15px;
+        padding:15px;
 }
 
 .sun, .moon {
@@ -1827,22 +1828,22 @@ li.comment {
 }
 
 .sunrise-set-image {
-	width:20px;
-	margin-right:5px;
+        width:20px; 
+        margin-right:5px; 
 }
 
 .sun-moon-title {
-	font-size:25px;
+	font-size:25px; 
 	text-align:left;
-	padding-bottom: 10px;
+	padding-bottom: 10px; 
 }
 
 .moon-container {
-	font-size:15px;
+	font-size:14.5px;
 }
 
 .moon {
-	text-align:right;
+	text-align:right; 
 }
 
 .moon-container {
@@ -1867,8 +1868,18 @@ li.comment {
 	margin-bottom:5px;
 }
 
+.meteored-title {
+        text-align:left;
+        font-size:25px;
+        margin-bottom:5px;
+}
+
 .forecast-subtitle {
 	font-size:14px;
+}
+
+.meteored-subtitle {
+        font-size:14px;
 }
 
 .wuforecast {
@@ -1877,7 +1888,7 @@ li.comment {
 
 .forecast-conditions {
 	min-height:133px;
-    word-wrap:break-word;
+        word-wrap:break-word;
 }
 
 .forecast-high, .forecast-low {
@@ -1962,7 +1973,7 @@ li.comment {
 }
 
 .records-header {
-    text-align:center;
+    text-align:left;
     background:#D7D7D7;
     color:#000;
     font-weight:400;
@@ -1980,7 +1991,7 @@ li.comment {
     margin-bottom:25px;
 }
 
-.noaa_reports {
+.stats_reports {
     margin-top:40px;
     /* padding-top:30px; */
 }
@@ -2135,7 +2146,7 @@ li.comment {
 	.wuforecast {
 		font-size:28px;
 		padding-bottom:15px;
-        min-height: 170px !important;
+                min-height: 170px !important;
 		border-bottom:1px solid #D7D7D7;
 	}
     	
