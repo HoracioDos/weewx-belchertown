@@ -1,9 +1,11 @@
 # Customized Belchertown weewx skin
 
-This fork from [weewx-belchertown skin](https://github.com/poblabs/weewx-belchertown) have been customized for my needs.  Write a little more.
+This fork from [weewx-belchertown skin](https://github.com/poblabs/weewx-belchertown) have been customized for my needs and it's only purpose is to satisfy entirely my whim.
 
-Features not included in original Belchertown skin:
-* Show inside temperature, windrun and daylight in main page.
+The following features have not been included in original Belchertown skin until now. Most of them are useless for obvious reasons, unless you want this skin in spanish (it's not ready yet) or you really like these beautiful satellite images from the south cone. Original Belchertown is what you probably may need or want.
+
+- Show inside temperature, windrun and daylight in main page.
+
 * Show Goes16 satellite images for Argentina in main page.
 * New stats reports and about page.
 * Some new Extra tags like station_photo and  webpage_autorefresh.
@@ -37,7 +39,8 @@ Commands
 
 ## To Do
 
-- Translate skin to Spanish (Latin America).
+- Update to Belchertown v1.0 as soon as it becomes available.
+- Translate skin into Spanish (Latin America).
 - Convert daylight cheetah script into python.
 - Get satellite images directly from SMN Argentina avoiding Meteored.
 - Get SMN Argentina Alerts and insert them into Darksky json file.
@@ -48,5 +51,4 @@ Commands
 
 ## Credits
 * Thanks to Pat O'Brien for creating such a wonderful skin. 
-* Also thanks to Tom Keffer and Matthew Wall for [weewx weather software](http://weewx.com) that I've been using for years.
-* Thanks more.
+* Also thanks to Tom Keffer and Matthew Wall for [weewx weather software](http://weewx.com) that makes all this things possible.
