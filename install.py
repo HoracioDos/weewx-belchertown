@@ -34,10 +34,11 @@ class ExfoliationInstaller(ExtensionInstaller):
                                           'skins/Belchertown/footer.html.tmpl',
                                           'skins/Belchertown/header.html.tmpl',
                                           'skins/Belchertown/index.html.tmpl',
-                                          'skins/Belchertown/about.inc.example',
+                                          'skins/Belchertown/about.inc',
                                           'skins/Belchertown/page-header.inc',
                                           'skins/Belchertown/manifest.json.tmpl',
-                                          'skins/Belchertown/records.inc.example',
+                                          'skins/Belchertown/index_hook_after_forecast.inc',
+                                          'skins/Belchertown/index_hook_daylight.inc',
                                           'skins/Belchertown/robots.txt',
                                           'skins/Belchertown/skin.conf',
                                           'skins/Belchertown/style.css'
@@ -45,8 +46,8 @@ class ExfoliationInstaller(ExtensionInstaller):
                     ),
                    ('skins/Belchertown/about', ['skins/Belchertown/about/index.html.tmpl']),
                    ('skins/Belchertown/graphs', ['skins/Belchertown/graphs/index.html.tmpl']),
-                   ('skins/Belchertown/NOAA', ['skins/Belchertown/NOAA/NOAA-YYYY-MM.txt.tmpl',
-                                               'skins/Belchertown/NOAA/NOAA-YYYY.txt.tmpl'
+                   ('skins/Belchertown/stats', ['skins/Belchertown/stats/stats-YYYY-MM.txt.tmpl',
+                                               'skins/Belchertown/stats/stats-YYYY.txt.tmpl'
                                               ]
                     ),
                    ('skins/Belchertown/pi', ['skins/Belchertown/pi/index.html.tmpl',
