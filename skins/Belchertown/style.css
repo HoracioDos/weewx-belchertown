@@ -1657,8 +1657,19 @@ li.comment {
 	font-size:20px;
 }
 
+.windrun {
+        text-align:center;
+        font-size:15px;
+}
+
+.inTemp {
+        text-align:center;
+        font-size:15px;
+}
+
+
 .stn-high-low {
-	padding-top: 15px;
+	padding-top: 10px;
 	font-size:15px;
 	line-height: 1.3;
 }
@@ -1666,7 +1677,7 @@ li.comment {
 .daylight {
         padding-top: 15px;
         font-size:15px;
-        line-height: 1.3;
+        line-height: 1.5;
 }
 
 .stn-high-low-table-title {
@@ -1675,6 +1686,7 @@ li.comment {
 
 .stn-high-low-table td {
 	text-align:center;
+	padding-top: 5px;
 }
 
 .windrow {

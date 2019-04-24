@@ -8,8 +8,18 @@
 #set global $page = "home"
 
     #include "header.html.tmpl"
-      
+    
     <script type="text/javascript">
+        #if $Extras.has_key("mqtt_websockets_enabled") and $Extras.mqtt_websockets_enabled == '0'
+            #if $Extras.has_key("webpage_autorefresh") and $Extras.webpage_autorefresh != '0'
+                function autoRefreshPage()
+                {
+                  window.location = window.location.href;
+                }
+                setInterval('autoRefreshPage()', $Extras.webpage_autorefresh);
+            #end if
+        #end if
+
         var finalRotation;
         #if $Extras.has_key("mqtt_websockets_enabled") and $Extras.mqtt_websockets_enabled == '1'
         var mqttMsg;
@@ -59,7 +69,7 @@
             });
             #else
             // MQTT Websockets not enabled, update the Last Updated timestamp with moment.js
-            updated = moment.unix( $current.dateTime.raw ).utcOffset($moment_js_utc_offset).format("LL, LTS");
+            updated = moment.unix( $current.dateTime.raw ).utcOffset($moment_js_utc_offset).format("LL, LTS"); 
             updated_text = "Last Updated " + updated;
             jQuery(".updated").html( updated_text );
             #end if
@@ -229,7 +239,7 @@
             jQuery(".dailymaxgust").html( parseFloat( data["day"]["wind"]["max"] ).toFixed(1) );
             
             // Daily stats section
-            jQuery(".snapshot-records-today-header").html( moment.unix( data["current"]["epoch"] ).format( 'dddd, LL' ) );
+            jQuery(".snapshot-records-today-header").html( moment.unix( data["current"]["epoch"] ).format( 'dddd, LL' ) ); 
             jQuery(".snapshot-records-month-header").html( moment.unix( data["current"]["epoch"] ).format( 'MMMM YYYY' ) );
             jQuery(".dailystatshigh").html( data["day"]["outTemp"]["max"] );
             jQuery(".dailystatslow").html( data["day"]["outTemp"]["min"] );
@@ -685,9 +695,6 @@
                             <div class="wx-stn-name">
                                 <h1>$station.location Weather Conditions</h1>                    
                             </div>
-                            <div class="wx-stn-info">
-                                Observations are powered by a <a href="about" target="_blank">Personal Weather Station</a>
-                            </div>
                             <div class="clear"></div>
                             <!-- Updated time ago -->
                             <div class="updated-wrapper">
@@ -743,6 +750,11 @@
                                                                 <td class="high">$day.outTemp.max.format("%.1f")</td>
                                                                 <td class="border-left low">$day.outTemp.min.format("%.1f")</td>
                                                             </tr>
+                                                            <tr>
+                                                                #if $Extras.has_key("show_inTemp") and $Extras.show_inTemp == '1'
+                                                                   <td class="inTemp" colspan="3">Inside Temperature $current.inTemp</td>
+                                                                #end if
+                                                            </tr>
                                                         </tbody>
                                                     </table>
                                                 </div>
@@ -791,6 +803,11 @@
                                                     </tr>
                                                     <tr>
                                                         <td class="mph" colspan="3">$unit.label.windSpeed</td>
+                                                    </tr>
+                                                    <tr>
+							#if $Extras.has_key("show_windrun") and $Extras.show_windrun == '1'
+                                                            <td class="windrun" colspan="3">Windrun $current.windrun</td>
+                                                        #end if  
                                                     </tr>
                                                 </tbody>
                                             </table>
@@ -879,7 +896,7 @@
                                             #end if
                                             #if $day.radiation.has_data
                                             <tr>
-                                                <td>Solar</td>
+                                                <td>Irradiance</td>
                                                 <td>
                                                     <span class="wx-radiation-data">
                                                         <span class="wx-radiation-value">$current.radiation</span><!-- AJAX -->
@@ -898,9 +915,9 @@
                                             <tr>
                                                 <td colspan="2">
                                                     <div class="row small-almanac">
-                                                        <div class="sun-moon-title">
+                                                         <!--  div class="sun-moon-title">
                                                             Sun &amp; Moon
-                                                        </div>
+                                                        </div> -->
                                                         <div class="col-sm-6 sun">
                                                             <span class="sunrise-set-image"><img src="$belchertown_root_url/images/sunrise.png"></span><span class="sunrise-value"></span><!-- moment.js -->
                                                             <br>
@@ -936,6 +953,11 @@
                                                     </div>
                                                 </td>
                                             </tr>
+                                            #if $Extras.has_key("show_daylight") and $Extras.show_daylight == '1'
+                                                #if os.path.exists("index_hook_daylight.inc")
+                                                    #include "index_hook_daylight.inc"
+                                                #end if
+                                            #end if
                                         </tbody>
                                     </table>
                                 </div>
@@ -962,7 +984,7 @@
                             <!-- Forecast -->
                             <div class="col-lg-12 forecast">
                                 <div class="forecast-title">
-                                    8 Day Forecast <span class="forecast-subtitle"></span><!-- moment.js -->
+                                    Darksky 8 Day Forecast <span class="forecast-subtitle"></span><!-- moment.js -->
                                 </div>
                                 <div class="row forecasts"></div><!-- JS -->
                             </div>        
