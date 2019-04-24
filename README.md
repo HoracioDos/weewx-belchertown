@@ -2,16 +2,15 @@
 
 This fork from [weewx-belchertown skin](https://github.com/poblabs/weewx-belchertown) have been customized for my needs and it's only purpose is to satisfy entirely my whim.
 
-The following features have not been included in original Belchertown skin until now. Most of them are useless for obvious reasons, unless you want this skin in spanish (it's not ready yet) or you really like these beautiful satellite images from the south cone. Original Belchertown is what you probably may need or want.
+The following features have not been included into the original Belchertown skin until now. Most of them are useless for obvious reasons, unless you want this skin in spanish (it's not ready yet) or you really like these beautiful satellite images of the South America. Original Belchertown skin is all what you probably may need or want.
 
-- Show inside temperature, windrun and daylight in main page.
-
+* Show inside temperature, windrun and daylight in main page
 * Show Goes16 satellite images for Argentina in main page.
 * New stats reports and about page.
 * Some new Extra tags like station_photo and  webpage_autorefresh.
 * Webpage auto refresh when MQTT is disabled.
 
-For install and customize instructions, please refer to [weewx-belchertown skin](https://github.com/poblabs/weewx-belchertown) and follow its excellent guides.
+For install and customize instructions, please refer to [weewx-belchertown skin](https://github.com/poblabs/weewx-belchertown) and follow its excellent guides. If you want to try a daredevil jump into the the unknown and you still want to install this skin you will need to follow some instructions that are described a little later.
 
 ![climacolegiales.org Homepage](https://raw.githubusercontent.com/HoracioDos/weewx-belchertown/master/assets/homepage_screenshot.png)
 
