@@ -1,0 +1,1162 @@
+var belchertown_debug = $belchertown_debug;
+
+var moment_locale = "$system_locale_js";
+moment.locale(moment_locale);
+
+jQuery(document).ready(function() {
+        
+    // Change theme if a URL variable is set
+    if ( window.location.search.indexOf('theme') ) {
+        if (window.location.search.indexOf('?theme=dark') === 0) {
+            if (belchertown_debug > 0) {
+                console.log("Theme: Setting dark theme because of URL override");
+            }
+            changeTheme("dark");
+        } else if (window.location.search.indexOf('?theme=light') === 0) {
+            if (belchertown_debug > 0) {
+                console.log("Theme: Setting light theme because of URL override");
+            }
+            changeTheme("light");
+        }
+    }
+
+    #if $Extras.has_key('theme_toggle_enabled') and $Extras.theme_toggle_enabled == '1'
+    // Dark mode checkbox toggle switcher
+    document.getElementById('themeSwitch').addEventListener('change', function(event){
+        if (belchertown_debug > 0) {
+            console.log("Theme: Toggle button changed");
+        }
+        (event.target.checked) ? changeTheme("dark") : changeTheme("light");
+    });
+    #end if
+    
+});
+
+#if $Extras.has_key("theme") and $Extras.theme == 'auto'
+// Run this on every page for dark mode if skin theme is auto
+ajaxweewx();
+#end if
+
+// Disable AJAX caching
+jQuery.ajaxSetup({
+    cache:false
+});
+
+// Get the URL variables. Source: https://stackoverflow.com/a/26744533/1177153
+function getURLvar(k) {
+    var p={};
+    location.search.replace(/[?&]+([^=&]+)=([^&]*)/gi,function(s,k,v){p[k]=v});
+    return k?p[k]:p;
+}
+
+// http://stackoverflow.com/a/14887961/1177153
+var weatherdirection = {
+	0: 'N',
+	90: 'E',
+	180: 'S',
+	270: 'W',
+	360: 'N'
+};
+
+// Change the color of the outTemp_F variable
+function update_outtemp_F( outTemp ) {
+    outTemp = parseFloat( outTemp ).toFixed(0); // Convert back to decimal literal
+    if ( outTemp <= 0 ) {
+        jQuery(".temp").css( "color", "#1278c8" );
+    } else if ( outTemp <= 25 ) {
+        jQuery(".temp").css( "color", "#30bfef" );
+    } else if ( outTemp <= 32 ) {
+        jQuery(".temp").css( "color", "#1fafdd" );
+    } else if ( outTemp <= 40 ) {
+        jQuery(".temp").css( "color", "rgba(0,172,223,1)" );
+    } else if ( outTemp <= 50 ) {
+        jQuery(".temp").css( "color", "#71bc3c" );
+    } else if ( outTemp <= 55 ) {
+        jQuery(".temp").css( "color", "rgba(90,179,41,0.8)" );
+    } else if ( outTemp <= 65 ) {
+        jQuery(".temp").css( "color", "rgba(131,173,45,1)" );
+    } else if ( outTemp <= 70 ) {
+        jQuery(".temp").css( "color", "rgba(206,184,98,1)" );
+    } else if ( outTemp <= 75 ) {
+        jQuery(".temp").css( "color", "rgba(255,174,0,0.9)" );
+    } else if ( outTemp <= 80 ) {
+        jQuery(".temp").css( "color", "rgba(255,153,0,0.9)" );
+    } else if ( outTemp <= 85 ) {
+        jQuery(".temp").css( "color", "rgba(255,127,0,1)" );
+    } else if ( outTemp <= 90 ) {
+        jQuery(".temp").css( "color", "rgba(255,79,0,0.9)" );
+    } else if ( outTemp <= 95 ) {
+        jQuery(".temp").css( "color", "rgba(255,69,69,1)" );
+    } else if ( outTemp <= 110 ) {
+        jQuery(".temp").css( "color", "rgba(255,104,104,1)" );
+    } else if ( outTemp >= 111 ) {
+        jQuery(".temp").css( "color", "rgba(218,113,113,1)" );
+    }
+}
+
+// Change the color of the outTemp_C variable
+function update_outtemp_C( outTemp ) {
+    outTemp = parseFloat( outTemp ).toFixed(0); // Convert back to decimal literal
+    if ( outTemp <= 0 ) {
+        jQuery(".temp").css( "color", "#1278c8" );
+    } else if ( outTemp <= -3.8 ) {
+        jQuery(".temp").css( "color", "#30bfef" );
+    } else if ( outTemp <= 0 ) {
+        jQuery(".temp").css( "color", "#1fafdd" );
+    } else if ( outTemp <= 4.4 ) {
+        jQuery(".temp").css( "color", "rgba(0,172,223,1)" );
+    } else if ( outTemp <= 10 ) {
+        jQuery(".temp").css( "color", "#71bc3c" );
+    } else if ( outTemp <= 12.7 ) {
+        jQuery(".temp").css( "color", "rgba(90,179,41,0.8)" );
+    } else if ( outTemp <= 18.3 ) {
+        jQuery(".temp").css( "color", "rgba(131,173,45,1)" );
+    } else if ( outTemp <= 21.1 ) {
+        jQuery(".temp").css( "color", "rgba(206,184,98,1)" );
+    } else if ( outTemp <= 23.8 ) {
+        jQuery(".temp").css( "color", "rgba(255,174,0,0.9)" );
+    } else if ( outTemp <= 26.6 ) {
+        jQuery(".temp").css( "color", "rgba(255,153,0,0.9)" );
+    } else if ( outTemp <= 29.4 ) {
+        jQuery(".temp").css( "color", "rgba(255,127,0,1)" );
+    } else if ( outTemp <= 32.2 ) {
+        jQuery(".temp").css( "color", "rgba(255,79,0,0.9)" );
+    } else if ( outTemp <= 35 ) {
+        jQuery(".temp").css( "color", "rgba(255,69,69,1)" );
+    } else if ( outTemp <= 43.3 ) {
+        jQuery(".temp").css( "color", "rgba(255,104,104,1)" );
+    } else if ( outTemp >= 43.4 ) {
+        jQuery(".temp").css( "color", "rgba(218,113,113,1)" );
+    }
+}
+
+function get_cardinal_direction(degree, point_obsType, highchartsReturn=false) {
+    // highchartsReturn returns the full string for highcharts tooltips
+    if ( point_obsType == "windDir" ) {
+        if (degree >= 0 && degree <= 11.25) {
+            output = "N";
+        } else if (degree >= 11.26 && degree <= 33.75) {
+            output = "NNE";
+        } else if (degree >= 33.76 && degree <= 56.25) {
+            output = "NE";
+        } else if (degree >= 56.26 && degree <= 78.75) {
+            output = "ENE";
+        } else if (degree >= 78.76 && degree <= 101.25) {
+            output = "E";
+        } else if (degree >= 101.26 && degree <= 123.75) {
+            output = "ESE";
+        } else if (degree >= 123.76 && degree <= 146.25) {
+            output = "SE";
+        } else if (degree >= 146.26 && degree <= 168.75) {
+            output = "SSE";
+        } else if (degree >= 168.76 && degree <= 191.25) {
+            output = "S";
+        } else if (degree >= 191.26 && degree <= 213.75) {
+            output = "SSW";
+        } else if (degree >= 213.76 && degree <= 236.25) {
+            output = "SW";
+        } else if (degree >= 236.26 && degree <= 258.75) {
+            output = "WSW";
+        } else if (degree >= 258.76 && degree <= 281.25) {
+            output = "W";
+        } else if (degree >= 281.26 && degree <= 303.75) {
+            output = "WNW";
+        } else if (degree >= 303.76 && degree <= 326.25) {
+            output = "NW";
+        } else if (degree >= 326.26 && degree <= 348.75) {
+            output = "NNW";
+        } else if (degree >= 348.76 && degree <= 360) {
+            output = "N";
+        }
+        if ( highchartsReturn ) {
+            data = output + " ("+ Math.round(degree) + "\xBA)";
+        } else {
+            data = output;
+        }
+    } else if ( point_obsType == "barometer" ) {
+        // No thousands separator on barometer metric, and remove the white space in thousands separator
+        // https://api.highcharts.com/class-reference/Highcharts#.numberFormat
+        data = Highcharts.numberFormat(degree, 2, "$highcharts_decimal", "");
+    } else {
+        try {
+            // Try to apply the highcharts numberFormat for locale awareness
+            data = Highcharts.numberFormat(degree);
+        } catch(err) {
+            // Fall back to just returning the number
+            data = degree
+        }
+    }
+    return data;
+}
+
+// Handle wind arrow rotation with the ability to "rollover" past 0 
+// without spinning back around. e.g 350 to 3 would spin back around
+// https://stackoverflow.com/a/19872672/1177153
+function rotateThis(newRotation) {
+    if ( newRotation == "N/A") { return; }
+    var currentRotation;
+    finalRotation = finalRotation || 0; // if finalRotation undefined or 0, make 0, else finalRotation
+    currentRotation = finalRotation % 360;
+    if ( currentRotation < 0 ) { currentRotation += 360; }
+    if ( currentRotation < 180 && (newRotation > (currentRotation + 180)) ) { finalRotation -= 360; }
+    if ( currentRotation >= 180 && (newRotation <= (currentRotation - 180)) ) { finalRotation += 360; }
+    finalRotation += (newRotation - currentRotation);
+    jQuery(".wind-arrow").css( "transform", "rotate(" + finalRotation + "deg)" );
+    jQuery(".arrow").css( "transform", "rotate(" + finalRotation + "deg)" );
+}
+
+// Title case strings. https://stackoverflow.com/a/45253072/1177153
+function titleCase(str) {
+    return str.toLowerCase().split(' ').map(function(word) {
+        return word.replace(word[0], word[0].toUpperCase());
+    }).join(' ');
+}
+
+function autoTheme(sunset_hour, sunset_min, sunrise_hour, sunrise_min) {
+    // First check if ?theme= is in URL. If so, bail out and do not change anything. 
+    if ( getURLvar("theme") ) {
+        if (belchertown_debug > 0) {
+            console.log("Auto theme: theme override detected in URL. Skipping auto theme");
+        }
+        return true;
+    }
+    if (belchertown_debug > 0) {
+        console.log("Auto theme: checking to see if theme needs to be switched");
+    }
+    
+    var d = new Date();
+    var nowHour = d.getHours();
+    var nowMinutes = d.getMinutes();
+    nowHour = nowHour;
+    sunrise_hour = sunrise_hour;
+    sunset_hour = sunset_hour;
+    
+    // Determine if it's day time. https://stackoverflow.com/a/14718577/1177153
+    if ( sunrise_hour <= nowHour && nowHour < sunset_hour ) {
+        dayTime = true;
+    } else {
+        dayTime = false;
+    }
+    
+    if (belchertown_debug > 0) {
+        console.log("Auto theme: sunrise: " + sunrise_hour);
+        console.log("Auto theme: now: " + nowHour);
+        console.log("Auto theme: sunset: " + sunset_hour);
+        console.log("Auto theme: are we in daylight hours: " + dayTime);
+    }
+    
+    if ( dayTime ) {
+        // Day time, set light if needed
+        if ( document.body.classList.contains("dark") ) {
+            if (belchertown_debug > 0) {
+                console.log("Auto theme: setting light theme since dayTime variable is true (day)");
+            }
+            changeTheme("light");
+        }
+    } else {
+        // Night time, set dark if needed
+        if ( document.body.classList.contains("light") ) {
+            if (belchertown_debug > 0) {
+                console.log("Auto theme: setting dark theme since dayTime variable is false (night)");
+            }
+            changeTheme("dark");
+        }
+    }
+}
+
+function changeTheme(themeName) {
+    if (belchertown_debug > 0) {
+        console.log("Theme: Changing to " + themeName);
+    }
+    if ( themeName == "dark" ) {
+        // Apply dark theme
+        jQuery('body').addClass("dark");
+        jQuery('body').removeClass("light");
+        #if $Extras.has_key('theme_toggle_enabled') and $Extras.theme_toggle_enabled == '1'
+        jQuery("#themeSwitch").prop( "checked", true );
+        #end if
+    } else {
+        // Apply light theme
+        jQuery('body').addClass("light");
+        jQuery('body').removeClass("dark");
+        #if $Extras.has_key('theme_toggle_enabled') and $Extras.theme_toggle_enabled == '1'
+        jQuery("#themeSwitch").prop( "checked", false );
+        #end if
+    }
+}
+
+function ajaxweewx() {
+    jQuery.getJSON("$belchertown_root_url/json/weewx_data.json", update_weewx_data);
+};
+
+// Update weewx data elements
+function update_weewx_data( data ) {
+    if (belchertown_debug > 0) {
+        console.log("Updating weewx data");
+    }
+    
+    #if $Extras.has_key("theme") and $Extras.theme == 'auto'
+    // Auto theme if enabled
+    autoTheme(data["almanac"]["sunset_hour"], data["almanac"]["sunset_minute"], data["almanac"]["sunrise_hour"], data["almanac"]["sunrise_minute"], );
+    #end if
+    
+    // Daily High Low
+    high = data["day"]["outTemp"]["max"];
+    low = data["day"]["outTemp"]["min"];
+    jQuery(".high").html( high );
+    jQuery(".low").html( low );
+    
+    // Barometer trending by finding a negative number
+    count = ( data["current"]["barometer_trend"].match(/-/g) || [] ).length
+    
+    if ( count >= 1 ) {
+        jQuery(".wx-barometer-trend").html( '<i class="fa fa-arrow-down barometer-down"></i>' );
+    } else {
+        jQuery(".wx-barometer-trend").html( '<i class="fa fa-arrow-up barometer-up"></i>' );
+    }
+    
+    // Daily max gust span
+    jQuery(".dailymaxgust").html( parseFloat( data["day"]["wind"]["max"] ).toFixed(1) );
+    
+    // Daily stats section
+    jQuery(".snapshot-records-today-header").html( moment.unix( data["current"]["epoch"] ).format( '$obs.label.time_snapshot_records_today_header' ) );
+    jQuery(".snapshot-records-month-header").html( moment.unix( data["current"]["epoch"] ).format( '$obs.label.time_snapshot_records_month_header' ) );
+    jQuery(".dailystatshigh").html( data["day"]["outTemp"]["max"] );
+    jQuery(".dailystatslow").html( data["day"]["outTemp"]["min"] );
+    jQuery(".dailystatswind").html( data["day"]["wind"]["max"] );
+    jQuery(".dailystatsuv").html( data["day"]["uv"]["max"] );
+    jQuery(".dailystatsrain").html( data["day"]["rain"]["sum"] );
+    jQuery(".dailystatsrainrate").html( data["day"]["rain"]["max"] );
+    
+    // Sunrise and Sunset            
+    jQuery(".sunrise-value").html( moment.unix( parseFloat(data["almanac"]["sunrise_epoch"]).toFixed(0) ).utcOffset($moment_js_utc_offset).format( "$obs.label.time_sunrise" ) );
+    jQuery(".sunset-value").html( moment.unix( parseFloat(data["almanac"]["sunset_epoch"]).toFixed(0) ).utcOffset($moment_js_utc_offset).format( "$obs.label.time_sunset" ) );
+    
+    // Moon icon, phase and illumination percent
+    switch ( data["almanac"]["moon"]["moon_phase"] ) {
+        case "New Moon":
+            jQuery(".moon-icon").html( "<div class='wi wi-moon-alt-new'></div>" );
+            break;
+        case "Waxing Crescent":
+            jQuery(".moon-icon").html( "<div class='wi wi-moon-alt-waxing-crescent-1'></div>" );
+            break;
+        case "First Quarter":
+            jQuery(".moon-icon").html( "<div class='wi wi-moon-alt-first-quarter'></div>" );
+            break;
+        case "Waxing Gibbous":
+            jQuery(".moon-icon").html( "<div class='wi wi-moon-alt-waxing-gibbous-3'></div>" );
+            break;
+        case "Full Moon":
+            jQuery(".moon-icon").html( "<div class='wi wi-moon-alt-full'></div>" );
+            break;
+        case "Waning Gibbous":
+            jQuery(".moon-icon").html( "<div class='wi wi-moon-alt-waning-gibbous-3'></div>" );
+            break;
+        case "Last Quarter":
+            jQuery(".moon-icon").html( "<div class='wi wi-moon-alt-first-quarter'></div>" );
+            break;
+        case "Waning Crescent":
+            jQuery(".moon-icon").html( "<div class='wi wi-moon-alt-waning-crescent-4'></div>" );
+            break;
+    }
+    jQuery(".moon-phase").html( titleCase( data["almanac"]["moon"]["moon_phase"] ) ); // Javascript function above
+    jQuery(".moon-visible").html( "<strong>" + data["almanac"]["moon"]["moon_fullness"] + "%</strong> $obs.label.moon_visible" );
+}
+
+#if $Extras.has_key("forecast_enabled") and $Extras.forecast_enabled == '1'
+function ajaxforecast() {
+    jQuery.getJSON("$forecast_json_url", update_forecast_data);
+};
+
+function update_forecast_data( data ) {
+    if (belchertown_debug > 0) {
+        console.log("Updating forecast data");
+    }
+    // WX Icon
+    if ( data['currently']['icon'] == "partly-cloudy-night" ) {
+        // partly-cloudy-night could also be clear-day
+        jQuery("#wxicon").attr( "src", "$belchertown_root_url/images/partly-cloudy-night.png" );
+    } else {
+        jQuery("#wxicon").attr( "src", "$belchertown_root_url/images/" + data['currently']['icon'] + ".png" );
+    }
+    
+    #if $Extras.has_key("forecast_alert_enabled") and $Extras.forecast_alert_enabled == '1'
+    // Weather Alerts
+    if ( data['alerts'] ) {
+        var i, forecast_alert_text;
+        forecast_alert_text = "";
+        for ( i = 0; i < data['alerts'].length; i++ ) { 
+            alert_expires = moment.unix( data['alerts'][i]['expires'] ).format( '$obs.label.time_darksky_alert_expires' );
+            forecast_alert_text += "<i class='fa fa-exclamation-triangle'></i> <a href='" + data['alerts'][i]['uri'] + "' target='_blank'>" + data['alerts'][i]['title'] + " $obs.label.alert_in_effect " + alert_expires + "</a><br>";
+        }
+        jQuery(".wx-stn-alert-text").html( forecast_alert_text );
+        jQuery(".wx-stn-alert").show();
+    } else {
+        jQuery(".wx-stn-alert").hide();
+    }
+    #end if
+    
+    // Current observation text
+    jQuery(".current-obs-text").html( data["currently"]["summary"] );
+    
+    // 8 day forecast
+    var output_html = "";
+    for (i = 0; i < data["daily"]["data"].length; i++) {
+        var forecastDay = data["daily"]["data"][i];
+        if ( data['daily']['data'][i]['icon'] == "partly-cloudy-night" ) {
+            var image_url = "$belchertown_root_url/images/clear-day.png";
+        } else { 
+            var image_url = "$belchertown_root_url/images/"+data['daily']['data'][i]['icon']+".png";
+        }
+        
+        var condition_text = "";
+        switch ( data["daily"]["data"][i]["icon"] ) {
+            case "clear-day":
+                condition_text = "$obs.label.clear";
+                break;
+            case "clear-night":
+                condition_text = "$obs.label.clear";
+                break;
+            case "rain":
+                condition_text = "$obs.label.darksky_rain";
+                break;
+            case "snow":
+                condition_text = "$obs.label.snow";
+                break;
+            case "sleet":
+                condition_text = "$obs.label.sleet";
+                break;
+            case "wind":
+                condition_text = "$obs.label.windy";
+                break;
+            case "fog":
+                condition_text = "$obs.label.fog";
+                break;
+            case "cloudy":
+                condition_text = "$obs.label.overcast";
+                break;
+            case "partly-cloudy-day":
+                condition_text = "$obs.label.partly_cloudy";
+                break;
+            case "partly-cloudy-night":
+                condition_text = "$obs.label.clear"; // https://darksky.net/dev/docs/faq - So you can just treat partly-cloudy-night as an alias for clear-day.
+                break;
+            case "hail":
+                condition_text = "$obs.label.hail";
+                break;
+            case "thunderstorm":
+                condition_text = "$obs.label.thunderstorm";
+                break;
+            case "tornado":
+                condition_text = "$obs.label.tornado";
+                break;
+        }
+        
+        if ( i == 0 ) {
+            output_html += '<div class="col-sm-1-5 forecast-day">';
+        } else {
+            output_html += '<div class="col-sm-1-5 forecast-day border-left">';
+        }
+        //var weekday = moment.unix( data["daily"]["data"][i]["time"] ).format( "ddd l" ).replace(/([A-Z])|[\/\-\.]\b[0-9]{4}\b/g, ' $1'); // Creates a short date by removing "/YYYY" or ".YYYY" or "-YYYY" - https://stackoverflow.com/a/12704805/1177153
+        var weekday = moment.unix( data["daily"]["data"][i]["time"] ).format( "$obs.label.time_darksky_forecast_date" );
+        output_html += '<span id="weekday">'+weekday+'</span>';
+        output_html += '<br>';
+        output_html += '<div class="forecast-conditions">';
+        output_html += '<img id="icon" src="'+image_url+'">';
+        output_html += '<span class="forecast-condition-text">'+condition_text+'</span>';
+        output_html += '</div>';
+        output_html += '<span class="forecast-high">'+ parseFloat( data["daily"]["data"][i]["temperatureHigh"] ).toFixed(0) +'°</span> | <span class="forecast-low">'+ parseFloat( data["daily"]["data"][i]["temperatureLow"] ).toFixed(0) +'°</span>';
+        output_html += '<br>';
+        output_html += '<div class="forecast-precip">';
+        if ( data["daily"]["data"][i].hasOwnProperty("precipType") && data["daily"]["data"][i]["precipType"] == "snow" ) {
+            output_html += '<div class="snow-precip">';
+            output_html += '<img src="$belchertown_root_url/images/snowflake-icon-15px.png"> <span>'+ parseFloat( data["daily"]["data"][i]["precipAccumulation"] ).toFixed(0) +'<span> in';
+            output_html += '</div>';
+        } else if ( data["daily"]["data"][i].hasOwnProperty("precipType") && data["daily"]["data"][i]["precipType"] == "rain" ) {
+            output_html += '<i class="wi wi-raindrop wi-rotate-45 rain-precip"></i> <span>'+ parseFloat( data["daily"]["data"][i]["precipProbability"] * 100 ).toFixed(0) +'%</span>';
+        } else {
+            output_html += '<i class="wi wi-raindrop wi-rotate-45 rain-no-precip"></i> <span >0%</span>';
+        }
+        output_html += '</div>';
+        output_html += '<div class="forecast-wind">';
+        output_html += '<i class="wi wi-strong-wind"></i> <span>'+ parseFloat( data["daily"]["data"][i]["windSpeed"] ).toFixed(0) +'</span> | <span> '+ parseFloat( data["daily"]["data"][i]["windGust"] ).toFixed(0) +'$unit.label.windSpeed';
+        output_html += '</div>';
+        output_html += '<a href="https://darksky.net/details/'+data["latitude"]+','+data["longitude"]+'/'+moment.unix( data["daily"]["data"][i]["time"] ).format( "YYYY-M-D" )+'" target="_blank">$obs.label.daily_forecast</a>';
+        output_html += '</div>';
+    }
+    forecast_subtitle = moment.unix( data["currently"]["time"] ).format( '$obs.label.time_forecast_last_updated' );
+    jQuery(".forecast-subtitle").text( "$obs.label.forecast_last_updated " + forecast_subtitle );
+    jQuery(".forecasts").html( output_html );
+}
+#end if
+
+#if $Extras.has_key("mqtt_websockets_enabled") and $Extras.mqtt_websockets_enabled == '1'
+//============================================//
+// Live website using MQTT Websockets enabled //
+//============================================//
+
+function ajaximages() {
+    // This function only runs if the elements have an img src.
+    if ( document.querySelectorAll(".radar-map img").length > 0 ) {
+        if (belchertown_debug > 0) {
+            console.log("Updating radar image");
+        }
+        var radar_html = jQuery('.radar-map').children('img').attr('src').split('?')[0] // Get the img src and remove everything after "?" so we don't stack ?'s onto the image during updates
+        jQuery('.radar-map').children('img').attr('src', radar_html + "?" + Math.floor(Math.random() * 999999999));
+    }
+    
+    #if $Extras.has_key("reload_hook_images") and $Extras.reload_hook_images == '1'
+    // Update images within the hook .inc files
+    jQuery('.index-hook-after-station-info img').each(function(){
+        new_image_url = jQuery(this).attr('src').split('?')[0] + "?" + Math.floor(Math.random() * 999999999);
+        jQuery(this).attr('src', new_image_url);
+    });
+    jQuery('.index-hook-after-forecast img').each(function(){
+        new_image_url = jQuery(this).attr('src').split('?')[0] + "?" + Math.floor(Math.random() * 999999999);
+        jQuery(this).attr('src', new_image_url);
+    });
+    jQuery('.index-hook-after-snapshot img').each(function(){
+        new_image_url = jQuery(this).attr('src').split('?')[0] + "?" + Math.floor(Math.random() * 999999999);
+        jQuery(this).attr('src', new_image_url);
+    });
+    jQuery('.index-hook-after-charts img').each(function(){
+        new_image_url = jQuery(this).attr('src').split('?')[0] + "?" + Math.floor(Math.random() * 999999999);
+        jQuery(this).attr('src', new_image_url);
+    });
+    #end if
+    
+}
+
+// MQTT connect
+function connect() {
+    if (belchertown_debug > 0) {
+        console.log("Connecting to MQTT");
+    }
+    reported = "$obs.label.mqtt_websockets_connecting";
+    jQuery(".updated").text( reported );
+    jQuery(".onlineMarker").hide();
+    jQuery(".offlineMarker").hide();
+    jQuery(".loadingMarker").show();
+    
+    client = new Paho.MQTT.Client("$Extras.mqtt_websockets_host", $Extras.mqtt_websockets_port, mqttclient);
+    client.onConnectionLost = onConnectionLost;
+    client.onMessageArrived = onMessageArrived;
+    var options = {
+        #if $Extras.has_key("mqtt_websockets_ssl") and $Extras.mqtt_websockets_ssl == '1'
+        useSSL: true,
+        #else
+        useSSL: false,
+        #end if
+        onSuccess:onConnect,
+        onFailure:onFailure
+      }
+    client.connect( options );
+}
+
+// MQTT connect callback
+function onConnect() {
+    if (belchertown_debug > 0) {
+        console.log("MQTT Connected. Subscribing.");
+    }
+    reported = "$obs.label.mqtt_websockets_waiting";
+    jQuery(".updated").text( reported );
+    jQuery(".onlineMarker").hide();
+    jQuery(".offlineMarker").hide();
+    jQuery(".loadingMarker").show();            
+    client.subscribe( "$Extras.mqtt_websockets_topic" );
+    #if $Extras.has_key("disconnect_live_website_visitor") and $Extras.disconnect_live_website_visitor != '0'
+    var activityTimeout = setTimeout( inactive, $Extras.disconnect_live_website_visitor ); // Stop automatic ajax refresh
+    #end if
+}
+
+// MQTT Failure
+function onFailure() {
+    var d = new Date();
+    jQuery(".onlineMarker").hide();
+    jQuery(".offlineMarker").show();
+    jQuery(".loadingMarker").hide();
+    epoch = parseFloat( (d / 1000) ).toFixed(0); // Convert millis to seconds
+    updated = moment.unix(epoch).utcOffset($moment_js_utc_offset).format("$obs.label.time_mqtt_websockets_last_updated");
+    jQuery(".updated").html( "$obs.label.mqtt_websockets_failed" );
+    console.log( updated + ": Cannot connect to MQTT broker" );
+}
+
+// MQTT connection lost
+function onConnectionLost(responseObject) {
+    var d = new Date();
+    jQuery(".onlineMarker").hide();
+    jQuery(".offlineMarker").show();
+    jQuery(".loadingMarker").hide();
+    epoch = parseFloat( (d / 1000) ).toFixed(0);  // Convert millis to seconds
+    updated = moment.unix(epoch).utcOffset($moment_js_utc_offset).format("$obs.label.time_mqtt_websockets_last_updated");
+    jQuery(".updated").html( "$obs.label.mqtt_websockets_lost" );
+    if (responseObject.errorCode !== 0) {
+        console.log( updated + ": mqtt Connection Lost: "+responseObject.errorMessage );
+    }
+}
+
+// New message from mqtt, process it
+function onMessageArrived(message) {
+    update_current_wx( message.payloadString );
+}
+
+function inactive(){
+    client.disconnect(); // Disconnect mqtt
+    if (belchertown_debug > 0) {
+        console.log("Inactive timer expired. MQTT Disconnected");
+    }
+    jQuery(".onlineMarker").hide(); // Hide online beacon
+    jQuery(".offlineMarker").show(); // Show offline beacon
+    jQuery(".loadingMarker").hide(); // Hide loading beacon
+    jQuery(".updated").html( "$obs.label.mqtt_websockets_stopped <button type='button' class='btn btn-primary restart-interval'>$obs.label.mqtt_websockets_continue</button>" );
+}
+
+// Handle MQTT message
+function update_current_wx(data) {
+    //console.log( data );
+    data = jQuery.parseJSON( data );
+    
+    #if $Extras.has_key('googleAnalyticsId')
+    // Send a pageview
+    gtag('config', '$Extras.googleAnalyticsId');
+    #end if
+    
+    // Updated time
+    epoch = parseFloat( data["dateTime"] ).toFixed(0);
+    updated = moment.unix(epoch).utcOffset($moment_js_utc_offset).format("$obs.label.time_mqtt_websockets_last_updated");
+    updated_text = "$obs.label.mqtt_websockets_connected " + updated;
+    jQuery(".updated").html( updated_text );
+    jQuery(".onlineMarker").show(); // Show the online beacon
+    jQuery(".offlineMarker").hide(); // Hide offline beacon
+    jQuery(".loadingMarker").hide(); // Hide loading beacon
+    
+    // This message is a weewx archive update. Update weewx data, forecast data and highcharts graphs
+    if ( data.hasOwnProperty("interval_minute") ) {
+        // Delays are recommended to allow the other skins to complete processing
+        if (belchertown_debug > 0) {
+            console.log("MQTT message indicates this is an archive interval.");
+        }
+        setTimeout( showChart(homepage_graphgroup), 30000 ); // Load updated charts
+        setTimeout( ajaxweewx, 10000 ); // Update weewx data
+        #if $Extras.has_key("forecast_enabled") and $Extras.forecast_enabled == '1'
+        setTimeout( ajaxforecast, 10000 ); // Update forecast data
+        #end if
+        setTimeout( ajaximages, 10000 ); // Update radar and home page hook "img src" if present
+    }
+    
+    // Temperature F
+    if ( data.hasOwnProperty("outTemp_F") ) {
+        // Inside parseFloat converts str to int. Outside parseFloat processes the locale string
+        // Help from: https://stackoverflow.com/a/40152286/1177153 and https://stackoverflow.com/a/31581206/1177153
+        outTemp = parseFloat(parseFloat(data["outTemp_F"])).toLocaleString("$system_locale_js", {minimumFractionDigits: 1, maximumFractionDigits: 1});
+        update_outtemp_F( outTemp );
+        jQuery(".outtemp").html( outTemp + '<sup class="tempsup">$unit.label.outTemp</sup>' );
+    
+        // Feels like temp as defined by NOAA's "Apparent Temperature" at: http://www.nws.noaa.gov/ndfd/definitions.htm
+        //if ( data["outTemp_F"] <= 50 ) {
+        //    jQuery(".feelslike").html( "Feels like: " + parseFloat(parseFloat(data["windchill_F"])).toLocaleString("$system_locale_js", {minimumFractionDigits: 1, maximumFractionDigits: 1}) + " $unit.label.outTemp" );
+        //} else if ( data["outTemp_F"] >= 80 ) {
+        //    jQuery(".feelslike").html( "Feels like: " + parseFloat(parseFloat(data["heatindex_F"])).toLocaleString("$system_locale_js", {minimumFractionDigits: 1, maximumFractionDigits: 1}) + " $unit.label.outTemp" );
+        //} else {
+        //    jQuery(".feelslike").html( "Feels like: " + parseFloat(parseFloat(data["outTemp_F"])).toLocaleString("$system_locale_js", {minimumFractionDigits: 1, maximumFractionDigits: 1}) + " $unit.label.outTemp" );
+        //}
+    }
+    
+    // Temperature C
+    if ( data.hasOwnProperty("outTemp_C") ) {
+        outTemp = parseFloat(parseFloat(data["outTemp_C"])).toLocaleString("$system_locale_js", {minimumFractionDigits: 1, maximumFractionDigits: 1});
+        update_outtemp_C( outTemp );
+        jQuery(".outtemp").html( outTemp + '<sup class="tempsup">$unit.label.outTemp</sup>' );
+    }
+    
+    // Apparent Temperature US
+    if ( data.hasOwnProperty("appTemp_F") ) {
+        jQuery(".feelslike").html( "$obs.label.feels_like: " + parseFloat(parseFloat(data["appTemp_F"])).toLocaleString("$system_locale_js", {minimumFractionDigits: 1, maximumFractionDigits: 1}) + " $unit.label.outTemp" ); 
+    }
+
+    // Dewpoint US
+    if ( data.hasOwnProperty("dewpoint_F") ) {
+        jQuery(".wx-dewpoint-value").html( parseFloat(parseFloat(data["dewpoint_F"])).toLocaleString("$system_locale_js", {minimumFractionDigits: 1, maximumFractionDigits: 1}) + " $unit.label.outTemp" );
+    }
+    
+    // Apparent Temperature Metric
+    if ( data.hasOwnProperty("appTemp_C") ) {
+        jQuery(".feelslike").html( "$obs.label.feels_like: " + parseFloat(parseFloat(data["appTemp_C"])).toLocaleString("$system_locale_js", {minimumFractionDigits: 1, maximumFractionDigits: 1}) + " $unit.label.outTemp" );
+    }
+    
+    #if $Extras.has_key("show_cloudbase") and $Extras.show_cloudbase == '1'
+    // Cloud Base US
+    if ( data.hasOwnProperty("cloudbase_foot") ) {
+        jQuery(".wx-cloudbase-value").html( parseFloat(parseFloat(data["cloudbase_foot"])).toLocaleString("$system_locale_js", {minimumFractionDigits: 0, maximumFractionDigits: 0}) + " $unit.label.cloudbase" );
+    }
+
+    // Cloud Base Metric
+    if ( data.hasOwnProperty("cloudbase_meter") ) {
+        jQuery(".wx-cloudbase-value").html( parseFloat(parseFloat(data["cloudbase_meter"])).toLocaleString("$system_locale_js", {minimumFractionDigits: 0, maximumFractionDigits: 0}) + " $unit.label.cloudbase" );
+    }
+    #end if
+
+    // Dewpoint Metric
+    if ( data.hasOwnProperty("dewpoint_C") ) {
+        jQuery(".wx-dewpoint-value").html( parseFloat(parseFloat(data["dewpoint_C"])).toLocaleString("$system_locale_js", {minimumFractionDigits: 1, maximumFractionDigits: 1}) + " $unit.label.outTemp" );
+    }            
+    
+    // Wind
+    if ( data.hasOwnProperty("windDir") ) {
+        // No toLocaleString() here since there is no float decimal needed.
+        rotateThis( data["windDir"] );
+        //jQuery(".wind-arrow").css( "transform", "rotate(" + data["windDir"] + "deg)" );
+        jQuery(".curwindeg").text( parseFloat( data["windDir"] ).toFixed(0) + "°" );
+        jQuery(".curwinddir").text( get_cardinal_direction( parseFloat( data["windDir"] ).toFixed(0), "windDir" ) );
+    }
+    // Windspeed US
+    if ( data.hasOwnProperty("windSpeed_mph") ) {
+        jQuery(".curwindspeed").text( parseFloat(parseFloat(data["windSpeed_mph"])).toLocaleString("$system_locale_js", {minimumFractionDigits: 1, maximumFractionDigits: 1}) );
+    }
+    // Windspeed Metric
+    if ( data.hasOwnProperty("windSpeed_kph") ) {
+        jQuery(".curwindspeed").text( parseFloat(parseFloat(data["windSpeed_kph"])).toLocaleString("$system_locale_js", {minimumFractionDigits: 1, maximumFractionDigits: 1}) );
+    }
+    // Windspeed METRICWX
+    if ( data.hasOwnProperty("windSpeed_mps") ) {
+        jQuery(".curwindspeed").text( parseFloat(parseFloat(data["windSpeed_mps"])).toLocaleString("$system_locale_js", {minimumFractionDigits: 1, maximumFractionDigits: 1}) );
+    }
+    
+    // Wind Gust US
+    // May not be provided in mqtt, but just in case.
+    if ( data.hasOwnProperty("windGust_mph") ) {
+        jQuery(".curwindgust").text( parseFloat(parseFloat(data["windGust_mph"])).toLocaleString("$system_locale_js", {minimumFractionDigits: 1, maximumFractionDigits: 1}) );
+    }
+    // Wind Gust Metric
+    if ( data.hasOwnProperty("windGust_kph") ) {
+        jQuery(".curwindgust").text( parseFloat(parseFloat(data["windGust_kph"])).toLocaleString("$system_locale_js", {minimumFractionDigits: 1, maximumFractionDigits: 1}) );
+    }
+    // Wind Gust METRICWX
+    if ( data.hasOwnProperty("windGust_mps") ) {
+        jQuery(".curwindgust").text( parseFloat(parseFloat(data["windGust_mps"])).toLocaleString("$system_locale_js", {minimumFractionDigits: 1, maximumFractionDigits: 1}) );
+    }
+    
+    // Barometer US
+    if ( data.hasOwnProperty("barometer_inHg") ) {
+        jQuery(".wx-barometer-value").text( parseFloat(parseFloat(data["barometer_inHg"])).toLocaleString("$system_locale_js", {minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: false}) + " $unit.label.pressure" );
+    }
+    // Barometer Metric
+    if ( data.hasOwnProperty("barometer_mbar") ) {
+        jQuery(".wx-barometer-value").text( parseFloat(parseFloat(data["barometer_mbar"])).toLocaleString("$system_locale_js", {minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: false}) + " $unit.label.pressure" );
+    }
+    
+    // Humidity
+    if ( data.hasOwnProperty("outHumidity") ) {
+        jQuery(".wx-humidity-value").text( parseFloat(parseFloat(data["outHumidity"])).toLocaleString("$system_locale_js", {minimumFractionDigits: 0, maximumFractionDigits: 1}) + "$unit.label.outHumidity" );
+    }
+    
+    // Windchill US
+    if ( data.hasOwnProperty("windchill") ) {
+        jQuery(".curwindchill").text( parseFloat(parseFloat(data["windchill"])).toLocaleString("$system_locale_js", {minimumFractionDigits: 1, maximumFractionDigits: 1}) + "$unit.label.outTemp" );
+    }
+    // Windchill Metric
+    if ( data.hasOwnProperty("windchill_C") ) {
+        jQuery(".curwindchill").text( parseFloat(parseFloat(data["windchill_C"])).toLocaleString("$system_locale_js", {minimumFractionDigits: 1, maximumFractionDigits: 1}) + "$unit.label.outTemp" );
+    }
+    
+    // Rain Day US
+    if ( data.hasOwnProperty("dayRain_in") ) {
+        jQuery(".wx-rain-value").text( parseFloat(parseFloat(data["dayRain_in"])).toLocaleString("$system_locale_js", {minimumFractionDigits: 2, maximumFractionDigits: 2}) + " $unit.label.rain" );
+    }
+    // Rain Day Metric
+    if ( data.hasOwnProperty("dayRain_cm") ) {
+        jQuery(".wx-rain-value").text( parseFloat(parseFloat(data["dayRain_cm"])).toLocaleString("$system_locale_js", {minimumFractionDigits: 2, maximumFractionDigits: 2}) + " $unit.label.rain" );
+    }
+    // Rain Day METRICWX
+    if ( data.hasOwnProperty("dayRain_mm") ) {
+        jQuery(".wx-rain-value").text( parseFloat(parseFloat(data["dayRain_mm"])).toLocaleString("$system_locale_js", {minimumFractionDigits: 2, maximumFractionDigits: 2}) + " $unit.label.rain" );
+    }
+    
+    // Rain rate US
+    if ( data.hasOwnProperty("rainRate_inch_per_hour") ) {
+        jQuery(".wx-rainrate-value").text( parseFloat(parseFloat(data["rainRate_inch_per_hour"])).toLocaleString("$system_locale_js", {minimumFractionDigits: 2, maximumFractionDigits: 2}) + " $unit.label.rainRate" );
+    }
+    // Rain rate Metric
+    if ( data.hasOwnProperty("rainRate_cm_per_hour") ) {
+        jQuery(".wx-rainrate-value").text( parseFloat(parseFloat(data["rainRate_cm_per_hour"])).toLocaleString("$system_locale_js", {minimumFractionDigits: 2, maximumFractionDigits: 2}) + " $unit.label.rainRate" );
+    }
+    // Rain rate METRICWX
+    if ( data.hasOwnProperty("rainRate_mm_per_hour") ) {
+        jQuery(".wx-rainrate-value").text( parseFloat(parseFloat(data["rainRate_mm_per_hour"])).toLocaleString("$system_locale_js", {minimumFractionDigits: 2, maximumFractionDigits: 2}) + " $unit.label.rainRate" );
+    }
+    
+    // UV
+    if ( data.hasOwnProperty("UV") ) {
+        jQuery(".wx-uv-value").text( parseFloat(parseFloat(data["UV"])).toLocaleString("$system_locale_js", {minimumFractionDigits: 1, maximumFractionDigits: 1}) );
+    }
+    
+    // Sun Radiation
+    if ( data.hasOwnProperty("radiation_Wpm2") ) {
+        jQuery(".wx-radiation-value").html( parseFloat(parseFloat(data["radiation_Wpm2"])).toLocaleString("$system_locale_js", {minimumFractionDigits: 0, maximumFractionDigits: 2}) + " $unit.label.radiation" );
+    }
+};
+#end if
+
+
+Highcharts.setOptions({
+    global: {
+        //useUTC: false
+        timezoneOffset: $highcharts_timezoneoffset
+    },
+    lang: {
+        decimalPoint: '$highcharts_decimal'
+    }
+});
+
+function showChart(json_file) {
+        
+    jQuery.getJSON('$belchertown_root_url/json/' + json_file + '.json', function(data) {
+        
+        // Loop through each chart name (e.g. chart1, chart2, chart3)
+        jQuery.each(data, function (plotname, obsname) {
+            var observation_type, moment_format = undefined;
+            
+            // Ignore the Belchertown Version since this "plot" has no other options
+            if ( plotname == "belchertown_version" ) {
+                return true;
+            }
+            
+            // Set the chart colors, then return right away since this "plot" has no other options
+            if ( plotname == "colors" ) { 
+                colors = obsname.split(","); 
+                return true;
+            }
+            
+            // Loop through each chart options
+            jQuery.each(data[plotname]["options"], function (optionName, optionVal) {
+                switch(optionName) {
+                    case "type":
+                        type = optionVal;
+                        break;
+                    case "renderTo":
+                        renderTo = optionVal;
+                        break;
+                    case "title":
+                        title = optionVal;
+                        break;
+                    case "yAxisLabel":
+                        yAxisLabel = optionVal;
+                        break;
+                    case "chart_group":
+                        chart_group = optionVal;
+                        break;
+                    case "gapsize":
+                        gapsize = optionVal;
+                        break;
+                }
+            });
+            
+            // Update moment.js locale format
+            if ( chart_group == "day" ) {
+                moment_format = "$obs.label.time_charts_tooltip_day";
+            } else if ( chart_group == "month" || chart_group == "year" ) {
+                moment_format = "$obs.label.time_charts_tooltip_month_year";
+            } else {
+                // Week charts and anything else undefined by a standard group
+                moment_format = "$obs.label.time_charts_tooltip_default";
+            }
+            
+            var options = {
+                chart: {
+                    renderTo: '',
+                    spacing: [5, 10, 10, 0],
+                    type: '',
+                    zoomType: 'x'
+                },
+
+                title: {
+                    text: ''
+                },
+
+                legend: {
+                    enabled: true
+                },
+
+                xAxis: {
+                    dateTimeLabelFormats: {
+                        day: '%e %b',
+                        week: '%e %b',
+                        month: '%b %y',
+                    },
+                    lineColor: '#555',
+                    minRange: 900000,
+                    minTickInterval: 900000,
+                    title: {
+                        style: {
+                            font: 'bold 12px Lucida Grande, Lucida Sans Unicode, Verdana, Arial, Helvetica, sans-serif'
+                        }
+                    },
+                    ordinal: false,
+                    type: 'datetime'
+                },
+
+                yAxis: [{
+                    endOnTick: true,
+                    lineColor: '#555',
+                    minorGridLineWidth: 0,
+                    startOnTick: true,
+                    showLastLabel: true,
+                    title: {
+                    },
+                    opposite: false
+                }],
+
+                plotOptions: {
+                    area: {
+                        lineWidth: 2,
+                        gapSize: '',
+                        gapUnit: 'value',
+                        marker: {
+                            enabled: false,
+                            radius: 2
+                        },
+                    },
+                    line: {
+                        lineWidth: 2,
+                        gapSize: '',
+                        gapUnit: 'value',
+                        marker: {
+                            enabled: false,
+                            radius: 2
+                        },
+                    },
+                    spline: {
+                        lineWidth: 2,
+                        gapSize: '',
+                        gapUnit: 'value',
+                        marker: {
+                            enabled: false,
+                            radius: 2
+                        },
+                    },
+                    scatter: {
+                        gapSize: '',
+                        gapUnit: 'value',
+                        marker: {
+                            radius: 2
+                        },
+                    }
+                },
+                
+                // Highstock is needed for gapsize. Disable these 3 to make it look like standard Highcharts
+                scrollbar: {
+                    enabled: false
+                },
+                navigator: {
+                    enabled: false
+                },
+                rangeSelector: {
+                    enabled: false
+                },
+
+                tooltip: {
+                    enabled: true,
+                    crosshairs: true,
+                    dateTimeLabelFormats: {
+                        hour: '%e %b %H:%M'
+                    },
+                    // For locale control with moment.js
+                    formatter: function (tooltip) {
+                                    try {
+                                        // The first returned item is the header, subsequent items are the points.
+                                        // Mostly applies to line style charts (line, spline, area)
+                                        return [moment.unix( this.x / 1000).utcOffset($moment_js_utc_offset).format( moment_format )].concat(
+                                            this.points.map(function (point) {
+                                                var point_obsType = point.series.userOptions.obsType;
+                                                return "<span style='color:" + point.series.color + "'>\u25CF</span> " + point.series.name + ': ' + get_cardinal_direction( point.y, point_obsType, true );
+                                            })
+                                        );
+                                    } catch(e) {
+                                        // There's an error so check if it's windDir to apply wind direction label, or if it's a scatter. If none of those revert back to default tooltip.
+                                        if (this.series.userOptions.obsType == "windDir") {
+                                            var point_obsType = this.series.userOptions.obsType;
+                                            return moment.unix( this.x / 1000).utcOffset($moment_js_utc_offset).format( moment_format ) +'<br><b>' + get_cardinal_direction( this.point.y, point_obsType, true ) + ' (' + Highcharts.numberFormat(this.point.y, 0) + '\xBA)';
+                                        } else if (this.series.userOptions.type == "scatter") {
+                                            // Catch anything else that might be a scatter plot. Scatter plots will just show x,y coordinates without this.
+                                            return "<span style='color:" + this.series.color + "'>\u25CF</span> " + this.series.name + ': ' + Highcharts.numberFormat(this.y);
+                                        } else {
+                                            return tooltip.defaultFormatter.call(this, tooltip);
+                                        }
+                                    }
+                    },
+                    split: true,
+                },
+
+                series: [{}]
+
+            };
+            
+            // Build the chart here with the data
+            if (belchertown_debug > 0) {
+                console.log( renderTo + ": building a " + type + " chart" );
+            }
+            
+            // Set the chart render div and title
+            options.chart.renderTo = renderTo;
+            options.chart.type = type;
+            options.title.text = title;
+            options.plotOptions.area.gapSize = gapsize;
+            options.plotOptions.line.gapSize = gapsize;
+            options.plotOptions.spline.gapSize = gapsize;
+            options.plotOptions.scatter.gapSize = gapsize;
+            options.colors = colors;
+            
+            // Reset the series everytime we loop.
+            options.series = [];
+
+            // Build the series
+            var i = 0;
+            jQuery.each(data[plotname]["series"], function (seriesName, seriesVal) {
+                observation_type = data[plotname]["series"][seriesName]["obsType"];
+                options.series[i] = data[plotname]["series"][seriesName];
+                i++;
+            });
+            
+            /* yAxis customization handler and label handling
+            Take the following example. 
+            yAxis is in observation 0 (rainTotal), so that label is caught and set by yAxis1_active. 
+            If you move yAxis to observation 1 (rainRate), then the label is caught and set by yAxis_index.
+            There may be a more efficient way to do this. If so, please submit a pull request :)
+            [[[chart3]]]
+                title = Rain
+                [[[[rainTotal]]]]
+                    name = Rain Total
+                    yAxis = 1
+                [[[[rainRate]]]]
+            */
+            
+            var yAxis1_active = undefined;
+            
+            // Find if any series have yAxis = 1. If so, save the array number so we can set labels correctly.
+            // We really care if yAxis is in array 1+, so we can go back and set yAxis 0 to the right label.
+            var yAxis_index = options.series.findIndex( function(item){ return item.yAxis == 1 } )
+            
+            options.series.forEach(s => {
+                if (s.yAxis == "1") {
+                    // If yAxis = 1 is set for the observation, add a new yAxis and associate that observation to the right side of the chart
+                    yAxis1_active = true;
+                    options.yAxis.push({ // Secondary yAxis
+                                opposite: true,
+                                title: {
+                                    text: s.name + " " + s.yAxisLabel,
+                                },
+                            }),
+                    // Associate this series to the new yAxis 1
+                    s.yAxis = 1
+                                        
+                    // We may have already passed through array 0 in the series without setting the "multi axis label", go back and explicitly define it.
+                    if ( yAxis_index >= 1 ) {
+                        options.yAxis[0].title.text = options.series[0].name + " " + options.series[0].yAxisLabel;
+                    } 
+                } else {
+                    if ( yAxis1_active ) {
+                        // This yAxis is first in the data series, so we can set labels without needing to double back
+                        options.yAxis[0].title.text = s.name + " " + s.yAxisLabel;
+                    } else {
+                        // Apply the normal yAxis 0's label without observation name
+                        options.yAxis[0].title.text = s.yAxisLabel;
+                    }
+                    // Associate this series to yAxis 1
+                    s.yAxis = 0;
+                }
+                
+                // Run yAxis customizations
+                this_yAxis = s.yAxis;
+                
+                if (belchertown_debug > 0) {
+                    console.log( renderTo + ": " + s.obsType + " is on yAxis " + this_yAxis );
+                }
+                
+                // Some charts may require a defined min/max on the yAxis
+                options.yAxis[this_yAxis].min = s.yaxis_min ? s.yaxis_min : null;
+                options.yAxis[this_yAxis].max = s.yaxis_max ? s.yaxis_max : null;
+
+                // Barometer chart plots get a higher precision yAxis tick
+                if (s.obsType == "barometer") {
+                    options.yAxis[this_yAxis].tickInterval = 0.01;
+                    options.yAxis[this_yAxis].labels = { format: '{value:.2f}' }
+                }
+                
+                // Rain, RainRate and rainTotal (special Belchertown skin observation) get yAxis precision
+                if (s.obsType == "rain" || s.obsType == "rainRate" || s.obsType == "rainTotal") {
+                    options.yAxis[this_yAxis].min = 0;
+                    options.yAxis[this_yAxis].minRange = 0.01;
+                    options.yAxis[this_yAxis].minorGridLineWidth = 1;
+                }
+
+                if (s.obsType == "windDir") {
+                    options.yAxis[this_yAxis].tickInterval = 90;
+                    options.yAxis[this_yAxis].labels = { formatter: function() { var value = weatherdirection[this.value]; return value !== 'undefined' ? value : this.value; } }
+                }
+                
+                // Check if this series has a gapsize override
+                if (s.gapsize) {
+                    options.plotOptions.area.gapSize = s.gapsize;
+                    options.plotOptions.line.gapSize = s.gapsize;
+                    options.plotOptions.spline.gapSize = s.gapsize;
+                    options.plotOptions.scatter.gapSize = s.gapsize;
+                }
+                
+            });
+            
+            // If windRose is present, configure a special chart to show that data
+            if (observation_type == "windRose") {
+                var categories = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
+                options.chart.className = "highcharts-windRose"; // Used for dark mode
+                options.chart.type = "column";
+                options.chart.polar = true;
+                options.chart.alignTicks = false;
+                options.pane = { size: '80%' }
+                // Reset xAxis and rebuild
+                options.xAxis = {}
+                options.xAxis.min = 0;
+                options.xAxis.max = 16;
+                options.xAxis.crosshair = true;
+                options.xAxis.categories = categories;
+                options.xAxis.tickmarkPlacement = 'on';
+                //options.legend.align = "right";
+                options.legend.verticalAlign = "top";
+                options.legend.x = 210;
+                options.legend.y = 119;
+                options.legend.layout = "vertical";
+                options.legend.floating = true;
+                options.yAxis[0].min = 0;
+                options.yAxis[0].endOnTick = false;
+                options.yAxis[0].reversedStacks = false;
+                options.yAxis[0].title.text = "Frequency (%)";
+                options.yAxis[0].gridLineWidth = 0;
+                options.plotOptions = { column: {
+                                            stacking: 'normal',
+                                            shadow: false,
+                                            groupPadding: 0,
+                                            pointPlacement: 'on',
+                                        }
+                                    }
+                // Reset the tooltip
+                options.tooltip = {}
+                options.tooltip.shared = true;
+                options.tooltip.valueSuffix = '%'
+                
+                // Since wind rose is a special observation, I did not re-do the JSON arrays to accomodate it as a separate array.
+                // So we need to grab the data array within the series and save it to a temporary array, delete the entire chart series, 
+                // and reapply the windrose data back to the series.
+                var newSeries = options.series[0].data;
+                options.series = [];
+                newSeries.forEach( ns => {
+                    options.series.push(ns);
+                });
+            }
+                        
+            // Finally all options are done, now show the chart
+            var chart = new Highcharts.chart(options);
+
+        });
+    
+    });
+
+};

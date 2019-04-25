@@ -6,22 +6,22 @@
     
     <script>        
         jQuery(document).ready(function() {
-            var month = getSearchParams("mo");
-            var year = getSearchParams("yr");
+            var month = getURLvar("mo");
+            var year = getURLvar("yr");
             if ( ( year !== undefined ) && ( month !== undefined ) ) {
-                url = '$belchertown_root_url/stats/stats-'+year+'-'+month+'.txt';
+                url = '$belchertown_root_url/NOAA/NOAA-'+year+'-'+month+'.txt';
             } else if ( year !== undefined ) {
-                url = '$belchertown_root_url/stats/stats-'+year+'.txt';
+                url = '$belchertown_root_url/NOAA/NOAA-'+year+'.txt';
             } else {
-                url = '$belchertown_root_url/stats/$default_stats_file';
+                url = '$belchertown_root_url/NOAA/$default_noaa_file';
             }
             
             // Load the file into the pre
-            //jQuery('#stats_contents').load( url );
+            //jQuery('#noaa_contents').load( url );
             populatePre( url );
             
             // Change the direct href link
-            jQuery(".stats_direct_link").attr( "href", url );
+            jQuery(".noaa_direct_link").attr( "href", url );
         });
 
         // Get the URL Var so we can show the right NOAA file.
@@ -48,10 +48,9 @@
     </script>
 
     <div class="site-inner">
-        <div class="content-sidebar-wrap">
-            <main class="content">	
-                <article class="weewx reports page type-page status-publish entry" itemscope itemtype="https://schema.org/CreativeWork">
-                    <div class="entry-content" itemprop="text">
+        <main class="content">	
+            <article class="weewx reports" itemscope itemtype="https://schema.org/CreativeWork">
+
                         #include "page-header.inc"
                         <div class="stats_reports">
                             <div class="row">
@@ -71,4 +70,6 @@
             </main>
         </div>
     </div>
+
+
     #include "footer.html.tmpl"

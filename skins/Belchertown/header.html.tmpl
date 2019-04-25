@@ -1,3 +1,29 @@
+## Determine initial skin theme CSS class from config
+## Auto theme setting determines which CSS class to use based on the hour
+#set $bodyTheme = ""
+#set $themeSwitchChecked = ""
+#if $Extras.theme == "dark"
+    #set $bodyTheme = "dark"
+    #set $themeSwitchChecked = "checked"
+#elif $Extras.theme == "light"
+    #set $bodyTheme = "light"
+    #set $themeSwitchChecked = ""
+#elif $Extras.theme == "auto"
+    #import datetime
+    #set $now = datetime.datetime.now()
+    #set $nowHour = $now.hour
+    #set $sunrise_hour = datetime.datetime.fromtimestamp($almanac.sunrise.raw).strftime('%H')
+    #set $sunset_hour = datetime.datetime.fromtimestamp($almanac.sunset.raw).strftime('%H')
+        ##if $sunrise_hour <= $nowHour < $sunset_hour ## This works but to keep it inline with JavaScript the below works too
+        #if int($sunrise_hour) <= int($nowHour) and int($nowHour) < int($sunset_hour)
+            #set $bodyTheme = "light"
+            #set $themeSwitchChecked = ""
+        #else
+            ## Night time, use dark mode
+            #set $bodyTheme = "dark"
+            #set $themeSwitchChecked = "checked"
+        #end if
+#end if
 <!DOCTYPE html>
 <html lang="$system_locale_js" prefix="og: http://ogp.me/ns# fb: http://ogp.me/ns/fb#">
     <head >
@@ -16,17 +42,16 @@
 
         <link rel='dns-prefetch' href='//code.highcharts.com' />
         <link rel='dns-prefetch' href='//fonts.googleapis.com' />
-        <link rel='dns-prefetch' href='//maxcdn.bootstrapcdn.com' />
+        <link rel='dns-prefetch' href='//stackpath.bootstrapcdn.com' />
         <link rel='dns-prefetch' href='//cdnjs.cloudflare.com' />
 
-        <link rel="alternate" type="application/rss+xml" title="$station.location Weather Conditions &raquo; Feed" href="$belchertown_root_url/feed/" />
-
         <link rel='stylesheet' href='//fonts.googleapis.com/css?family=Lato%3A300%2C400%2C700&#038;ver=1.0' type='text/css' media='all' />
-        <link rel='stylesheet' href='//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css' type='text/css' media='all' />
-        <link rel='stylesheet' href='//maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css?ver=4.7.4' type='text/css' media='all' />
+        <link rel='stylesheet' href='//stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css' type='text/css' media='all' />
         <link rel='stylesheet' href='//cdnjs.cloudflare.com/ajax/libs/weather-icons/2.0.9/css/weather-icons.min.css?ver=4.7.4' type='text/css' media='all' />
         <link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css">
-        <link rel='stylesheet' href='$belchertown_root_url/style.css?ver=#echo int( time.time() ) #' type='text/css' media='all' />
+        <link rel='stylesheet' href='//stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css' type='text/css' media='all' />
+        <link rel='stylesheet' href='$belchertown_root_url/style.css?ver=#echo int( time.time() ) #' type='text/css' media='all' id="belchertownStyle" />
+        <link rel='stylesheet' href='$belchertown_root_url/belchertown-dark.min.css?ver=#echo int( time.time() ) #' type='text/css' media='all' id="belchertownStyle" />
         
         <link rel="manifest" href="$belchertown_root_url/manifest.json">
         <link rel="apple-touch-icon" href="$belchertown_root_url/images/station.png">
@@ -46,16 +71,9 @@
         #if $page == "home" and $Extras.has_key("mqtt_websockets_enabled") and $Extras.mqtt_websockets_enabled == '1'
         <script type='text/javascript' src="//cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
         #end if
-        #if $page == "home" or $page == "graphs"
         <script type='text/javascript' src='//code.highcharts.com/stock/highstock.js'></script>
         <script type='text/javascript' src='//code.highcharts.com/highcharts-more.js'></script>
-        <script type='text/javascript' src='$belchertown_root_url/js/highcharts-dayplots.js'></script>
-        #end if
-        #if $page == "graphs"
-        <script type='text/javascript' src='$belchertown_root_url/js/highcharts-weekplots.js'></script>
-        <script type='text/javascript' src='$belchertown_root_url/js/highcharts-monthplots.js'></script>
-        <script type='text/javascript' src='$belchertown_root_url/js/highcharts-yearplots.js'></script>
-        #end if
+        <script type='text/javascript' src='$belchertown_root_url/js/belchertown.js?#echo int( time.time() )#'></script>
         
         <link rel='shortlink' href='$belchertown_root_url/' />
                 
@@ -73,8 +91,8 @@
         #end if
 
     </head>
-    
-    <body class="home page-template-default page page-id-2 full-width-content" itemscope itemtype="https://schema.org/WebPage">
+
+    <body class="page-template-default page full-width-content $bodyTheme" itemscope itemtype="https://schema.org/WebPage">
 
         <div class="site-container">
             <header class="site-header">
@@ -91,18 +109,24 @@
                         </p>
                     </div>
                     <div class="widget-area header-widget-area">
-                        <section id="nav_menu-2" class="widget widget_nav_menu">
+                        <section id="nav_menu">
                             <div class="widget-wrap">
                                 <nav class="nav-header" itemscope itemtype="https://schema.org/SiteNavigationElement">
                                     <ul id="menu-menu" class="menu genesis-nav-menu">
                                         <!-- class = current-menu-item -->
-                                        <li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-home"><a href="$belchertown_root_url" itemprop="url"><span itemprop="name">Home</span></a></li>
+                                        <li class="menu-item menu-item-home"><a href="$belchertown_root_url" itemprop="url"><span itemprop="name">$obs.label.nav_home</span></a></li>
                                         #if $Extras.has_key('highcharts_enabled') and $Extras.highcharts_enabled == '1'
-                                        <li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-28"><a href="$belchertown_root_url/graphs" itemprop="url"><span itemprop="name">Graphs</span></a></li>
+                                        <li class="menu-item menu-item-1"><a href="$belchertown_root_url/graphs" itemprop="url"><span itemprop="name">$obs.label.nav_graphs</span></a></li>
                                         #end if
-                                        <li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-36"><a href="$belchertown_root_url/records" itemprop="url"><span itemprop="name">Records</span></a></li>
-                                        <li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-38"><a href="$belchertown_root_url/reports" itemprop="url"><span itemprop="name">Reports</span></a></li>
-                                        <li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-14"><a href="$belchertown_root_url/about" itemprop="url"><span itemprop="name">About</span></a></li>
+                                        <li class="menu-item menu-item-2"><a href="$belchertown_root_url/records" itemprop="url"><span itemprop="name">$obs.label.nav_records</span></a></li>
+                                        <li class="menu-item menu-item-3"><a href="$belchertown_root_url/reports" itemprop="url"><span itemprop="name">$obs.label.nav_reports</span></a></li>
+                                        <li class="menu-item menu-item-4"><a href="$belchertown_root_url/about" itemprop="url"><span itemprop="name">$obs.label.nav_about</span></a></li>
+                                        #if $Extras.has_key('theme_toggle_enabled') and $Extras.theme_toggle_enabled == '1'
+                                        <label class="themeSwitchLabel">
+                                            <input type="checkbox" id="themeSwitch" $themeSwitchChecked>
+                                            <span class="slider round"></span>
+                                        </label>
+                                        #end if
                                     </ul>
                                 </nav>
                             </div>
@@ -110,3 +134,5 @@
                     </div>
                 </div>
             </header>
+            
+            

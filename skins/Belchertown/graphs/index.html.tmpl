@@ -5,87 +5,63 @@
     #include "header.html.tmpl"
 
     <div class="site-inner">
-        <div class="content-sidebar-wrap">
-            <main class="content">	
-                <article class="weewx graphs page type-page status-publish entry" itemscope itemtype="https://schema.org/CreativeWork">
-                    <div class="entry-content" itemprop="text">
+        <main class="content">	
+            <article class="weewx graphs" itemscope itemtype="https://schema.org/CreativeWork">
 
-                        <script type="text/javascript">
-                            // Document ready calls        
-                            jQuery(document).ready(function() {
-                            
-                                daily(); // Initial load daily highcharts
-                                
-                                jQuery('button.wx-btn-today').click(function() {
-                                    daily(); // Load daily highcharts
-                                    jQuery(".wx-graph-text").text("today");
-                                    jQuery(".month-year-hide").show();
-                                });
-                                
-                                jQuery('button.wx-btn-week').click(function() {
-                                    weekly(); // Load weekly highcharts
-                                    jQuery(".wx-graph-text").text("this week");
-                                    jQuery(".month-year-hide").show();
-                                });
-                                
-                                jQuery('button.wx-btn-month').click(function() {
-                                    monthly(); // Load monthly highcharts
-                                    jQuery(".wx-graph-text").text("this month");
-                                    jQuery(".month-year-hide").hide();
-                                });
-                                
-                                jQuery('button.wx-btn-year').click(function() {
-                                    yearly(); // Load yearly highcharts
-                                    jQuery(".wx-graph-text").text("this year");
-                                    jQuery(".month-year-hide").hide();
-                                });
-                            });
-                                
-                        </script>
-                        
-                        #include "page-header.inc"
-
-                        <!-- Begin row -->
-                        <div class="row">
-                            <div class="col-sm-12 wx-buttons">
-                                <button type="button" class="btn btn-primary wx-btn-today">Today</button> <button type="button" class="btn btn-primary wx-btn-week">Week</button> <button type="button" class="btn btn-primary wx-btn-month">Month</button> <button type="button" class="btn btn-primary wx-btn-year">Year</button>
-                            </div>
-                            <div class="col-sm-12 wx-buttons-description">
-                                Graphs for <span class='wx-graph-text'>today</span>
-                            </div>
-                        </div>
-                        <!-- End row -->
-                                    
-                        #if $Extras.has_key("highcharts_graph_1") and $Extras.highcharts_graph_1 != ''
-                        <div id="$Extras.highcharts_graph_1" style="width:100%; height:350px;"></div>
-                        #end if
-                        
-                        #if $Extras.has_key("highcharts_graph_2") and $Extras.highcharts_graph_2 != ''
-                        <div id="$Extras.highcharts_graph_2" style="width:100%; height:350px;"></div>
-                        #end if
-
-                        #if $Extras.has_key("highcharts_graph_3") and $Extras.highcharts_graph_3 != ''
-                        <div id="$Extras.highcharts_graph_3" style="width:100%; height:350px;"></div>
-                        #end if
-
-                        #if $Extras.has_key("highcharts_graph_4") and $Extras.highcharts_graph_4 != ''
-                        <div id="$Extras.highcharts_graph_4" style="width:100%; height:350px;"></div>
-                        #end if
-
-                        #if $Extras.has_key("highcharts_graph_5") and $Extras.highcharts_graph_5 != ''
-                        <div id="$Extras.highcharts_graph_5" style="width:100%; height:350px;"></div>
-                        #end if
-
-                        #if $Extras.has_key("highcharts_graph_6") and $Extras.highcharts_graph_6 != ''
-                        <div id="$Extras.highcharts_graph_6" style="width:100%; height:350px;"></div>
-                        #end if
-                                
-                        <div class="clear"></div>
+                <script type="text/javascript">
+                    var graph = getURLvar("graph");
+                    if ( graph === undefined ) {
+                        // If no URL VAR, default to today
+                        graph = "day";
+                    }
+                    var graphgroups_raw = $charts;
+                    var thisPageGraphs = graphgroups_raw[graph];
                     
+                    
+                    jQuery(document).ready(function() {
+                        // Loop through the graph group for this page and add the graph divs to the page
+                        try {
+                        thisPageGraphs.forEach( graphID => {
+                            jQuery(".graph_outer").append('<div id="' + graphID + '" style="width:100%;height:350px;margin-top:20px;"></div>');
+                        });
+                        
+                        // Render the charts
+                        showChart(graph);
+                        } catch(err) {
+                            console.log("ERROR: Cannot add graphs from [" + graph + "] graph group: " + err.message);
+                        }
+                        
+                        if ( graph == "day" ) {
+                            jQuery(".wx-graph-text").html("$obs.label.graphs_page_today");
+                        } else if ( graph == "week" ) {
+                            jQuery(".wx-graph-text").html("$obs.label.graphs_page_week");
+                        } else if ( graph == "month" ) {
+                            jQuery(".wx-graph-text").html("$obs.label.graphs_page_month");
+                        } else if ( graph == "year" ) {
+                            jQuery(".wx-graph-text").html("$obs.label.graphs_page_year");
+                        }
+                    });
+                </script>
+                
+                #include "page-header.inc"
+
+                <!-- Begin row -->
+                <div class="row">
+                    <div class="col-sm-12 wx-buttons">
+                        <a href="./?graph=day"><button type="button" class="btn btn-primary wx-btn-today">$obs.label.graphs_page_today_button</button></a> <a href="./?graph=week"><button type="button" class="btn btn-primary wx-btn-week">$obs.label.graphs_page_week_button</button></a> <a href="./?graph=month"><button type="button" class="btn btn-primary wx-btn-month">$obs.label.graphs_page_month_button</button></a> <a href="./?graph=year"><button type="button" class="btn btn-primary wx-btn-year">$obs.label.graphs_page_year_button</button></a>
                     </div>
-                </article>
-            </main>
-        </div>
+                    <div class="col-sm-12 wx-buttons-description">
+                        $obs.label.graphs_page_graphs <span class='wx-graph-text'></span>
+                    </div>
+                </div>
+                <!-- End row -->
+                
+                <div class="graph_outer"></div><!-- JS populated -->
+                
+                <div class="clear"></div>
+                
+            </article>
+        </main>
     </div>
 
 

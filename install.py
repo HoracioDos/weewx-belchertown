@@ -9,7 +9,7 @@ def loader():
 class ExfoliationInstaller(ExtensionInstaller):
     def __init__(self):
         super(ExfoliationInstaller, self).__init__(
-            version="0.9.1",
+            version="1.0rc7",
             name='Belchertown',
             description='A clean modern skin with real time streaming updates and interactive charts. Modeled after BelchertownWeather.com',
             author="Pat OBrien",
@@ -26,8 +26,7 @@ class ExfoliationInstaller(ExtensionInstaller):
                     }
                 }
             },
-            files=[('bin/user', ['bin/user/belchertown.py',
-                                 'bin/user/belchertown_highchartsSearchX.py'
+            files=[('bin/user', ['bin/user/belchertown.py'
                                 ]
                     ),
                    ('skins/Belchertown', ['skins/Belchertown/favicon.ico',
@@ -41,6 +40,7 @@ class ExfoliationInstaller(ExtensionInstaller):
                                           'skins/Belchertown/index_hook_daylight.inc',
                                           'skins/Belchertown/robots.txt',
                                           'skins/Belchertown/skin.conf',
+                                          'skins/Belchertown/belchertown-dark.min.css',
                                           'skins/Belchertown/style.css'
                                          ]
                     ),
@@ -56,10 +56,7 @@ class ExfoliationInstaller(ExtensionInstaller):
                     ),                    
                    ('skins/Belchertown/records', ['skins/Belchertown/records/index.html.tmpl']),
                    ('skins/Belchertown/reports', ['skins/Belchertown/reports/index.html.tmpl']),
-                   ('skins/Belchertown/js', ['skins/Belchertown/js/highcharts-dayplots.js.tmpl',
-                                             'skins/Belchertown/js/highcharts-weekplots.js.tmpl',
-                                             'skins/Belchertown/js/highcharts-monthplots.js.tmpl',
-                                             'skins/Belchertown/js/highcharts-yearplots.js.tmpl',
+                   ('skins/Belchertown/js', ['skins/Belchertown/js/belchertown.js.tmpl',
                                              'skins/Belchertown/js/index.html',
                                              'skins/Belchertown/js/responsive-menu.js'
                                             ]

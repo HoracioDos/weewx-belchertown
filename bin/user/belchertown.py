@@ -4,21 +4,35 @@
 #
 # Pat O'Brien, August 19, 2018
 
+from __future__ import with_statement
 import datetime
 import time
 import calendar
 import json
 import os
+import os.path
 import syslog
 import sys
 import locale
 
 import weewx
 import weecfg
+import configobj
+import weedb
+import weeutil.weeutil
+import weewx.reportengine
+import weewx.station
+import weewx.units
+import weewx.tags
+import weeplot.genplot
+import weeplot.utilities
+
+from collections import OrderedDict
 
 from weewx.cheetahgenerator import SearchList
 from weewx.tags import TimespanBinder
-from weeutil.weeutil import TimeSpan
+from weeutil.weeutil import to_bool, TimeSpan, to_int, archiveDaySpan, archiveWeekSpan, archiveMonthSpan, archiveYearSpan, startOfDay, timestamp_to_string
+from weeutil.config import search_up
 
 # This helps with locale. https://stackoverflow.com/a/40346898/1177153
 reload(sys)
@@ -38,7 +52,7 @@ def logerr(msg):
     logmsg(syslog.LOG_ERR, msg)
     
 # Print version in syslog for easier troubleshooting
-VERSION = "0.9.1"
+VERSION = "1.0rc7"
 loginf("version %s" % VERSION)
 
 class getData(SearchList):
@@ -53,6 +67,13 @@ class getData(SearchList):
         # Look for the debug flag which can be used to show more logging
         weewx.debug = int(self.generator.config_dict.get('debug', 0))
         
+        # Setup label dict for text and titles
+        try:
+            d = self.generator.skin_dict['Labels']['Generic']
+        except KeyError:
+            d = {}
+        label_dict = weeutil.weeutil.KeyDict(d)
+        
         # Check if the pre-requisites have been completed. Either station_url or belchertown_root_url need to be set. 
         if self.generator.skin_dict['Extras']['belchertown_root_url'] != "":
             belchertown_root_url = self.generator.skin_dict['Extras']['belchertown_root_url']
@@ -60,6 +81,8 @@ class getData(SearchList):
             belchertown_root_url = self.generator.config_dict["Station"]["station_url"]
         else:
             belchertown_root_url = ""
+            
+        belchertown_debug = self.generator.skin_dict['Extras'].get('belchertown_debug', 0)
 
         # Find the right HTML ROOT
         if 'HTML_ROOT' in self.generator.skin_dict:
@@ -80,10 +103,49 @@ class getData(SearchList):
         # Multiplying by -1 will reverse the number sign and keep 0 (not -0). https://stackoverflow.com/a/14053631/1177153
         highcharts_timezoneoffset = moment_js_utc_offset * -1
         
-        # Get the system locale for use with moment.js, and the system decimal for use with highcharts
-        system_locale, locale_encoding = locale.getdefaultlocale()
+        # If theme locale is auto, get the system locale for use with moment.js, and the system decimal for use with highcharts
+        if self.generator.skin_dict['Extras']['belchertown_locale'] == "auto":
+            system_locale, locale_encoding = locale.getdefaultlocale()
+        else:
+            try:
+                # Locale needs to be in locale.encoding format. Example: "en_US.UTF-8", or "de_DE.UTF-8"
+                locale.setlocale(locale.LC_ALL, self.generator.skin_dict['Extras']['belchertown_locale'])
+                system_locale, locale_encoding = locale.getlocale()
+            except Exception as error:
+                raise Warning( "Error changing locale to %s. This locale may not exist on your system, or you have a typo. This locale needs to be installed onto your Linux system first before Belchertown Skin can use it. Please check Google on how to install this locale onto your system. Or use the default 'auto' locale skin setting. Full error: %s" % ( self.generator.skin_dict['Extras']['belchertown_locale'], error ) )
         system_locale_js = system_locale.replace("_", "-") # Python's locale is underscore. JS uses dashes.
         highcharts_decimal = locale.localeconv()["decimal_point"]
+        
+        # Get the archive interval for the highcharts gapsize
+        archive_interval_ms = int(self.generator.config_dict["StdArchive"]["archive_interval"]) * 1000
+        
+        # Build the chart array for the HTML
+        # Outputs a dict of nested lists which allow you to have different charts for different timespans on the site in different order with different names.
+        # OrderedDict([('day', ['chart1', 'chart2', 'chart3', 'chart4']), 
+        # ('week', ['chart1', 'chart5', 'chart6', 'chart2', 'chart3', 'chart4']),
+        # ('month', ['this_is_chart1', 'chart2_is_here', 'chart3', 'windSpeed_and_windDir', 'chart5', 'chart6', 'chart7']), 
+        # ('year', ['chart1', 'chart2', 'chart3', 'chart4', 'chart5'])])       
+        chart_config_path = os.path.join(
+            self.generator.config_dict['WEEWX_ROOT'],
+            self.generator.skin_dict['SKIN_ROOT'],
+            self.generator.skin_dict.get('skin', ''),
+            'graphs.conf')
+        default_chart_config_path = os.path.join(
+            self.generator.config_dict['WEEWX_ROOT'],
+            self.generator.skin_dict['SKIN_ROOT'],
+            self.generator.skin_dict.get('skin', ''),
+            'graphs.conf.example')
+        if os.path.exists( chart_config_path ):
+            chart_dict = configobj.ConfigObj(chart_config_path, file_error=True)
+        else:
+            chart_dict = configobj.ConfigObj(default_chart_config_path, file_error=True)
+        charts = OrderedDict()
+        for chart_timespan in chart_dict.sections:
+            timespan_chart_list = []
+            for plotname in chart_dict[chart_timespan].sections:
+                if plotname not in timespan_chart_list:
+                    timespan_chart_list.append( plotname )
+            charts[chart_timespan] = timespan_chart_list
         
         # Set a default radar URL using station's lat/lon. Moved from skin.conf so we can get station lat/lon from weewx.conf. A lot of stations out there with Belchertown 0.1 through 0.7 are showing the visitor's location and not the proper station location because nobody edited the radar_html which did not have lat/lon set previously.
         if self.generator.skin_dict['Extras']['radar_html'] == "":
@@ -146,7 +208,7 @@ class getData(SearchList):
             # Replace the SQL Query output with the converted values
             year_outTemp_range_max = [ year_outTemp_max_range_query[0], locale.format("%g", float(year_outTemp_max_range_total)), locale.format("%g", float(year_outTemp_max_range_min)), locale.format("%g", float(year_outTemp_max_range_max)) ]
         else:
-            year_outTemp_range_max = [ calendar.timegm( time.gmtime() ), 0.0, 0.0, 0.0 ]
+            year_outTemp_range_max = [ calendar.timegm( time.gmtime() ), locale.format("%.1f", 0), locale.format("%.1f", 0), locale.format("%.1f", 0) ]
         
         # Smallest Daily Temperature Range Conversions
         # Max temperature for this day
@@ -161,7 +223,7 @@ class getData(SearchList):
             # Replace the SQL Query output with the converted values
             year_outTemp_range_min = [ year_outTemp_min_range_query[0], locale.format("%g", float(year_outTemp_min_range_total)), locale.format("%g", float(year_outTemp_min_range_min)), locale.format("%g", float(year_outTemp_min_range_max)) ]
         else:
-            year_outTemp_range_min = [ calendar.timegm( time.gmtime() ), 0.0, 0.0, 0.0 ]
+            year_outTemp_range_min = [ calendar.timegm( time.gmtime() ), locale.format("%.1f", 0), locale.format("%.1f", 0), locale.format("%.1f", 0) ]
         
         # All Time - Largest Daily Temperature Range Conversions
         # Max temperature
@@ -202,7 +264,7 @@ class getData(SearchList):
             rainiest_day_converted = rain_round % self.generator.converter.convert(rainiest_day_tuple)[0]
             rainiest_day = [ rainiest_day_query[0], rainiest_day_converted ]
         else:
-            rainiest_day = [ calendar.timegm( time.gmtime() ), 0.00 ]
+            rainiest_day = [ calendar.timegm( time.gmtime() ), locale.format("%.2f", 0) ]
             
 
         # All Time Rainiest Day
@@ -279,12 +341,12 @@ class getData(SearchList):
         if year_days_with_rain_output:
             year_days_with_rain = max( zip( year_days_with_rain_output.values(), year_days_with_rain_output.keys() ) )
         else:
-            year_days_with_rain = [ 0.0, calendar.timegm( time.gmtime() ) ]
+            year_days_with_rain = [ locale.format("%.1f", 0), calendar.timegm( time.gmtime() ) ]
             
         if year_days_without_rain_output:
             year_days_without_rain = max( zip( year_days_without_rain_output.values(), year_days_without_rain_output.keys() ) )
         else:
-            year_days_without_rain = [ 0.0, calendar.timegm( time.gmtime() ) ]
+            year_days_without_rain = [ locale.format("%.1f", 0), calendar.timegm( time.gmtime() ) ]
            
         at_days_with_rain_total = 0
         at_days_without_rain_total = 0
@@ -431,7 +493,7 @@ class getData(SearchList):
             with open( forecast_file, "r" ) as read_file:
                 data = json.load( read_file )
             
-            current_obs_summary = data["currently"]["summary"]
+            current_obs_summary = label_dict[ data["currently"]["summary"].lower() ]
             visibility = locale.format("%g", float( data["currently"]["visibility"] ) )
             
             if data["currently"]["icon"] == "partly-cloudy-night":
@@ -597,6 +659,7 @@ class getData(SearchList):
         # Build the search list with the new values
         search_list_extension = { 'belchertown_version': VERSION,
                                   'belchertown_root_url': belchertown_root_url,
+                                  'belchertown_debug': belchertown_debug,
                                   'moment_js_utc_offset': moment_js_utc_offset,
                                   'highcharts_timezoneoffset': highcharts_timezoneoffset,
                                   'system_locale': system_locale,
@@ -605,6 +668,7 @@ class getData(SearchList):
                                   'highcharts_decimal': highcharts_decimal,
                                   'radar_html': radar_html,
                                   'archive_interval_ms': archive_interval_ms,
+                                  'charts': json.dumps(charts),
                                   'alltime' : all_stats,
                                   'year_outTemp_range_max': year_outTemp_range_max,
                                   'year_outTemp_range_min': year_outTemp_range_min,
@@ -637,3 +701,589 @@ class getData(SearchList):
 
         # Finally, return our extension as a list:
         return [search_list_extension]
+
+# =============================================================================
+# JsonGenerator
+# =============================================================================
+
+class JsonGenerator(weewx.reportengine.ReportGenerator):
+    """Class for generating JSON files for the Highcharts. 
+    Adapted from the ImageGenerator class.
+    
+    Useful attributes (some inherited from ReportGenerator):
+
+        config_dict:      The weewx configuration dictionary 
+        skin_dict:        The dictionary for this skin
+        gen_ts:           The generation time
+        first_run:        Is this the first time the generator has been run?
+        stn_info:         An instance of weewx.station.StationInfo
+        record:           A copy of the "current" record. May be None.
+        formatter:        An instance of weewx.units.Formatter
+        converter:        An instance of weewx.units.Converter
+        search_list_objs: A list holding search list extensions
+        db_binder:        An instance of weewx.manager.DBBinder from which the
+                          data should be extracted
+    """
+    
+    def run(self):
+        """Main entry point for file generation."""
+        
+        chart_config_path = os.path.join(
+            self.config_dict['WEEWX_ROOT'],
+            self.skin_dict['SKIN_ROOT'],
+            self.skin_dict.get('skin', ''),
+            'graphs.conf')
+        default_chart_config_path = os.path.join(
+            self.config_dict['WEEWX_ROOT'],
+            self.skin_dict['SKIN_ROOT'],
+            self.skin_dict.get('skin', ''),
+            'graphs.conf.example')
+        if os.path.exists( chart_config_path ):
+            self.chart_dict = configobj.ConfigObj(chart_config_path, file_error=True)
+        else:
+            self.chart_dict = configobj.ConfigObj(default_chart_config_path, file_error=True)
+        
+        self.converter = weewx.units.Converter.fromSkinDict(self.skin_dict)
+        self.formatter = weewx.units.Formatter.fromSkinDict(self.skin_dict)
+        self.db_lookup = self.db_binder.bind_default()
+        binding = self.config_dict['StdReport'].get('data_binding', 'wx_binding')
+        archive = self.db_binder.get_manager(binding)
+        start_ts = archive.firstGoodStamp()
+        stop_ts = archive.lastGoodStamp()
+        timespan = weeutil.weeutil.TimeSpan(start_ts, stop_ts)
+
+        # Setup title dict for plot titles
+        try:
+            d = self.skin_dict['Labels']['Generic']
+        except KeyError:
+            d = {}
+        label_dict = weeutil.weeutil.KeyDict(d)
+        
+        # Final output dict
+        output = {}
+        
+        # Loop through each timespan
+        for chart_group in self.chart_dict.sections:
+            output[chart_group] = OrderedDict() # This retains the order in which to load the charts on the page.
+            chart_options = weeutil.weeutil.accumulateLeaves(self.chart_dict[chart_group])
+                
+            output[chart_group]["belchertown_version"] = VERSION
+            
+            colors = chart_options.get("colors", "#7cb5ec, #434348, #90ed7d, #f7a35c, #8085e9, #f15c80, #e4d354, #8085e8, #8d4653, #91e8e1") # Default back to Highcharts standards
+            output[chart_group]["colors"] = colors
+            
+            # Loop through each chart within the chart_group
+            for plotname in self.chart_dict[chart_group].sections:
+                output[chart_group][plotname] = {}
+                output[chart_group][plotname]["series"] = OrderedDict() # This retains the observation position in the dictionary to match the order in the conf so the chart is in the right user-defined order
+                output[chart_group][plotname]["options"] = {}
+                #output[chart_group][plotname]["options"]["renderTo"] = chart_group + plotname # daychart1, weekchart1, etc. Used for the graphs page and the different chart_groups
+                output[chart_group][plotname]["options"]["renderTo"] = plotname # daychart1, weekchart1, etc. Used for the graphs page and the different chart_groups
+                output[chart_group][plotname]["options"]["chart_group"] = chart_group
+                
+                plot_options = weeutil.weeutil.accumulateLeaves(self.chart_dict[chart_group][plotname])
+                
+                plotgen_ts = self.gen_ts
+                if not plotgen_ts:
+                    plotgen_ts = stop_ts
+                    if not plotgen_ts:
+                        plotgen_ts = time.time()
+                
+                # Look for any keyword timespans first and default to those start/stop times for the chart
+                time_length = plot_options.get('time_length', 86400)
+                if time_length == "today":
+                    minstamp, maxstamp = archiveDaySpan( timespan.stop )
+                elif time_length == "week":
+                    week_start = to_int(self.config_dict["Station"].get('week_start', 6))              
+                    minstamp, maxstamp = archiveWeekSpan( timespan.stop, week_start )
+                elif time_length == "month":
+                    minstamp, maxstamp = archiveMonthSpan( timespan.stop )
+                elif time_length == "year":
+                    minstamp, maxstamp = archiveYearSpan( timespan.stop )
+                else:
+                    # Rolling timespans using seconds
+                    (minstamp, maxstamp, timeinc) = weeplot.utilities.scaletime(plotgen_ts - int(time_length), plotgen_ts)
+                
+                chart_title = plot_options.get("title", "")
+                output[chart_group][plotname]["options"]["title"] = chart_title
+                
+                # Get the type of plot ("bar', 'line', 'spline', or 'scatter')
+                plottype = plot_options.get('type', 'line')
+                output[chart_group][plotname]["options"]["type"] = plottype
+                
+                gapsize = plot_options.get('gapsize', 300000) # Default to 5 minutes in millis TODO is this the right thing to do? or have it in belchertown.js? More testing needed.
+                if gapsize:
+                    output[chart_group][plotname]["options"]["gapsize"] = gapsize
+
+                polar = plot_options.get('polar', None)
+                if polar:
+                    output[chart_group][plotname]["polar"] = polar    
+                
+                # Loop through each observation within the chart chart_group
+                for line_name in self.chart_dict[chart_group][plotname].sections:
+                    output[chart_group][plotname]["series"][line_name] = {}
+                    output[chart_group][plotname]["series"][line_name]["obsType"] = line_name
+                    
+                    line_options = weeutil.weeutil.accumulateLeaves(self.chart_dict[chart_group][plotname][line_name])
+                    
+                    # Find the observation type if specified (e.g. more than 1 of the same on a chart). (e.g. outTemp, rainFall, windDir, etc.)
+                    observation_type = line_options.get('observation_type', line_name)
+                    
+                    # Get any custom names for this observation 
+                    name = line_options.get('name', None)
+                    if not name:
+                        # No explicit name. Look up a generic one. NB: label_dict is a KeyDict which
+                        # will substitute the key if the value is not in the dictionary.
+                        name = label_dict[observation_type]
+                                        
+                    if observation_type == "rainTotal":
+                        obs_label = "rain"
+                    else:
+                        obs_label = observation_type
+                    unit_label = line_options.get('y_label', weewx.units.get_label_string(self.formatter, self.converter, obs_label))
+                    
+                    # Look for aggregation type:
+                    aggregate_type = line_options.get('aggregate_type')
+                    if aggregate_type in (None, '', 'None', 'none'):
+                        # No aggregation specified.
+                        aggregate_type = aggregate_interval = None
+                    else:
+                        try:
+                            # Aggregation specified. Get the interval.
+                            aggregate_interval = line_options.as_int('aggregate_interval')
+                        except KeyError:
+                            syslog.syslog(syslog.LOG_ERR, "JsonGenerator: aggregate interval required for aggregate type %s" % aggregate_type)
+                            syslog.syslog(syslog.LOG_ERR, "JsonGenerator: line type %s skipped" % observation_type)
+                            continue
+                    
+                    # Build the final array items. 
+                    
+                    # This for loop is to get any user provided highcharts series config data. Built-in highcharts variable names accepted.  
+                    for highcharts_config, highcharts_value in self.chart_dict[chart_group][plotname][line_name].items():
+                        output[chart_group][plotname]["series"][line_name][highcharts_config] = highcharts_value
+                    
+                    # Override any highcharts series configs with standardized data, then generate the data output
+                    output[chart_group][plotname]["series"][line_name]["name"] = name
+
+                    # Set the yAxis label. Place into series for custom JavaScript. Highcharts will ignore these by default
+                    output[chart_group][plotname]["options"]["yAxisLabel"] = "(" + unit_label.strip() + ")"
+                    output[chart_group][plotname]["series"][line_name]["yAxisLabel"] = "(" + unit_label.strip() + ")"
+                                    
+                    # Set the yAxis min and max if present. Useful for the rxCheckPercent plots
+                    yaxis_min = plot_options.get('yaxis_min', None)
+                    if yaxis_min:
+                        output[chart_group][plotname]["series"][line_name]["yaxis_min"] = yaxis_min
+                    yaxis_max = plot_options.get('yaxis_max', None)
+                    if yaxis_max:
+                        output[chart_group][plotname]["series"][line_name]["yaxis_max"] = yaxis_max
+                        
+                    # Build series data
+                    output[chart_group][plotname]["series"][line_name]["data"] = self._getObservationData(observation_type, minstamp, maxstamp, aggregate_type, aggregate_interval, time_length)
+            
+            # This consolidates all chart_groups into the chart_group JSON (day.json, week.json, month.json, year.json) and saves them to HTML_ROOT/json
+            html_dest_dir = os.path.join(self.config_dict['WEEWX_ROOT'],
+                                     self.skin_dict['HTML_ROOT'],
+                                     "json")
+            json_filename = html_dest_dir + "/" + chart_group + ".json"
+            with open(json_filename, mode='w') as fd:
+                    fd.write( json.dumps( output[chart_group] ) )
+
+    def _getObservationData(self, observation, start_ts, end_ts, aggregate_type, aggregate_interval, time_length):
+        """Get the SQL vectors for the observation, the aggregate type and the interval of time"""
+        
+        if observation == "windRose":
+            # Special Belchertown wind rose with Highcharts aggregator
+            # Wind speeds are split into the first 7 beaufort groups. https://en.wikipedia.org/wiki/Beaufort_scale
+            
+            # Force no aggregate_type
+            if aggregate_type:
+                aggregate_type = None
+                
+            # Force no aggregate_interval
+            if aggregate_interval:
+                aggregate_interval = None
+            
+            # Get windDir observations.
+            obs_lookup = "windDir"
+            (time_start_vt, time_stop_vt, windDir_vt) = self.db_lookup().getSqlVectors(TimeSpan(start_ts, end_ts), obs_lookup, aggregate_type, aggregate_interval)
+            #windDir_vt = self.converter.convert(windDir_vt)
+            #usageRound = int(self.skin_dict['Units']['StringFormats'].get(windDir_vt[2], "0f")[-2])
+            usageRound = 0 # Force round to 0 decimal
+            windDirRound_vt = [self._roundNone(x, usageRound) for x in windDir_vt[0]]
+            #windDirRound_vt = [0.0 if v is None else v for v in windDirRound_vt]
+
+            # Get windSpeed observations.
+            obs_lookup = "windSpeed"
+            (time_start_vt, time_stop_vt, windSpeed_vt) = self.db_lookup().getSqlVectors(TimeSpan(start_ts, end_ts), obs_lookup, aggregate_type, aggregate_interval)
+            windSpeed_vt = self.converter.convert(windSpeed_vt)
+            usageRound = int(self.skin_dict['Units']['StringFormats'].get(windSpeed_vt[2], "2f")[-2])
+            windSpeedRound_vt = [self._roundNone(x, usageRound) for x in windSpeed_vt[0]]
+            
+            # Get the unit label from the skin dict for speed. 
+            windSpeedUnit = windSpeed_vt[1]
+            windSpeedUnitLabel = self.skin_dict["Units"]["Labels"][windSpeedUnit]
+
+            # Merge the two outputs so we have a consistent data set to filter on
+            merged = zip(windDirRound_vt, windSpeedRound_vt)
+            
+            # Sort by beaufort wind speeds
+            group_0_windDir, group_0_windSpeed, group_1_windDir, group_1_windSpeed, group_2_windDir, group_2_windSpeed, group_3_windDir, group_3_windSpeed, group_4_windDir, group_4_windSpeed, group_5_windDir, group_5_windSpeed, group_6_windDir, group_6_windSpeed = ([] for i in range(14))
+            for windData in merged:
+                if windSpeedUnit == "mile_per_hour" or windSpeedUnit == "mile_per_hour2":
+                    if windData[1] < 1:
+                        group_0_windDir.append( windData[0] )
+                        group_0_windSpeed.append( windData[1] )
+                    elif windData[1] >= 1 and windData[1] <= 3:
+                        group_1_windDir.append( windData[0] )
+                        group_1_windSpeed.append( windData[1] )
+                    elif windData[1] >= 4 and windData[1] <= 7:
+                        group_2_windDir.append( windData[0] )
+                        group_2_windSpeed.append( windData[1] )
+                    elif windData[1] >= 8 and windData[1] <= 12:
+                        group_3_windDir.append( windData[0] )
+                        group_3_windSpeed.append( windData[1] )
+                    elif windData[1] >= 13 and windData[1] <= 18:
+                        group_4_windDir.append( windData[0] )
+                        group_4_windSpeed.append( windData[1] )
+                    elif windData[1] >= 19 and windData[1] <= 24:
+                        group_5_windDir.append( windData[0] )
+                        group_5_windSpeed.append( windData[1] )
+                    elif windData[1] >= 25:
+                        group_6_windDir.append( windData[0] )
+                        group_6_windSpeed.append( windData[1] )
+                elif windSpeedUnit == "km_per_hour" or windSpeedUnit == "km_per_hour2":
+                    if windData[1] < 2:
+                        group_0_windDir.append( windData[0] )
+                        group_0_windSpeed.append( windData[1] )
+                    elif windData[1] >= 2 and windData[1] <= 5:
+                        group_1_windDir.append( windData[0] )
+                        group_1_windSpeed.append( windData[1] )
+                    elif windData[1] >= 6 and windData[1] <= 11:
+                        group_2_windDir.append( windData[0] )
+                        group_2_windSpeed.append( windData[1] )
+                    elif windData[1] >= 12 and windData[1] <= 19:
+                        group_3_windDir.append( windData[0] )
+                        group_3_windSpeed.append( windData[1] )
+                    elif windData[1] >= 20 and windData[1] <= 28:
+                        group_4_windDir.append( windData[0] )
+                        group_4_windSpeed.append( windData[1] )
+                    elif windData[1] >= 29 and windData[1] <= 38:
+                        group_5_windDir.append( windData[0] )
+                        group_5_windSpeed.append( windData[1] )
+                    elif windData[1] >= 39:
+                        group_6_windDir.append( windData[0] )
+                        group_6_windSpeed.append( windData[1] )
+                elif windSpeedUnit == "meter_per_second" or windSpeedUnit == "meter_per_second2":
+                    if windData[1] < 0.5:
+                        group_0_windDir.append( windData[0] )
+                        group_0_windSpeed.append( windData[1] )
+                    elif windData[1] >= 0.5 and windData[1] <= 1.5:
+                        group_1_windDir.append( windData[0] )
+                        group_1_windSpeed.append( windData[1] )
+                    elif windData[1] >= 1.6 and windData[1] <= 3.3:
+                        group_2_windDir.append( windData[0] )
+                        group_2_windSpeed.append( windData[1] )
+                    elif windData[1] >= 3.4 and windData[1] <= 5.5:
+                        group_3_windDir.append( windData[0] )
+                        group_3_windSpeed.append( windData[1] )
+                    elif windData[1] >= 5.6 and windData[1] <= 7.9:
+                        group_4_windDir.append( windData[0] )
+                        group_4_windSpeed.append( windData[1] )
+                    elif windData[1] >= 8 and windData[1] <= 10.7:
+                        group_5_windDir.append( windData[0] )
+                        group_5_windSpeed.append( windData[1] )
+                    elif windData[1] >= 10.8:
+                        group_6_windDir.append( windData[0] )
+                        group_6_windSpeed.append( windData[1] )
+                elif windSpeedUnit == "knot" or windSpeedUnit == "knot2":
+                    if windData[1] < 1:
+                        group_0_windDir.append( windData[0] )
+                        group_0_windSpeed.append( windData[1] )
+                    elif windData[1] >= 1 and windData[1] <= 3:
+                        group_1_windDir.append( windData[0] )
+                        group_1_windSpeed.append( windData[1] )
+                    elif windData[1] >= 4 and windData[1] <= 6:
+                        group_2_windDir.append( windData[0] )
+                        group_2_windSpeed.append( windData[1] )
+                    elif windData[1] >= 7 and windData[1] <= 10:
+                        group_3_windDir.append( windData[0] )
+                        group_3_windSpeed.append( windData[1] )
+                    elif windData[1] >= 11 and windData[1] <= 16:
+                        group_4_windDir.append( windData[0] )
+                        group_4_windSpeed.append( windData[1] )
+                    elif windData[1] >= 17 and windData[1] <= 21:
+                        group_5_windDir.append( windData[0] )
+                        group_5_windSpeed.append( windData[1] )
+                    elif windData[1] >= 22:
+                        group_6_windDir.append( windData[0] )
+                        group_6_windSpeed.append( windData[1] )
+
+            # Get the windRose data
+            group_0_series_data = self._create_windRose_data( group_0_windDir, group_0_windSpeed )
+            group_1_series_data = self._create_windRose_data( group_1_windDir, group_1_windSpeed )
+            group_2_series_data = self._create_windRose_data( group_2_windDir, group_2_windSpeed )
+            group_3_series_data = self._create_windRose_data( group_3_windDir, group_3_windSpeed )
+            group_4_series_data = self._create_windRose_data( group_4_windDir, group_4_windSpeed )
+            group_5_series_data = self._create_windRose_data( group_5_windDir, group_5_windSpeed )
+            group_6_series_data = self._create_windRose_data( group_6_windDir, group_6_windSpeed )
+            
+            # Group all together to get wind frequency percentages
+            wind_sum = sum(group_0_series_data + group_1_series_data + group_2_series_data + group_3_series_data + group_4_series_data + group_5_series_data + group_6_series_data)
+            if wind_sum > 0:
+                y = 0
+                while y < len(group_0_series_data):
+                    group_0_series_data[y] = round(group_0_series_data[y] / wind_sum * 100)
+                    y += 1
+                y = 0
+                while y < len(group_1_series_data):
+                    group_1_series_data[y] = round(group_1_series_data[y] / wind_sum * 100)
+                    y += 1
+                y = 0
+                while y < len(group_2_series_data):
+                    group_2_series_data[y] = round(group_2_series_data[y] / wind_sum * 100)
+                    y += 1
+                y = 0
+                while y < len(group_3_series_data):
+                    group_3_series_data[y] = round(group_3_series_data[y] / wind_sum * 100)
+                    y += 1
+                y = 0
+                while y < len(group_4_series_data):
+                    group_4_series_data[y] = round(group_4_series_data[y] / wind_sum * 100)
+                    y += 1
+                y = 0
+                while y < len(group_5_series_data):
+                    group_5_series_data[y] = round(group_5_series_data[y] / wind_sum * 100)
+                    y += 1
+                y = 0
+                while y < len(group_6_series_data):
+                    group_6_series_data[y] = round(group_6_series_data[y] / wind_sum * 100)
+                    y += 1
+            
+            # Setup the labels based on unit
+            if windSpeedUnit == "mile_per_hour" or windSpeedUnit == "mile_per_hour2":
+                group_0_speedRange = "< 1"
+                group_1_speedRange = "1-3"
+                group_2_speedRange = "4-7"
+                group_3_speedRange = "8-12"
+                group_4_speedRange = "13-18"
+                group_5_speedRange = "19-24"
+                group_6_speedRange = "25+"
+            elif windSpeedUnit == "km_per_hour" or windSpeedUnit == "km_per_hour2":
+                group_0_speedRange = "< 2"
+                group_1_speedRange = "2-5"
+                group_2_speedRange = "6-11"
+                group_3_speedRange = "12-19"
+                group_4_speedRange = "20-28"
+                group_5_speedRange = "29-38"
+                group_6_speedRange = "39+"
+            elif windSpeedUnit == "meter_per_second" or windSpeedUnit == "meter_per_second2":
+                group_0_speedRange = "< 0.5"
+                group_1_speedRange = "0.5-1.5"
+                group_2_speedRange = "1.6-3.3"
+                group_3_speedRange = "3.4-5.5"
+                group_4_speedRange = "5.5-7.9"
+                group_5_speedRange = "8-10.7"
+                group_6_speedRange = "10.8+"
+            elif windSpeedUnit == "knot" or windSpeedUnit == "knot2":
+                group_0_speedRange = "< 1"
+                group_1_speedRange = "1-3"
+                group_2_speedRange = "4-6"
+                group_3_speedRange = "7-10"
+                group_4_speedRange = "11-16"
+                group_5_speedRange = "17-21"
+                group_6_speedRange = "22+"
+            
+            group_0_name = "%s %s" % (group_0_speedRange, windSpeedUnitLabel)
+            group_1_name = "%s %s" % (group_1_speedRange, windSpeedUnitLabel)
+            group_2_name = "%s %s" % (group_2_speedRange, windSpeedUnitLabel)
+            group_3_name = "%s %s" % (group_3_speedRange, windSpeedUnitLabel)
+            group_4_name = "%s %s" % (group_4_speedRange, windSpeedUnitLabel)
+            group_5_name = "%s %s" % (group_5_speedRange, windSpeedUnitLabel)
+            group_6_name = "%s %s" % (group_6_speedRange, windSpeedUnitLabel)
+                                        
+            group_0 = { "name": group_0_name,            
+                        "type": "column",
+                        "_colorIndex": 0,
+                        "zIndex": 106, 
+                        "stacking": "normal", 
+                        "fillOpacity": 0.75, 
+                        "data": group_0_series_data
+                      }
+            group_1 = { "name": group_1_name,            
+                        "type": "column",
+                        "_colorIndex": 1,
+                        "zIndex": 105, 
+                        "stacking": "normal", 
+                        "fillOpacity": 0.75, 
+                        "data": group_1_series_data
+                      }
+            group_2 = { "name": group_2_name,            
+                        "type": "column",
+                        "_colorIndex": 2,
+                        "zIndex": 104,
+                        "stacking": "normal", 
+                        "fillOpacity": 0.75, 
+                        "data": group_2_series_data
+                      }
+            group_3 = { "name": group_3_name,            
+                        "type": "column",
+                        "_colorIndex": 3,
+                        "zIndex": 103, 
+                        "stacking": "normal", 
+                        "fillOpacity": 0.75, 
+                        "data": group_3_series_data
+                      }
+            group_4 = { "name": group_4_name,            
+                        "type": "column",
+                        "_colorIndex": 4,
+                        "zIndex": 102, 
+                        "stacking": "normal", 
+                        "fillOpacity": 0.75, 
+                        "data": group_4_series_data
+                      }
+            group_5 = { "name": group_5_name,            
+                        "type": "column",
+                        "_colorIndex": 5,
+                        "zIndex": 101, 
+                        "stacking": "normal", 
+                        "fillOpacity": 0.75, 
+                        "data": group_5_series_data
+                      }
+            group_6 = { "name": group_6_name,            
+                        "type": "column",
+                        "_colorIndex": 6,
+                        "zIndex": 100, 
+                        "stacking": "normal", 
+                        "fillOpacity": 0.75, 
+                        "data": group_6_series_data
+                      }
+            
+            # Append everything into a list and return right away, do not process rest of function
+            series = []
+            series.append(group_0)
+            series.append(group_1)
+            series.append(group_2)
+            series.append(group_3)
+            series.append(group_4)
+            series.append(group_5)
+            series.append(group_6)
+            return series
+        
+        # Special Belchertown Skin rain counter
+        if observation == "rainTotal":
+            obs_lookup = "rain"
+            # Force sum on this observation
+            if aggregate_interval:
+                aggregate_type = "sum"
+        elif observation == "rainRate":
+            obs_lookup = "rainRate"
+            # Force max on this observation
+            if aggregate_interval:
+                aggregate_type = "max"
+        else:
+            obs_lookup = observation
+        
+        # Begin standard observation lookups
+        (time_start_vt, time_stop_vt, obs_vt) = self.db_lookup().getSqlVectors(TimeSpan(start_ts, end_ts), obs_lookup, aggregate_type, aggregate_interval)
+        obs_vt = self.converter.convert(obs_vt)
+                
+        # Special handling for the rain.
+        if observation == "rainTotal":
+            # The weewx "rain" observation is really "bucket tips". This special counter increments the bucket tips over timespan to return rain total.
+            rain_count = 0
+            obsRound_vt = []
+            for rain in obs_vt[0]:
+                # If the rain value is None or "", add it as 0.0
+                if rain is None or rain == "":
+                    rain = 0.0
+                rain_count = rain_count + rain
+                obsRound_vt.append( round( rain_count, 2 ) )
+        else:
+            # Send all other observations through the usual process, except Barometer for finer detail
+            if observation == "barometer":
+                usageRound = int(self.skin_dict['Units']['StringFormats'].get(obs_vt[1], "1f")[-2])
+                obsRound_vt = [round(x,usageRound) if x is not None else None for x in obs_vt[0]]
+            else:
+                usageRound = int(self.skin_dict['Units']['StringFormats'].get(obs_vt[2], "2f")[-2])
+                obsRound_vt = [self._roundNone(x, usageRound) for x in obs_vt[0]]
+            
+        # "Today" charts have the point timestamp on the stop time so we don't see the previous minute in the tooltip. (e.g. 4:59 instead of 5:00)
+        # Everything else has it on the start time so we don't see the next day in the tooltip (e.g. Jan 2 instead of Jan 1)
+        if time_length == "today":
+            point_timestamp = time_stop_vt
+        else:
+            point_timestamp = time_start_vt
+        
+        time_ms = [float(x) * 1000 for x in point_timestamp[0]]
+        data = zip(time_ms, obsRound_vt)
+        
+        return data
+        
+    def _roundNone(self, value, places):
+        """Round value to 'places' places but also permit a value of None"""
+        if value is not None:
+            try:
+                value = round(value, places)
+            except Exception, e:
+                value = None
+        return value
+
+    def _create_windRose_data(self, windDirList, windSpeedList):
+        # List comprehension borrowed from weewx-wd extension
+        # Create windroseList container and initialise to all 0s
+        windroseList=[0.0 for x in range(16)]
+        
+        # Step through each windDir and add corresponding windSpeed to windroseList
+        x = 0
+        while x < len(windDirList):
+            # Only want to add windSpeed if both windSpeed and windDir have a value
+            if windSpeedList[x] != None and windDirList[x] != None:
+                # Add the windSpeed value to the corresponding element of our windrose list
+                windroseList[int((windDirList[x]+11.25)/22.5)%16] += windSpeedList[x]
+            x += 1
+            
+        # Step through our windrose list and round all elements to 1 decimal place
+        y = 0
+        while y < len(windroseList):
+            windroseList[y] = round(windroseList[y],1)
+            y += 1
+        # Need to return a string of the list elements comma separated, no spaces and bounded by [ and ]
+        #windroseData = '[' + ','.join(str(z) for z in windroseList) + ']'
+        return windroseList
+
+    def _get_cardinal_direction(self, degree):
+        if (degree >= 0 and degree <= 11.25):
+            return "N"
+        elif (degree >= 11.26 and degree <= 33.75):
+            return "NNE"
+        elif (degree >= 33.76 and degree <= 56.25):
+            return "NE"
+        elif (degree >= 56.26 and degree <= 78.75):
+            return "ENE"
+        elif (degree >= 78.76 and degree <= 101.25):
+            return "E"
+        elif (degree >= 101.26 and degree <= 123.75):
+            return "ESE"
+        elif (degree >= 123.76 and degree <= 146.25):
+            return "SE"
+        elif (degree >= 146.26 and degree <= 168.75):
+            return "SSE"
+        elif (degree >= 168.76 and degree <= 191.25):
+            return "S"
+        elif (degree >= 191.26 and degree <= 213.75):
+            return "SSW"
+        elif (degree >= 213.76 and degree <= 236.25):
+            return "SW"
+        elif (degree >= 236.26 and degree <= 258.75):
+            return "WSW"
+        elif (degree >= 258.76 and degree <= 281.25):
+            return "W"
+        elif (degree >= 281.26 and degree <= 303.75):
+            return "WNW"
+        elif (degree >= 303.76 and degree <= 326.25):
+            return "NW"
+        elif (degree >= 326.26 and degree <= 348.75):
+            return "NNW"
+        elif (degree >= 348.76 and degree <= 360):
+            return "N"
+    
