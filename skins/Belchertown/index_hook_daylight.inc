@@ -36,9 +36,9 @@
       #set $delta = abs($difference)
       #set $amt_str = "%s%ds" % (str(int($delta) // 60) + 'm ' if ($delta // 60) > 0 else '', $delta % 60 if ($delta // 60) > 0 else $delta)
       #if $difference > 0
-        #set $delta_str = "larger than yesterday"
+        #set $delta_str = "más largo que ayer"
       #else
-        #set $delta_str = "shorter than yesterday"
+        #set $delta_str = "más corto que ayer"
       #end if
     #end if
 
@@ -46,10 +46,10 @@
 #end if
 
 <tr>
-   <td class= daylight>Daylight</td>
-   <td class= daylight>$daylight Hours</td>
+   <td class= daylight>Luz del Día:</td>
+   <td class= daylight>$daylight Horas</td>
 </tr>
 <tr>
-   <td class= daylight>Today is</td>
+   <td class= daylight>Hoy es</td>
    <td class= daylight>$amt_str $delta_str </td>
 </tr>

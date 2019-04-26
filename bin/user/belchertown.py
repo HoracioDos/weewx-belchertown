@@ -37,7 +37,6 @@ from weeutil.config import search_up
 # This helps with locale. https://stackoverflow.com/a/40346898/1177153
 reload(sys)
 sys.setdefaultencoding("utf-8")
-locale.setlocale(locale.LC_ALL, "")
 
 def logmsg(level, msg):
     syslog.syslog(level, 'Belchertown Extension: %s' % msg)
@@ -154,9 +153,6 @@ class getData(SearchList):
             radar_html = '<iframe width="650" height="360" src="https://embed.windy.com/embed2.html?lat={}&lon={}&zoom=8&level=surface&overlay=radar&menu=&message=true&marker=&calendar=&pressure=&type=map&location=coordinates&detail=&detailLat={}&detailLon={}&metricWind=&metricTemp=&radarRange=-1" frameborder="0"></iframe>'.format( lat, lon, lat, lon )
         else:
             radar_html = self.generator.skin_dict['Extras']['radar_html']
-        
-        # Get the archive interval for the highcharts gapsize
-        archive_interval_ms = int(self.generator.config_dict["StdArchive"]["archive_interval"]) * 1000
         
         """
         Build the all time stats.
@@ -387,7 +383,7 @@ class getData(SearchList):
         
         
         """
-        Get Stats Data
+        Get STATS Data
         """
         years = []
         stats_header_html = ""
@@ -399,7 +395,7 @@ class getData(SearchList):
 
             # Generate a list of years based on file name
             for f in stats_file_list:
-                filename = f.split(".")[0] # Drop the .inc
+                filename = f.split(".")[0] # Drop the .txt
                 year = filename.split("-")[1]
                 years.append(year)
 
@@ -418,7 +414,7 @@ class getData(SearchList):
                 # If the file doesn't exist, just show the month name in the header without a href link.
                 # There is no month 13, but we need to loop to 12, so 13 is where it stops.
                 for i in range(1, 13):
-                    month_num = format( i, '02' ) # Pad the number with a 0 since the Stats files use 2 digit month
+                    month_num = format( i, '02' ) # Pad the number with a 0 since the stats files use 2 digit month
                     month_abbr = calendar.month_abbr[ i ]
                     if os.path.exists( stats_dir + "stats-%s-%s.txt" % ( y, month_num ) ):
                         stats_header_html += ' <a href="?yr=%s&amp;mo=%s" class="stats_rep_nav"><b>%s</b></a>' % ( y, month_num, month_abbr )
@@ -428,8 +424,8 @@ class getData(SearchList):
                 # Row build complete, push next row to new line
                 stats_header_html += "<br>"
                 
-            # Find the current month's Stats file for the default file to show on JavaScript page load. 
-            # The Stats files are generated as part of this skin, but if for some reason that the month file doesn't exist, use the year file.
+            # Find the current month's stats file for the default file to show on JavaScript page load. 
+            # The stats files are generated as part of this skin, but if for some reason that the month file doesn't exist, use the year file.
             now = datetime.datetime.now()
             current_year = str( now.year )
             current_month = str( format( now.month, '02' ) )
@@ -438,7 +434,7 @@ class getData(SearchList):
             else:
                 default_stats_file = "stats-%s.txt" % current_year
         except:
-            # There's an error - I've seen this on first run and the Stats folder is not created yet. Skip this section.
+            # There's an error - I've seen this on first run and the stats folder is not created yet. Skip this section.
             pass
 
             

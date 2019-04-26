@@ -216,7 +216,6 @@ img {
 input,
 select,
 textarea {
-	background-color: #fff;
 	border: 1px solid #ddd;
     /* Removed in favor for dark mode dynamic switching */
 	/* color: #333; */
@@ -468,79 +467,6 @@ th {
 /* # Common Classes
 ---------------------------------------------------------------------------------------------------- */
 
-/* ## Avatar
---------------------------------------------- */
-
-.avatar {
-	float: left;
-}
-
-.alignleft .avatar,
-.author-box .avatar {
-	margin-right: 24px;
-}
-
-.alignright .avatar {
-	margin-left: 24px;
-}
-
-.comment .avatar {
-	margin: 0 16px 24px 0;
-}
-
-/* ## Genesis
---------------------------------------------- */
-
-.breadcrumb {
-	margin-bottom: 20px;
-}
-
-.archive-description,
-.author-box {
-	background-color: #fff;
-	font-size: 16px;
-	margin-bottom: 40px;
-	padding: 40px;
-}
-
-.author-box-title {
-	font-size: 16px;
-	margin-bottom: 4px;
-}
-
-.archive-description p:last-child,
-.author-box p:last-child {
-	margin-bottom: 0;
-}
-
-/* ## Search Form
---------------------------------------------- */
-
-.search-form {
-	overflow: hidden;
-}
-
-.site-header .search-form {
-	float: right;
-	margin-top: 12px;
-}
-
-.entry-content .search-form,
-.site-header .search-form {
-	width: 50%;
-}
-
-.genesis-nav-menu .search input[type="submit"],
-.widget_search input[type="submit"] {
-	border: 0;
-	clip: rect(0, 0, 0, 0);
-	height: 1px;
-	margin: -1px;
-	padding: 0;
-	position: absolute;
-	width: 1px;
-}
-
 /* ## Titles
 --------------------------------------------- */
 
@@ -618,7 +544,6 @@ img.alignright {
 ---------------------------------------------------------------------------------------------------- */
 
 .site-header {
-	background-color: #fff;
 	min-height: 75px;
 }
 
@@ -727,7 +652,6 @@ img.alignright {
 }
 
 .genesis-nav-menu .sub-menu a {
-	background-color: #fff;
 	border: 1px solid #eee;
 	border-top: none;
 	font-size: 14px;
@@ -818,7 +742,6 @@ img.alignright {
 --------------------------------------------- */
 
 .nav-secondary {
-	background-color: #fff;
 }
 
 
@@ -835,7 +758,6 @@ img.alignright {
 }
 
 .content .entry {
-	background-color: #fff;
 }
 
 .entry-content ol,
@@ -889,132 +811,6 @@ p.entry-meta {
 	content: "\2014";
 	margin: 0 6px 0 2px;
 }
-
-/* ## Pagination
---------------------------------------------- */
-
-.pagination {
-	clear: both;
-	margin: 40px 0;
-}
-
-.adjacent-entry-pagination {
-	margin-bottom: 0;
-}
-
-.archive-pagination li {
-	display: inline;
-}
-
-.archive-pagination li a {
-	background-color: #333;
-	color: #fff;
-	cursor: pointer;
-	display: inline-block;
-	font-size: 16px;
-	padding: 8px 12px;
-}
-
-.archive-pagination li a:hover,
-.archive-pagination .active a {
-	background-color: #e5554e;
-}
-
-/* ## Comments
---------------------------------------------- */
-
-.comment-respond,
-.entry-comments,
-.entry-pings {
-	background-color: #fff;
-	margin-bottom: 40px;
-}
-
-.comment-respond,
-.entry-pings {
-	padding: 40px 40px 16px;
-}
-
-.entry-comments {
-	padding: 40px;
-}
-
-.comment-header {
-	font-size: 16px;
-}
-
-li.comment {
-	background-color: #f5f5f5;
-	border: 2px solid #fff;
-	border-right: none;
-}
-
-.comment-content {
-	clear: both;
-}
-
-.comment-list li {
-	margin-top: 24px;
-	padding: 32px;
-}
-
-.comment-list li li {
-	margin-right: -32px;
-}
-
-.comment-respond input[type="email"],
-.comment-respond input[type="text"],
-.comment-respond input[type="url"] {
-	width: 50%;
-}
-
-.comment-respond label {
-	display: block;
-	margin-right: 12px;
-}
-
-.entry-comments .comment-author {
-	margin-bottom: 0;
-}
-
-.entry-pings .reply {
-	display: none;
-}
-
-.bypostauthor {
-}
-
-.form-allowed-tags {
-	background-color: #f5f5f5;
-	font-size: 16px;
-	padding: 24px;
-}
-
-
-/* # Sidebars
----------------------------------------------------------------------------------------------------- */
-
-.sidebar {
-	font-size: 16px;
-}
-
-.sidebar li {
-	border-bottom: 1px dotted #ddd;
-	margin-bottom: 10px;
-	padding-bottom: 10px;
-}
-
-.sidebar p:last-child,
-.sidebar ul > li:last-child {
-	margin-bottom: 0;
-}
-
-.sidebar .widget {
-	background-color: #fff;
-	margin-bottom: 40px;
-	padding: 40px;
-}
-
 
 /* # Site Footer
 ---------------------------------------------------------------------------------------------------- */
@@ -1196,7 +992,6 @@ li.comment {
 	body, html { overflow-x:hidden; }
 	body { 
 		padding:5px; 
-		background-color: #fff;
 		font-size: 16px;
 	}
 	
@@ -1330,7 +1125,6 @@ li.comment {
 	.genesis-nav-menu.responsive-menu li a,
 	.genesis-nav-menu.responsive-menu li a:hover,
 	.genesis-nav-menu.responsive-menu li.current-menu-item > a {
-		background: none;
 		display: block;
 		line-height: 1;
 		padding: 12px 0;
@@ -1381,7 +1175,6 @@ li.comment {
 	
 	.genesis-nav-menu.responsive-menu .sub-menu li a,
 	.genesis-nav-menu.responsive-menu .sub-menu li a:hover {
-		background: none;
 		border: none;
 		box-shadow: none;
 		padding: 12px 0;
@@ -1400,7 +1193,6 @@ li.comment {
 	}
 	
 	.nav-primary .genesis-nav-menu.responsive-menu li a:hover {
-		background: none;
 		color: red;
 	}
 
@@ -1681,27 +1473,10 @@ li.comment {
 	font-size:20px;
 }
 
-.windrun {
-        text-align:center;
-        font-size:15px;
-}
-
-.inTemp {
-        text-align:center;
-        font-size:15px;
-}
-
-
 .stn-high-low {
-	padding-top: 10px;
+	padding-top: 15px;
 	font-size:15px;
 	line-height: 1.3;
-}
-
-.daylight {
-        padding-top: 15px;
-        font-size:15px;
-        line-height: 1.5;
 }
 
 .stn-high-low-table-title {
@@ -1710,7 +1485,6 @@ li.comment {
 
 .stn-high-low-table td {
 	text-align:center;
-	padding-top: 5px;
 }
 
 .windrow {
@@ -1745,7 +1519,6 @@ li.comment {
     border-radius: 50%;
     width: 60px;
     height: 60px;
-    background: white;
 	color:#808080;
     border: 3px solid #808080;
     behavior: url(PIE.htc); /* remove if you don't care about IE8 */
@@ -1761,7 +1534,8 @@ li.comment {
     position: relative;
     color: #555;
     border: solid #808080 5px;
-        margin-left: 60px;
+    margin-left: 60px; /* Old Value */
+    margin-left: 25px; /* Fix Spanish*/
     /* margin-top: -10px; */
 }
 
@@ -1825,10 +1599,12 @@ li.comment {
 
 .wind-table td {
 	text-align:center !important;
+	width: 50%;
 }
 
 .windtext {
-	font-size:20px;
+	font-size:16px; /* Fix for spanish */
+	font-size:20px; /* Old Value */
 }
 
 .curwindspeed, .curwindgust {
@@ -1836,8 +1612,7 @@ li.comment {
 }
 
 .mph { 
-	padding-top: 5px !important;
-	padding-bottom: 10px !important;
+	padding-top:10px !important;
 	font-size:18px !important;
 }
 
@@ -1883,11 +1658,11 @@ li.comment {
 }
 
 .moon-container {
-	font-size:14.5px;
+	font-size:15px; /* Linux Browsers */
 }
 
 .moon {
-	text-align:right; 
+	text-align:right;
 }
 
 .moon-container {
@@ -1902,6 +1677,12 @@ li.comment {
 	padding:5px 5px 0px 5px !important;
 }
 
+.daylight {
+        padding-top: 15px;
+        font-size:15px;
+        line-height: 1.5;
+}
+
 .forecastrow {
 	text-align:center;
 }
@@ -1912,7 +1693,7 @@ li.comment {
 	margin-bottom:5px;
 }
 
-.goes-title {
+.satellite-title {
         text-align:left;
         font-size:25px;
         margin-bottom:5px;
@@ -1922,12 +1703,8 @@ li.comment {
 	font-size:14px;
 }
 
-.goes-subtitle {
+.satellite-subtitle {
         font-size:14px;
-}
-
-.wuforecast {
-	min-height:250px !important;
 }
 
 .forecast-conditions {
@@ -2042,15 +1819,29 @@ li.comment {
     margin-bottom:25px;
 }
 
+.noaa_reports {
+    margin-top:40px;
+    /* padding-top:30px; */
+}
+
 .stats_reports {
     margin-top:40px;
     /* padding-top:30px; */
 }
 
-#stats_contents {
+#noaa_contents {
     width: 75%;
     margin: 0 auto;
 }
+
+#stats_contents {
+    width: 95%;
+    margin: 0 auto;
+    font-size: 18px;
+    font-weight: 500;
+    font-family: monospace;
+}
+
 
 /* .col-sm-1-5 { */
 .forecast-day {
@@ -2269,7 +2060,6 @@ input:checked + .slider:before {
 	
 	.forecast-day {
 		font-size:28px;
-		padding-bottom:15px;
         min-height: 170px !important;
 		/* border-bottom:1px solid #D7D7D7; */
         padding-bottom:15px;
@@ -2385,7 +2175,6 @@ input:checked + .slider:before {
 /* End custom wx page */
 
 /* Custom Raspberry Pi Kiosk Page */
-    
     body.pi {
         /* font-family:initial; */
         font-weight: normal;
@@ -2431,9 +2220,6 @@ input:checked + .slider:before {
 
     .pi .wx-content {
         padding-top: 0px;
-    }
-    .pi .updated-wrapper {
-        float: none;
     }
     
     .pi #wxicon {
@@ -2575,7 +2361,7 @@ input:checked + .slider:before {
 	}
     
     .pi .moon-container {
-		font-size: 16px;
+	font-size: 16px;
         margin-top: 5px;
         line-height: 18px;
     }

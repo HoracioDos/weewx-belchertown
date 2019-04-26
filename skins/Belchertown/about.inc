@@ -38,7 +38,7 @@
   #end if
 #end for
 
-<p>Weather Station Model: $station.hardware located in <a href="https://es.wikipedia.org/wiki/Colegiales_(Buenos_Aires)" target="_blank"> Colegiales</a> , CABA - Argentina ($station.latitude[0]&deg;$station.latitude[1]' $station.latitude[2], $station.longitude[0]&deg;$station.longitude[1]' $station.longitude[2] @ $station.altitude)</p>
+<p>Estación meteorológica modelo: $station.hardware situada en el barrio de <a href="https://es.wikipedia.org/wiki/Colegiales_(Buenos_Aires)" target="_blank"> Colegiales</a> , CABA - Argentina ($station.latitude[0]&deg;$station.latitude[1]' $station.latitude[2], $station.longitude[0]&deg;$station.longitude[1]' $station.longitude[2] a $station.altitude de altura.)</p>
 
 <div class="col-sm-4">
     #if $Extras.has_key("station_photo") and $Extras.station_photo != ''
@@ -48,7 +48,7 @@
     <br>
     <table>
     #if $have_conn
-      <tr><th>Connectivity</th><th></th></tr>
+      <tr><th>Conectividad</th><th></th></tr>
       #if $day.rxCheckPercent.has_data
         <tr>
           <td>$obs.label.rxCheckPercent</td>
@@ -58,7 +58,7 @@
     #end if
 
     #if $have_battery_status
-      <tr><th>Battery Status</th><th></th></tr>
+      <tr><th>Estado de las Baterias</th><th></th></tr>
       #if $day.txBatteryStatus.has_data
         <tr>
           <td>$obs.label.txBatteryStatus</td>
@@ -96,7 +96,7 @@
     #end if
     
     #if $have_voltage
-      <tr><th>Voltage</th><th></th></tr>
+      <tr><th>Tensiones</th><th></th></tr>
       #if $day.consBatteryVoltage.has_data
         <tr>
           <td>$obs.label.consBatteryVoltage</td>
@@ -129,19 +129,20 @@
 </div>
 
 <div class="col-sm-8">
-<p>This station uploads data to the following sites:</p>
+<p>Esta estación sube datos a los siguientes sitios:</p>
 <ul>
-    <li><a href="http://www.wunderground.com/personal-weather-station/dashboard?ID=KMABELCH13" target="_blank">TEST123 </a>on Weather Underground using rapid fire.</li>
-    <li><a href="http://www.findu.com/cgi-bin/wxpage.cgi?last=24&amp;call=EW8484" target="_blank">TEST123</a> on CWOP</li>
-    <li><a href="http://pwsweather.com/obs/KMABELCH13.html" target="_blank">TEST123</a> on PWSWeather.com</li>
-    <li><a href="https://openweathermap.org/city" target="_blank">TEST123</a> on OpenWeatherMap.org</li>
-    <li><a href="https://app.weathercloud.net/d0882834506" target="_blank">TEST123</a> on Weathercloud.net</li>
+    <li><a href="http://www.wunderground.com/personal-weather-station/dashboard?ID=KMABELCH13" target="_blank">TEST123 </a>en Weather Underground utilizando rapid fire.</li>
+    <li><a href="http://www.wunderground.com/personal-weather-station/dashboard?ID=KMABELCH13" target="_blank">TEST123 </a>en Windy.com.</li>
+    <li><a href="http://www.findu.com/cgi-bin/wxpage.cgi?last=24&amp;call=EW8484" target="_blank">TEST123</a> en CWOP</li>
+    <li><a href="http://pwsweather.com/obs/KMABELCH13.html" target="_blank">TEST123</a> en PWSWeather.com</li>
+    <li><a href="https://openweathermap.org/city" target="_blank">TEST123</a> en OpenWeatherMap.org</li>
+    <li><a href="https://app.weathercloud.net/d0882834506" target="_blank">TEST123</a> en Weathercloud.net</li>
 </ul>
 
-<p>Resources and Credits:</p>
+<p>Recursos utilizados y Créditos:</p>
 <ul>
-    <li><a href="http://www.weewx.com/" target="_blank">Weewx - Weather Station Software Version $station.version</a> - Thanks to Tom Keffer and Matthew Wall.</li>
-    <li><a href="https://github.com/poblabs/weewx-belchertown" target="_blank">Belchertown Skin Version $belchertown_version</a> - Thanks to Pat O'Brien.</li>
+    <li><a href="http://www.weewx.com/" target="_blank">Weewx - Weather Station Software Version $station.version</a> - Thanks to Tom Keffer and Matthew Wall for making it available for everyone.</li>
+    <li><a href="https://github.com/poblabs/weewx-belchertown" target="_blank">Belchertown Skin Version $belchertown_version</a> - Thanks to Pat O'Brien for creating such a wonderful skin.</li>
     <li><a href="http://www.highcharts.com/" target="_blank">HighCharts</a> - Interactive JavaScript charts for web pages.</li>
     <li><a href="https://windy.com/" target="_blank">Windy radar map.</a> - Interactive Weather forecasting services.</li>
     <li><a href="https://darksky.net/poweredby/" target="_blank">Darksky forecast data and maps</a> - Weather forecasting and visualization services.</li>
