@@ -1413,7 +1413,7 @@ p.entry-meta {
 }
 
 
-.temperature-row, .forecastrow, .satelliterow, .eq-stats-row {
+.temperature-row, .forecastrow, .eq-stats-row {
 	border-bottom:1px solid #D7D7D7;
 }
 
@@ -1685,10 +1685,6 @@ p.entry-meta {
 
 .forecastrow {
 	text-align:center;
-}
-
-.satelliterow {
-        text-align:center;
 }
 
 

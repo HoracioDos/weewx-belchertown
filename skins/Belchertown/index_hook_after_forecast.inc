@@ -2,7 +2,6 @@
   <head>
   </head>
   <body>
-  <div class="row satelliterow">
       <div class="col-lg-12 satellite">
           <div class="satellite-title">
               #if $Extras.has_key("sat_title") and $Extras.sat_title != ""
@@ -10,7 +9,6 @@
               #end if
           </div>
       </div>
-  </div>
 <table>
   <tr>
     <td>
