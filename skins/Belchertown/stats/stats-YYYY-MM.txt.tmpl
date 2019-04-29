@@ -15,11 +15,11 @@
 #set $DayCount=0
 #set $TempAvgAmpl=0
 #set $BaroAvgAmpl=0
-$month_name $year_name $TAB $TAB $TAB TEMPERATURE($unit.label.outTemp.strip()) SUMMARY
+$month_name $year_name $TAB $TAB $TAB RESUMEN DE TEMPERATURA($unit.label.outTemp.strip())
                                                                                        
-                  MAX          MIN        HEAT  COOL     ------ TEMPERATURE HOURS -----
-     AVG   MAX   TEMP   MIN   TEMP  TEMP   DEG   DEG     >=     >=<    >=<    >=<     <
-DAY TEMP  TEMP   TIME  TEMP   TIME  AMPL  DAYS  DAYS     30   20-30  10-20   0-10     0
+                 HORA         HORA        HEAT  COOL     --DIST TEMPERATURA 24 HORAS---
+    TEMP  TEMP   TEMP  TEMP   TEMP  AMPL   DEG   DEG     >=     >=<    >=<    >=<     <
+DIA PROM   MAX    MAX   MIN    MIN  TERM  DAYS  DAYS     30   20-30  10-20   0-10     0
 ---------------------------------------------------------------------------------------
 #for $day in $month.days
     #set $VeryHotCount=0
@@ -60,11 +60,11 @@ $day.dateTime.format($D)
 #set $TempAvgAmpC = '{:5.1f}'.format($TempAvgAmpl)
 TOT$month.outTemp.avg.nolabel($Temp) $month.outTemp.max.nolabel($Temp)    $month.outTemp.maxtime.format($D)  $month.outTemp.min.nolabel($Temp)    $month.outTemp.mintime.format($D)  $TempAvgAmpC $month.heatdeg.sum.nolabel($Temp) $month.cooldeg.sum.nolabel($Temp)
 
-$month_name $year_name $TAB $TAB $TAB BAROMETER($unit.label.barometer.strip()) SUMMARY
+$month_name $year_name $TAB $TAB $TAB RESUMEN PRESION BAROMETRICA($unit.label.barometer.strip())
                                                                                              
-                      MAX            MIN          ------------- BAROMETER HOURS ------------ 
-       AVG     MAX   BARO     MIN   BARO   BARO     >=       >=<       >=<       >=<       <
-DAY   BARO    BARO   TIME    BARO   TIME   AMPL   1030 1030-1020 1020-1010 1010-1000    1000
+                     HORA           HORA          --------- DIST BAROMETRO 24 HORAS --------
+      BARO    BARO   BARO    BARO   BARO   BARO     >=       >=<       >=<       >=<       <
+DIA   PROM     MAX    MAX     MIN    MIN   AMPL   1030 1030-1020 1020-1010 1010-1000    1000
 --------------------------------------------------------------------------------------------
 #for $day in $month.days
     #set $VHBaroCount=0
@@ -105,11 +105,11 @@ $day.dateTime.format($D)
 #set $BaroAvgAmpC='{:5.1f}'.format($BaroAvgAmpl)
 TOT $month.barometer.avg.nolabel($Temp)  $month.barometer.max.nolabel($Temp)    $month.barometer.maxtime.format($D)    $month.barometer.min.nolabel($Temp)    $month.barometer.mintime.format($D)   $BaroAvgAmpC
 
-$month_name $year_name $TAB $TAB $TAB HUMIDITY($unit.label.outHumidity.strip()) AND RAIN($unit.label.rain.strip()) SUMMARY
+$month_name $year_name $TAB $TAB $TAB RESUMEN DE HUMEDAD($unit.label.outHumidity.strip()) Y PRECIPITACIONES($unit.label.rain.strip())
                                                                       
-                MAX         MIN         MAX    MAX   MIN    MIN  RAIN  ----- RAINRATE HOURS  ------
-    AVG  MAX    HUM  MIN    HUM   TOT  RAIN   RAIN  RAIN   RAIN  RATE   >=    >=<   >=<   >=<     < 
-DAY HUM  HUM   TIME  HUM   TIME  RAIN  RATE   TIME  RATE   TIME  AMPL  100 75-100 50-75 25-75    25
+               HORA        HORA               HORA         HORA        --- DIST PRECIP 24 HORAS ---
+     HUM HUM    HUM  HUM    HUM  PREC  PREC   PREC  PREC   PREC  AMPL   >=    >=<   >=<   >=<     < 
+DIA PROM MAX    MAX  MIN    MIN   TOT   MAX    MAX   MIN    MIN  PREC  100 75-100 50-75 25-75    25
 ---------------------------------------------------------------------------------------------------
 #for $day in $month.days
     #set $VHRainCount=0
@@ -138,7 +138,7 @@ DAY HUM  HUM   TIME  HUM   TIME  RAIN  RATE   TIME  RATE   TIME  AMPL  100 75-10
 #if $day.rain.count.raw
     #set $RainAmpl = $day.rainRate.minmax.raw - $day.rainRate.maxmin.raw
     #set $RainAmpC = '{:5.2f}'.format($RainAmpl)
-$day.dateTime.format($D,$NONE) $day.outHumidity.avg.nolabel($Hum,$NONE) $day.outHumidity.max.nolabel($Hum,$NONE) $day.outHumidity.maxtime.format($Time,$NONE) $day.outHumidity.min.nolabel($Hum,$NONE) $day.outHumidity.mintime.format($Time,$NONE) $day.rain.sum.nolabel($Rain,$NONE) $day.rainRate.minmax.nolabel($Rain,$NONE) $day.rainRate.minmaxtime.format($Time,$NONE) $day.rainRate.maxmin.nolabel($Rain,$NONE) $day.rainRate.maxmintime.format($Time,$NONE) $RainAmpC   $VHRainC     $HRainC    $NRainC    $LRainC    $VLRainC
+$day.dateTime.format($D,$NONE)  $day.outHumidity.avg.nolabel($Hum,$NONE)$day.outHumidity.max.nolabel($Hum,$NONE) $day.outHumidity.maxtime.format($Time,$NONE) $day.outHumidity.min.nolabel($Hum,$NONE) $day.outHumidity.mintime.format($Time,$NONE) $day.rain.sum.nolabel($Rain,$NONE) $day.rainRate.minmax.nolabel($Rain,$NONE) $day.rainRate.minmaxtime.format($Time,$NONE) $day.rainRate.maxmin.nolabel($Rain,$NONE) $day.rainRate.maxmintime.format($Time,$NONE) $RainAmpC   $VHRainC     $HRainC    $NRainC    $LRainC    $VLRainC
 #else
 $day.dateTime.format($D)
 #end if
@@ -146,11 +146,11 @@ $day.dateTime.format($D)
 ---------------------------------------------------------------------------------------------------
 TOT$month.outHumidity.avg.nolabel($Hum,$NONE) $month.outHumidity.max.nolabel($Hum,$NONE)    $month.outHumidity.maxtime.format($D)  $month.outHumidity.min.nolabel($Hum,$NONE)    $month.outHumidity.mintime.format($D)  $month.rain.sum.nolabel($Rain,$NONE) $month.rainRate.meanmax.nolabel($Rain,$NONE)        $month.rainRate.meanmin.nolabel($Rain,$NONE) 
 
-$month_name $year_name $TAB $TAB $TAB WIND SPEED($unit.label.windSpeed.strip()) SUMMARY
+$month_name $year_name $TAB $TAB RESUMEN DE VELOCIDAD DEL VIENTO($unit.label.windSpeed.strip())
 
-      AVG    MAX    MAX    MIN    MIN        ------- WIND HOURS -------
-     WIND   WIND   WIND   WIND   WIND  WIND  >=    >=<   >=<   >=<    <  DOM
-DAY SPEED  SPEED   TIME  SPEED   TIME  AMPL  40  40-30 30-20 20-10   10  DIR
+                   HORA          HORA        ----- DIST VIENTO 24 HORAS ----
+    VELOC  VELOC  VELOC  VELOC  VELOC  AMPL  >=    >=<   >=<   >=<    <  DOM
+DIA  PROM    MAX    MAX    MIN    MIN VELOC  40  40-30 30-20 20-10   10  DIR
 ----------------------------------------------------------------------------
 #for $day in $month.days
     #set $VHWindCount=0
