@@ -1638,8 +1638,8 @@ p.entry-meta {
 .small-almanac {
 	/* padding-top:5px; */
 	border-top:1px solid #D7D7D7;
-    padding:15px;
-    margin: 0 -15px 0 -15px;
+        padding:15px;
+        margin: 0 -15px 0 -15px;
 }
 
 .sun, .moon {
@@ -1659,8 +1659,7 @@ p.entry-meta {
 
 .moon-container {
 	font-size:14.5px; /* Linux Browsers */
-   /*   text-align:left; */
-        color:#808080;
+   /*     color:#808080; */
 }
 
 .moon {
