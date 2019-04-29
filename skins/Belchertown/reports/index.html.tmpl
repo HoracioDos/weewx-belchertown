@@ -53,6 +53,10 @@
                         </div>
                     </div>
                     <a href="#" class="stats_direct_link" download>$obs.label.reports_click_here_link</a> $obs.label.reports_view_more
+                    #if $Extras.has_key("reports_review") and $Extras.reports_review == "1"
+                        <br>
+                        <strong>¡Importante!</strong> $Extras.reports_review_text <strong> $current.dateTime.format("%B-%Y").</strong>
+                    #end if
                     <br><br>
                     <div class="stats_report_container">
                         <pre id="stats_contents"></pre>
