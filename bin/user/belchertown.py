@@ -150,6 +150,14 @@ class getData(SearchList):
                     timespan_chart_list.append( plotname )
             charts[chart_timespan] = timespan_chart_list
         
+        # Create a dict of chart titles for use on the graphs page. If no title defined, use the chartgroup name
+        chartgroup_titles = OrderedDict()
+        for chartgroup in chart_dict.sections:
+            if "title" in chart_dict[chartgroup]:
+                chartgroup_titles[chartgroup] = chart_dict[chartgroup]["title"]
+            else:
+                chartgroup_titles[chartgroup] = chartgroup        
+
         # Set a default radar URL using station's lat/lon. Moved from skin.conf so we can get station lat/lon from weewx.conf. A lot of stations out there with Belchertown 0.1 through 0.7 are showing the visitor's location and not the proper station location because nobody edited the radar_html which did not have lat/lon set previously.
         if self.generator.skin_dict['Extras']['radar_html'] == "":
             lat = self.generator.config_dict['Station']['latitude']
@@ -633,7 +641,7 @@ class getData(SearchList):
                 
                 # Special rain rounding and label gathering, save as dayRain for JavaScript and MQTT
                 rain_obs_group = weewx.units.obs_group_dict["rain"]
-                rain_obs_unit = converter.group_unit_dict[rain_obs_group]
+                rain_obs_unit = self.generator.converter.group_unit_dict[rain_obs_group]
                 rain_obs_round = self.generator.skin_dict['Units']['StringFormats'].get(rain_obs_unit, "0")[2]
                 rain_obs_unit_label = self.generator.skin_dict['Units']['Labels'].get(rain_obs_unit, "")
                 station_obs_rounding_json["dayRain"] = str(rain_obs_round)
@@ -641,7 +649,7 @@ class getData(SearchList):
 
                 # Special rainRate rounding and label gathering
                 rainRate_obs_group = weewx.units.obs_group_dict["rainRate"]
-                rainRate_obs_unit = converter.group_unit_dict[rainRate_obs_group]
+                rainRate_obs_unit = self.generator.converter.group_unit_dict[rainRate_obs_group]
                 rainRate_obs_round = self.generator.skin_dict['Units']['StringFormats'].get(rainRate_obs_unit, "0")[2]
                 rainRate_obs_unit_label = self.generator.skin_dict['Units']['Labels'].get(rainRate_obs_unit, "")
                 station_obs_rounding_json["rainRate"] = str(rainRate_obs_round)
@@ -660,7 +668,7 @@ class getData(SearchList):
                 # Find the group this observation is in 
                 obs_group = weewx.units.obs_group_dict[obs]
                 # Find the group_name for this obs group
-                obs_unit = converter.group_unit_dict[obs_group]
+                obs_unit = self.generator.converter.group_unit_dict[obs_group]
                 # Find the number of decimals to round to based on group name
                 obs_round = self.generator.skin_dict['Units']['StringFormats'].get(obs_unit, "0")[2]
                 # Get the unit's label
@@ -768,6 +776,7 @@ class getData(SearchList):
                                   'radar_html': radar_html,
                                   'archive_interval_ms': archive_interval_ms,
                                   'charts': json.dumps(charts),
+                                  'chartgroup_titles': json.dumps(chartgroup_titles),
                                   'alltime' : all_stats,
                                   'year_outTemp_range_max': year_outTemp_range_max,
                                   'year_outTemp_range_min': year_outTemp_range_min,
@@ -877,6 +886,10 @@ class JsonGenerator(weewx.reportengine.ReportGenerator):
             colors = chart_options.get("colors", "#7cb5ec, #434348, #90ed7d, #f7a35c, #8085e9, #f15c80, #e4d354, #8085e8, #8d4653, #91e8e1") # Default back to Highcharts standards
             output[chart_group]["colors"] = colors
             
+            chartgroup_title = chart_options.get('title', None) # chartgroup_title is used on the graphs page
+            if chartgroup_title:
+                output[chart_group]["chartgroup_title"] = chartgroup_title
+            
             # Loop through each chart within the chart_group
             for plotname in self.chart_dict[chart_group].sections:
                 output[chart_group][plotname] = {}
@@ -922,8 +935,8 @@ class JsonGenerator(weewx.reportengine.ReportGenerator):
 
                 polar = plot_options.get('polar', None)
                 if polar:
-                    output[chart_group][plotname]["polar"] = polar    
-                
+                    output[chart_group][plotname]["polar"] = polar
+                                
                 # Loop through each observation within the chart chart_group
                 for line_name in self.chart_dict[chart_group][plotname].sections:
                     output[chart_group][plotname]["series"][line_name] = {}

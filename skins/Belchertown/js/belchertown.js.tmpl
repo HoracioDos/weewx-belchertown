@@ -802,7 +802,7 @@ Highcharts.setOptions({
     }
 });
 
-function showChart(json_file) {
+function showChart(json_file, prepend_renderTo=false) {
         
     jQuery.getJSON('$belchertown_root_url/json/' + json_file + '.json', function(data) {
         
@@ -814,6 +814,11 @@ function showChart(json_file) {
             if ( plotname == "belchertown_version" ) {
                 return true;
             }
+            
+            // Ignore the chartgroup_title since this "plot" has no other options
+            if ( plotname == "chartgroup_title" ) {
+                return true;
+            }            
             
             // Set the chart colors, then return right away since this "plot" has no other options
             if ( plotname == "colors" ) { 
@@ -996,7 +1001,11 @@ function showChart(json_file) {
             }
             
             // Set the chart render div and title
-            options.chart.renderTo = renderTo;
+            if ( prepend_renderTo ) {
+                options.chart.renderTo = json_file + "_" + renderTo;
+            } else {
+                options.chart.renderTo = renderTo;
+            }
             options.chart.type = type;
             options.title.text = title;
             options.plotOptions.area.gapSize = gapsize;
