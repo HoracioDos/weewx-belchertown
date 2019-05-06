@@ -156,7 +156,18 @@ class getData(SearchList):
             if "title" in chart_dict[chartgroup]:
                 chartgroup_titles[chartgroup] = chart_dict[chartgroup]["title"]
             else:
-                chartgroup_titles[chartgroup] = chartgroup        
+                chartgroup_titles[chartgroup] = chartgroup
+        
+        # Setup the Graphs page button row based on the skin extras option and the button_text from graphs.conf
+        graph_page_buttons = ""
+        graph_page_graphgroup_buttons = self.generator.skin_dict['Extras']['graph_page_graphgroup_buttons']
+        for gg in graph_page_graphgroup_buttons:
+            if "button_text" in chart_dict[gg]:
+                button_text = chart_dict[gg]["button_text"]
+            else:
+                button_text = gg
+            graph_page_buttons += '<a href="./?graph='+gg+'"><button type="button" class="btn btn-primary">' + button_text + '</button></a>'
+            graph_page_buttons += " " # Spacer between the button
 
         # Set a default radar URL using station's lat/lon. Moved from skin.conf so we can get station lat/lon from weewx.conf. A lot of stations out there with Belchertown 0.1 through 0.7 are showing the visitor's location and not the proper station location because nobody edited the radar_html which did not have lat/lon set previously.
         if self.generator.skin_dict['Extras']['radar_html'] == "":
@@ -777,6 +788,8 @@ class getData(SearchList):
                                   'archive_interval_ms': archive_interval_ms,
                                   'charts': json.dumps(charts),
                                   'chartgroup_titles': json.dumps(chartgroup_titles),
+                                  'chartgroup_titles_dict': chartgroup_titles,
+                                  'graph_page_buttons': graph_page_buttons,
                                   'alltime' : all_stats,
                                   'year_outTemp_range_max': year_outTemp_range_max,
                                   'year_outTemp_range_min': year_outTemp_range_min,
@@ -918,6 +931,15 @@ class JsonGenerator(weewx.reportengine.ReportGenerator):
                     minstamp, maxstamp = archiveMonthSpan( timespan.stop )
                 elif time_length == "year":
                     minstamp, maxstamp = archiveYearSpan( timespan.stop )
+                elif time_length == "yesterday":
+                    minstamp, maxstamp = archiveDaySpan( timespan.stop, days_ago=1 )
+                elif time_length == "last_week":
+                    week_start = to_int(self.config_dict["Station"].get('week_start', 6))              
+                    minstamp, maxstamp = archiveWeekSpan( timespan.stop, week_start, weeks_ago=1 )
+                elif time_length == "last_month":
+                    minstamp, maxstamp = archiveMonthSpan( timespan.stop, months_ago=1 )
+                elif time_length == "last_year":
+                    minstamp, maxstamp = archiveYearSpan( timespan.stop, years_ago=1 )
                 else:
                     # Rolling timespans using seconds
                     (minstamp, maxstamp, timeinc) = weeplot.utilities.scaletime(plotgen_ts - int(time_length), plotgen_ts)
