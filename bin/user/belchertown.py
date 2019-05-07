@@ -51,7 +51,7 @@ def logerr(msg):
     logmsg(syslog.LOG_ERR, msg)
     
 # Print version in syslog for easier troubleshooting
-VERSION = "1.0rc8"
+VERSION = "1.0rc8.1"
 loginf("version %s" % VERSION)
 
 class getData(SearchList):
@@ -161,6 +161,9 @@ class getData(SearchList):
         # Setup the Graphs page button row based on the skin extras option and the button_text from graphs.conf
         graph_page_buttons = ""
         graph_page_graphgroup_buttons = self.generator.skin_dict['Extras']['graph_page_graphgroup_buttons']
+        # Check if this is a list. If not then we have 1 item, so force it into a list
+        if isinstance(graph_page_graphgroup_buttons, list) is False:
+            graph_page_graphgroup_buttons = graph_page_graphgroup_buttons.split()
         for gg in graph_page_graphgroup_buttons:
             if "button_text" in chart_dict[gg]:
                 button_text = chart_dict[gg]["button_text"]
@@ -632,9 +635,12 @@ class getData(SearchList):
         station_obs_trend_json = OrderedDict()
         station_obs_html = ""
         station_observations = self.generator.skin_dict['Extras']['station_observations']
+        # Check if this is a list. If not then we have 1 item, so force it into a list
+        if isinstance(station_observations, list) is False:
+            station_observations = station_observations.split()
         currentStamp = manager.lastGoodStamp()
         current = weewx.tags.CurrentObj(db_lookup, None, currentStamp, self.generator.formatter, self.generator.converter)
-        for obs in self.generator.skin_dict['Extras']['station_observations']:
+        for obs in station_observations:
             if obs == "visibility":
                 try:
                     obs_output = str(visibility) + " " + str(visibility_unit)
@@ -922,6 +928,10 @@ class JsonGenerator(weewx.reportengine.ReportGenerator):
                 
                 # Look for any keyword timespans first and default to those start/stop times for the chart
                 time_length = plot_options.get('time_length', 86400)
+                time_ago = int(plot_options.get('time_ago', 1))
+                day_specific = plot_options.get('day_specific', 1) # Force a day so we don't error out
+                month_specific = plot_options.get('month_specific', 8) # Force a month so we don't error out
+                year_specific = plot_options.get('year_specific', 2019) # Force a year so we don't error out
                 if time_length == "today":
                     minstamp, maxstamp = archiveDaySpan( timespan.stop )
                 elif time_length == "week":
@@ -931,15 +941,30 @@ class JsonGenerator(weewx.reportengine.ReportGenerator):
                     minstamp, maxstamp = archiveMonthSpan( timespan.stop )
                 elif time_length == "year":
                     minstamp, maxstamp = archiveYearSpan( timespan.stop )
-                elif time_length == "yesterday":
-                    minstamp, maxstamp = archiveDaySpan( timespan.stop, days_ago=1 )
-                elif time_length == "last_week":
+                elif time_length == "day_ago":
+                    minstamp, maxstamp = archiveDaySpan( timespan.stop, days_ago=time_ago )
+                elif time_length == "week_ago":
                     week_start = to_int(self.config_dict["Station"].get('week_start', 6))              
-                    minstamp, maxstamp = archiveWeekSpan( timespan.stop, week_start, weeks_ago=1 )
-                elif time_length == "last_month":
-                    minstamp, maxstamp = archiveMonthSpan( timespan.stop, months_ago=1 )
-                elif time_length == "last_year":
-                    minstamp, maxstamp = archiveYearSpan( timespan.stop, years_ago=1 )
+                    minstamp, maxstamp = archiveWeekSpan( timespan.stop, week_start, weeks_ago=time_ago )
+                elif time_length == "month_ago":
+                    minstamp, maxstamp = archiveMonthSpan( timespan.stop, months_ago=time_ago )
+                elif time_length == "year_ago":
+                    minstamp, maxstamp = archiveYearSpan( timespan.stop, years_ago=time_ago )
+                elif time_length == "day_specific":
+                    # Set an arbitrary hour within the specific day to get that full day timespan and not the day before. e.g. 1pm
+                    day_dt = datetime.datetime.strptime(str(year_specific) + '-' + str(month_specific) + '-' + str(day_specific) + ' 13', '%Y-%m-%d %H')
+                    daystamp = int(time.mktime(day_dt.timetuple()))
+                    minstamp, maxstamp = archiveDaySpan( daystamp )
+                elif time_length == "month_specific":
+                    # Set an arbitrary day within the specific month to get that full month timespan and not the day before. e.g. 5th day
+                    month_dt = datetime.datetime.strptime(str(year_specific) + '-' + str(month_specific) + '-5', '%Y-%m-%d')
+                    monthstamp = int(time.mktime(month_dt.timetuple()))
+                    minstamp, maxstamp = archiveMonthSpan( monthstamp )
+                elif time_length == "year_specific":
+                    # Get a date in the middle of the year to get the full year epoch so weewx can find the year timespan. 
+                    year_dt = datetime.datetime.strptime(str(year_specific) + '-8-1', '%Y-%m-%d')
+                    yearstamp = int(time.mktime(year_dt.timetuple()))
+                    minstamp, maxstamp = archiveYearSpan( yearstamp )
                 else:
                     # Rolling timespans using seconds
                     (minstamp, maxstamp, timeinc) = weeplot.utilities.scaletime(plotgen_ts - int(time_length), plotgen_ts)
@@ -1072,6 +1097,13 @@ class JsonGenerator(weewx.reportengine.ReportGenerator):
             windSpeed_vt = self.converter.convert(windSpeed_vt)
             usageRound = int(self.skin_dict['Units']['StringFormats'].get(windSpeed_vt[2], "2f")[-2])
             windSpeedRound_vt = [self._roundNone(x, usageRound) for x in windSpeed_vt[0]]
+            
+            # Exit if the vectors are None
+            if windDir_vt[1] == None or windSpeed_vt[1] == None:
+                emptyWindRose = [{ "name": "",            
+                    "data": []
+                  }]
+                return emptyWindRose
             
             # Get the unit label from the skin dict for speed. 
             windSpeedUnit = windSpeed_vt[1]
