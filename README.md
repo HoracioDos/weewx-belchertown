@@ -1,6 +1,6 @@
 # Customized Belchertown weewx skin
 
-This fork from [weewx-belchertown skin](https://github.com/poblabs/weewx-belchertown) have been customized mainly to change some small aspects in the layout and style. Some other modifications are related to my own needs and interests. This version was synched upstream to **v1.0rc8.2** on **May 7, 2019 at night** and everything works fine except for moon phases icons.
+This fork from [weewx-belchertown skin](https://github.com/poblabs/weewx-belchertown) have been customized mainly to change some small aspects in the layout and style. Some other modifications are related to my own needs and interests. This version was synched upstream to **v1.0rc8.2** on **May 8, 2019** and everything works fine except for moon phases icons.
 
 
 
