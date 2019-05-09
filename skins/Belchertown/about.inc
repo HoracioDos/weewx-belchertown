@@ -38,14 +38,31 @@
   #end if
 #end for
 
-<p>Estación meteorológica modelo: $station.hardware situada en el barrio de <a href="https://es.wikipedia.org/wiki/Colegiales_(Buenos_Aires)" target="_blank"> Colegiales</a> , CABA - Argentina ($station.latitude[0]&deg;$station.latitude[1]' $station.latitude[2], $station.longitude[0]&deg;$station.longitude[1]' $station.longitude[2] a $station.altitude de altura.)</p>
+#if $Extras.has_key("show_gps_location") and $Extras.show_gps_location == '1'
+  <p>Estación meteorológica modelo: $station.hardware situada en el barrio de <a href="https://es.wikipedia.org/wiki/Colegiales_(Buenos_Aires)" target="_blank"> Colegiales</a> , CABA - Argentina ($station.latitude[0]&deg;$station.latitude[1]' $station.latitude[2], $station.longitude[0]&deg;$station.longitude[1]' $station.longitude[2] a $station.altitude de altura.)
+<br>
+Debido a la geografia urbana donde se encuentra instalada la estación, la misma no adhiere completamente a las recomendaciones establecidas por la WMO (World Meteorological Organization) para su emplazamiento. A pesar de ello, las mediciones meteorológicas se ajustan por software para lograr la mayor exactitud posible.
+<br>
+  </p>
+#else
+  <p>Estación meteorológica modelo: $station.hardware situada en el barrio de <a href="https://es.wikipedia.org/wiki/Colegiales_(Buenos_Aires)" target="_blank"> Colegiales</a> , CABA - Argentina.
+<br>
+Debido a la geografia urbana donde se encuentra instalada la estación, la misma no adhiere completamente a las recomendaciones establecidas por la WMO (World Meteorological Organization) para su emplazamiento. A pesar de ello, las mediciones meteorológicas se ajustan por software para lograr la mayor exactitud posible.
+<br>
+  </p>
+#end if
 
 <div class="col-sm-4">
     #if $Extras.has_key("station_photo") and $Extras.station_photo != ''
-      <img src="$Extras.station_photo" alt="$station.location" title="$station.location">
+       <div class="about-title">
+          <p>Estación:</p>
+       </div>
+       <img class="station-photo" src="$Extras.station_photo" alt=$station.hardware title=$station.hardware>
     #end if
-    <br>
-    <br>
+    <br><br>
+    <div class="about-title">
+      <p>Estado:</p>
+    </div>
     <table>
     #if $have_conn
       <tr><th>Conectividad</th><th></th></tr>
@@ -129,7 +146,51 @@
 </div>
 
 <div class="col-sm-8">
-<p>Esta estación sube datos a los siguientes sitios:</p>
+    <div class="about-title">
+        <p>Especificaciones:</p>
+    </div>
+    <table>
+      <tr><th>Temperatura</th><th></th></tr>
+        <tr>
+          <td>Rango de Temperatura exterior</td>
+          <td>-40°C ~ 65°C</td>
+        </tr>
+        <tr>
+          <td>Precisión de Temperatura</td>
+          <td>± 1,0°C</td>
+        </tr>
+      <tr><th>Humedad</th><th></th></tr>
+        <tr>
+          <td>Rango de Humedad</td>
+          <td>1% RH-99%</td>
+        </tr>        
+        <tr>
+          <td>Precisión de Humedad</td>
+          <td> ± 5% bajo -20°C a 65°C & 20%-98%</td>
+        </tr>  
+      <tr><th>Velocidad del Viento</th><th></th></tr>
+        <tr>
+          <td>Rango de Velocidad del Viento</td>
+          <td>0 ~ 50,0 m/s</td>
+        </tr>
+        <tr>
+          <td>Precisión de Velocidad del Viento</td>
+          <td>± 1 m/s (velocidad del viento <10 m/s), ± 10% (velocidad del viento >10 m/s)</td>
+        </tr>
+      <tr><th>Pluviosidad</th><th></th></tr>
+        <tr>
+          <td>Rango de Pluviosidad</td>
+          <td>0 ~ 99,999 mm</td>
+        </tr>
+        <tr>
+          <td>Precisión de Pluviosidad</td>
+          <td>± 1,5 mm</td>
+        </tr>
+    </table>  
+<br>
+<div class="about-title">
+  <p>Esta estación sube datos a los siguientes sitios:</p>
+</div>
 <ul>
     <li><a href="http://www.wunderground.com/personal-weather-station/dashboard?ID=KMABELCH13" target="_blank">TEST123 </a>en Weather Underground utilizando rapid fire.</li>
     <li><a href="http://www.wunderground.com/personal-weather-station/dashboard?ID=KMABELCH13" target="_blank">TEST123 </a>en Windy.com.</li>
@@ -138,8 +199,9 @@
     <li><a href="https://openweathermap.org/city" target="_blank">TEST123</a> en OpenWeatherMap.org</li>
     <li><a href="https://app.weathercloud.net/d0882834506" target="_blank">TEST123</a> en Weathercloud.net</li>
 </ul>
-
-<p>Recursos utilizados y Créditos:</p>
+<div class="about-title">
+  <p>Créditos:</p>
+</div>  
 <ul>
     <li><a href="http://www.weewx.com/" target="_blank">Weewx - Weather Station Software Version $station.version</a> - Thanks to Tom Keffer and Matthew Wall for making it available for everyone.</li>
     <li><a href="https://github.com/poblabs/weewx-belchertown" target="_blank">Belchertown Skin Version $belchertown_version</a> - Thanks to Pat O'Brien for creating such a wonderful skin.</li>

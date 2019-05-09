@@ -129,7 +129,8 @@ li {
 
 b,
 strong {
-	font-weight: 500;
+    /*	font-weight: 700; */
+	font-weight: bolder;
 }
 
 blockquote,
@@ -1695,6 +1696,17 @@ p.entry-meta {
         margin-bottom:5px;
 }
 
+.about-title {
+        text-align:left;
+        font-size:25px;
+        margin-bottom:5px;
+}
+
+.station-photo{
+   width:   370px;
+   height:  520px;
+}
+
 .forecast-subtitle {
 	font-size:14px;
 }
@@ -1771,7 +1783,7 @@ p.entry-meta {
     font-size:30px;
     font-weight:400;
     text-align:center;
-    padding:10px 0px;
+ /*   padding:10px 0px; Fix */
 }
 
 .wx-records-description {
