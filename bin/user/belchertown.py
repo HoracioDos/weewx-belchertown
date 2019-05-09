@@ -51,7 +51,7 @@ def logerr(msg):
     logmsg(syslog.LOG_ERR, msg)
     
 # Print version in syslog for easier troubleshooting
-VERSION = "1.0rc8.3"
+VERSION = "1.0rc8.4"
 loginf("version %s" % VERSION)
 
 class getData(SearchList):
@@ -971,6 +971,9 @@ class JsonGenerator(weewx.reportengine.ReportGenerator):
                 
                 chart_title = plot_options.get("title", "")
                 output[chart_group][plotname]["options"]["title"] = chart_title
+
+                chart_subtitle = plot_options.get("subtitle", "")
+                output[chart_group][plotname]["options"]["subtitle"] = chart_subtitle
                 
                 # Get the type of plot ("bar', 'line', 'spline', or 'scatter')
                 plottype = plot_options.get('type', 'line')
