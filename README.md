@@ -1,6 +1,6 @@
 # Customized Belchertown weewx skin
 
-This fork from [weewx-belchertown skin](https://github.com/poblabs/weewx-belchertown) have been customized mainly to change some small aspects in the layout and style. Some other modifications are related to my own needs and interests. This version was synched upstream to **v1.0rc9** on **May 15, 2019**. 
+This fork from [weewx-belchertown skin](https://github.com/poblabs/weewx-belchertown) have been customized mainly to change some small aspects in the layout and style. Some other modifications are related to my own needs and interests. This version was synched upstream to **v1.0rc9**.1 on **May 15, 2019**. 
 
 
 
