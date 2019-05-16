@@ -1,2 +1,3 @@
 User-agent: * 
 Disallow: 
+Sitemap: https://climacolegiales.com.ar/sitemap.xml
