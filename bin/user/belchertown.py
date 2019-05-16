@@ -740,11 +740,11 @@ class getData(SearchList):
         """
         Social Share
         """
-        station_location = self.generator.config_dict["Station"]["location"]
         facebook_enabled = self.generator.skin_dict['Extras']['facebook_enabled']
         twitter_enabled = self.generator.skin_dict['Extras']['twitter_enabled']
-        twitter_owner = self.generator.skin_dict['Extras']['twitter_owner']
-        twitter_hashtags = self.generator.skin_dict['Extras']['twitter_hashtags']
+        twitter_text = label_dict["twitter_text"]
+        twitter_owner = label_dict["twitter_owner"]
+        twitter_hashtags = label_dict["twitter_hashtags"]
                 
         if facebook_enabled == "1": 
             facebook_html = """
@@ -766,8 +766,8 @@ class getData(SearchList):
                 <script>
                     !function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');
                 </script>
-                <a href="https://twitter.com/share" class="twitter-share-button" data-url="%s" data-text="%s Weather Conditions" data-via="%s" data-hashtags="%s">Tweet</a>
-            """ % ( belchertown_root_url, station_location, twitter_owner, twitter_hashtags )
+                <a href="https://twitter.com/share" class="twitter-share-button" data-url="%s" data-text="%s" data-via="%s" data-hashtags="%s">Tweet</a>
+            """ % ( belchertown_root_url, twitter_text, twitter_owner, twitter_hashtags )
         else:
             twitter_html = ""
         
@@ -1440,11 +1440,17 @@ class JsonGenerator(weewx.reportengine.ReportGenerator):
                 sql_lookup = 'SELECT strftime("{0}", datetime(dateTime, "unixepoch")) as {1}, IFNULL({2}({3}),0) as obs FROM archive WHERE dateTime >= {4} AND dateTime <= {5} GROUP BY {6};'.format( strformat, xaxis_groupby, aggregate_type, obs_lookup, start_ts, end_ts, xaxis_groupby )
             elif driver == "weedb.mysql":
                 sql_lookup = 'SELECT FROM_UNIXTIME( dateTime, "%{0}" ) AS {1}, IFNULL({2}({3}),0) as obs FROM archive WHERE dateTime >= {4} AND dateTime <= {5} GROUP BY {6};'.format( strformat, xaxis_groupby, aggregate_type, obs_lookup, start_ts, end_ts, xaxis_groupby )
-                
+            
+            # Setup converter
+            obs_group = weewx.units.obs_group_dict[obs_lookup]
+            obs_unit = self.converter.group_unit_dict[obs_group]
+            
             query = self.archive.genSql( sql_lookup )
             for row in query:
                 xaxis_labels.append( row[0] )
-                obsvalues.append( row[1] )
+                row_tuple = (row[1], obs_unit, obs_group)
+                row_converted = self.converter.convert( row_tuple )
+                obsvalues.append( row_converted[0] )
 
             # If the values are to be mirrored, we need to make them negative
             if mirrored_value:
