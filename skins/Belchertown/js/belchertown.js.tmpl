@@ -485,7 +485,10 @@ function update_forecast_data( data ) {
         visibility_unit = ""
     }
     try {
-        jQuery(".station-observations .visibility").html( data["currently"]["visibility"] + " " + visibility_unit );
+        visibility_output = parseFloat(parseFloat(data["currently"]["visibility"])).toLocaleString("$system_locale_js", {minimumFractionDigits: 2, maximumFractionDigits: 2}) + " " + visibility_unit;
+
+        jQuery(".station-observations .visibility").html( visibility_output );
+        //jQuery(".station-observations .visibility").html( data["currently"]["visibility"] + " " + visibility_unit );
     } catch(err) {
         // Visibility not in the station observation table, so silently exit
     }
@@ -1210,11 +1213,16 @@ function showChart(json_file, prepend_renderTo=false) {
                 
                 // Barometer chart plots get a higher precision yAxis tick
                 if (s.obsType == "barometer") {
-                    if ( ! s.yaxis_tickinterval ) { 
+                    if ( typeof s.yaxis_tickinterval === "undefined" ) { 
                         // If no tick interval override, set 0.01 as default tick interval to satisfy an old request for this level of precision. 
                         options.yAxis[this_yAxis].tickInterval = 0.01;
                     }
-                    options.yAxis[this_yAxis].labels = { format: '{value:.2f}' }
+                    // Define yAxis label float format if rounding is defined. Default to 2 decimals if nothing defined
+                    if ( typeof s.rounding !== "undefined" ) {
+                        options.yAxis[this_yAxis].labels = { format: '{value:.'+s.rounding+'f}' }
+                    } else {
+                        options.yAxis[this_yAxis].labels = { format: '{value:.2f}' }
+                    }
                 }
                 
                 // Rain, RainRate and rainTotal (special Belchertown skin observation) get yAxis precision
