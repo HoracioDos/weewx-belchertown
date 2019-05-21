@@ -121,7 +121,10 @@
                     #end if
                     <div class="clear"></div>
                     #if $Extras.has_key("forecast_alert_enabled") and $Extras.forecast_alert_enabled == '1'
-                    <div class="wx-stn-alert"><span class="wx-stn-alert-text"></span></div><!-- AJAX -->
+                        <div class="wx-stn-alert"><span class="wx-stn-alert-text"></span></div><!-- AJAX -->
+                        #if os.path.exists("alerts.inc")
+                            #include "alerts.inc"
+                        #end if
                     #end if
                 </div>
                 

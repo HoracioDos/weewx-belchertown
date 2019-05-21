@@ -1400,6 +1400,19 @@ p.entry-meta {
 
 .wx-stn-alert i { color: red; }
 
+.alerts {
+    color: #FF0000;
+    font-size: 18px;
+    border: none;
+    padding: 5px;
+    font-weight: bold;
+}
+
+.alerts_text {
+ /* padding-left: 10px; Fix CC */
+}
+
+
 .wx-fb, .wx-share-sep, .wx-twitter {
     display:inline-block;
 }
