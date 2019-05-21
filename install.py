@@ -9,7 +9,7 @@ def loader():
 class ExfoliationInstaller(ExtensionInstaller):
     def __init__(self):
         super(ExfoliationInstaller, self).__init__(
-            version="1.0rc8.1",
+            version="1.0rc9.2",
             name='Belchertown',
             description='A clean modern skin with real time streaming updates and interactive charts. Modeled after BelchertownWeather.com',
             author="Pat OBrien",
@@ -18,10 +18,6 @@ class ExfoliationInstaller(ExtensionInstaller):
                 'StdReport': {
                     'Belchertown': {
                         'skin':'Belchertown',
-                        'HTML_ROOT':'belchertown'
-                    },
-                    'Highcharts_Belchertown': {
-                        'skin':'Highcharts_Belchertown',
                         'HTML_ROOT':'belchertown'
                     }
                 }
@@ -34,8 +30,11 @@ class ExfoliationInstaller(ExtensionInstaller):
                                           'skins/Belchertown/header.html.tmpl',
                                           'skins/Belchertown/index.html.tmpl',
                                           'skins/Belchertown/about.inc',
+                                          'skins/Belchertown/celestial.inc',
+                                          'skins/Belchertown/graphs.conf',
                                           'skins/Belchertown/page-header.inc',
                                           'skins/Belchertown/manifest.json.tmpl',
+                                          'skins/Belchertown/records.inc,
                                           'skins/Belchertown/index_hook_after_forecast.inc',
                                           'skins/Belchertown/index_hook_daylight.inc',
                                           'skins/Belchertown/robots.txt',
@@ -90,14 +89,6 @@ class ExfoliationInstaller(ExtensionInstaller):
                                                  'skins/Belchertown/images/wind.png',
                                                  'skins/Belchertown/images/index.html'
                                                 ]
-                    ),
-                   ('skins/Highcharts_Belchertown', ['skins/Highcharts_Belchertown/skin.conf']
-                    ),
-                   ('skins/Highcharts_Belchertown/json', ['skins/Highcharts_Belchertown/json/day.json.tmpl',
-                                                          'skins/Highcharts_Belchertown/json/week.json.tmpl',
-                                                          'skins/Highcharts_Belchertown/json/month.json.tmpl',
-                                                          'skins/Highcharts_Belchertown/json/year.json.tmpl',
-                                                         ]
                     )
                    ]
         )

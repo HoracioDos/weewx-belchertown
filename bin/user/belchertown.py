@@ -51,7 +51,7 @@ def logerr(msg):
     logmsg(syslog.LOG_ERR, msg)
     
 # Print version in syslog for easier troubleshooting
-VERSION = "1.0rc9.1"
+VERSION = "1.0rc9.2"
 loginf("version %s" % VERSION)
 
 class getData(SearchList):
@@ -1067,8 +1067,12 @@ class JsonGenerator(weewx.reportengine.ReportGenerator):
                     output[chart_group][plotname]["series"][line_name]["name"] = name
 
                     # Set the yAxis label. Place into series for custom JavaScript. Highcharts will ignore these by default
-                    output[chart_group][plotname]["options"]["yAxisLabel"] = "(" + unit_label.strip() + ")"
-                    output[chart_group][plotname]["series"][line_name]["yAxisLabel"] = "(" + unit_label.strip() + ")"
+                    yAxisLabel = plot_options.get('yAxisLabel', None)
+                    if yAxisLabel is None:
+                        yAxisLabel = "(" + unit_label.strip() + ")"
+                    output[chart_group][plotname]["options"]["yAxisLabel"] = yAxisLabel
+                    output[chart_group][plotname]["series"][line_name]["yAxisLabel"] = yAxisLabel
+                        
                                     
                     # Set the yAxis min and max if present. Useful for the rxCheckPercent plots
                     yaxis_min = plot_options.get('yaxis_min', None)
@@ -1444,14 +1448,23 @@ class JsonGenerator(weewx.reportengine.ReportGenerator):
             else:
                 strformat = "%m"
                 
+            # Default catch all in case the aggregate_type isn't defined, default to sum
+            if aggregate_type is None:
+                aggregate_type = "sum"
+                
             if driver == "weedb.sqlite":
                 sql_lookup = 'SELECT strftime("{0}", datetime(dateTime, "unixepoch")) as {1}, IFNULL({2}({3}),0) as obs FROM archive WHERE dateTime >= {4} AND dateTime <= {5} GROUP BY {6};'.format( strformat, xaxis_groupby, aggregate_type, obs_lookup, start_ts, end_ts, xaxis_groupby )
             elif driver == "weedb.mysql":
                 sql_lookup = 'SELECT FROM_UNIXTIME( dateTime, "%{0}" ) AS {1}, IFNULL({2}({3}),0) as obs FROM archive WHERE dateTime >= {4} AND dateTime <= {5} GROUP BY {6};'.format( strformat, xaxis_groupby, aggregate_type, obs_lookup, start_ts, end_ts, xaxis_groupby )
             
             # Setup values for the converter
-            obs_group = weewx.units.obs_group_dict[obs_lookup]
-            obs_unit_from_target_unit = converter.group_unit_dict[obs_group]
+            try:
+                obs_group = weewx.units.obs_group_dict[obs_lookup]
+                obs_unit_from_target_unit = converter.group_unit_dict[obs_group]
+            except:
+                # This observation doesn't exist within weewx schema so nothing to convert, so set None type
+                obs_group = None
+                obs_unit_from_target_unit = None
             
             query = self.archive.genSql( sql_lookup )
             for row in query:
