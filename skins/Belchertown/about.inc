@@ -40,17 +40,17 @@
 
 #if $Extras.has_key("show_gps_location") and $Extras.show_gps_location == '1'
   <p>Estación meteorológica modelo: $station.hardware situada en el barrio de <a href="https://es.wikipedia.org/wiki/Colegiales_(Buenos_Aires)" target="_blank"> Colegiales</a> , CABA - Argentina ($station.latitude[0]&deg;$station.latitude[1]' $station.latitude[2], $station.longitude[0]&deg;$station.longitude[1]' $station.longitude[2] a $station.altitude de altura.)
-<br>
-Debido a la geografia urbana donde se encuentra instalada la estación, la misma no adhiere completamente a las recomendaciones establecidas por la WMO (World Meteorological Organization) para su emplazamiento. A pesar de ello, las mediciones meteorológicas se ajustan por software para lograr la mayor exactitud posible.
-<br>
-  </p>
 #else
   <p>Estación meteorológica modelo: $station.hardware situada en el barrio de <a href="https://es.wikipedia.org/wiki/Colegiales_(Buenos_Aires)" target="_blank"> Colegiales</a> , CABA - Argentina.
+#end if  
 <br>
+#if $Extras.has_key("sensors_review") and $Extras.sensors_review == '1'
+<strong>En este momento algunos sensores se encuentran desconectados. Esperamos incorporarlos en breve.</strong>
+<br>
+#end if
 Debido a la geografia urbana donde se encuentra instalada la estación, la misma no adhiere completamente a las recomendaciones establecidas por la WMO (World Meteorological Organization) para su emplazamiento. A pesar de ello, las mediciones meteorológicas se ajustan por software para lograr la mayor exactitud posible.
 <br>
   </p>
-#end if
 
 <div class="col-sm-4">
     #if $Extras.has_key("station_photo") and $Extras.station_photo != ''
