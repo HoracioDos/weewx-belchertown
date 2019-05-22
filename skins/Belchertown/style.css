@@ -1712,7 +1712,7 @@ table.celestial td.label {
 }
 
 .moon-container {
-	color:#808080;
+   /*	color:#808080; Fix CC */
 }
 
 .moon-icon {

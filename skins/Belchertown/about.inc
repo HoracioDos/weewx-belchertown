@@ -204,12 +204,12 @@ Debido a la geografia urbana donde se encuentra instalada la estación, la misma
 </div>  
 <ul>
     <li><a href="http://www.weewx.com/" target="_blank">Weewx - Weather Station Software Version $station.version</a> - Thanks to Tom Keffer and Matthew Wall for making it available for everyone.</li>
-    <li><a href="https://github.com/poblabs/weewx-belchertown" target="_blank">Belchertown Skin Version $belchertown_version</a> - Thanks to Pat O'Brien for creating such a wonderful skin.</li>
+    <li><a href="https://github.com/poblabs/weewx-belchertown" target="_blank">Belchertown Skin Version $belchertown_version</a> - Thanks to Pat O'Brien for creating such a wonderful skin.</li><a href="https://obrienlabs.net/donate" rel="nofollow"><img src="https://camo.githubusercontent.com/4d7238795f7751518467c2fddc2efc1313e24dd3/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f446f6e6174652d537570706f72742532306279253230446f6e6174696e672532306f72253230427579696e672532306d6525323061253230436f666665652d626c75652e737667" alt="Donate" data-canonical-src="https://img.shields.io/badge/Donate-Support%20by%20Donating%20or%20Buying%20me%20a%20Coffee-blue.svg" style="max-width:100%;"></a>
     <li><a href="http://www.highcharts.com/" target="_blank">HighCharts</a> - Interactive JavaScript charts for web pages.</li>
     <li><a href="https://windy.com/" target="_blank">Windy radar map.</a> - Interactive Weather forecasting services.</li>
     <li><a href="https://darksky.net/poweredby/" target="_blank">Darksky forecast data and maps</a> - Weather forecasting and visualization services.</li>
     <li><a href="https://www.meteored.com.ar" target="_blank">Meteored Weather Services</a> - Thanks for providing an easy way to access SMN Images.</li>
-    <li><a href="https://www.smn.gob.ar" target="_blank">Radar and Satellite Images</a> - Servicio Meteorologico Nacional - Argentina.</li>
+    <li><a href="https://www.smn.gob.ar" target="_blank">Imágenes Satelitales y Alertas</a> - Gracias al Servicio Meteorologico Nacional - Argentina. Excelente nuevo sitio web!</li>
     <li>Earthquake data from <a href="http://earthquake.usgs.gov/fdsnws/event/1/" target="_blank">USGS.gov</a> - Earthquake Catalog Developer API.</li>
 </ul>
 </div>

@@ -122,9 +122,11 @@
                     <div class="clear"></div>
                     #if $Extras.has_key("forecast_alert_enabled") and $Extras.forecast_alert_enabled == '1'
                         <div class="wx-stn-alert"><span class="wx-stn-alert-text"></span></div><!-- AJAX -->
-                        #if os.path.exists("alerts.inc")
-                            #include "alerts.inc"
-                        #end if
+                        #if $Extras.has_key("smn_alert_enabled") and $Extras.smn_alert_enabled == '1'
+                           #if os.path.exists("alerts.inc")
+                              #include "alerts.inc"
+                           #end if
+                        #end if 
                     #end if
                 </div>
                 
@@ -275,6 +277,7 @@
                                                     </div>
                                                 </div>
                                                 <div class="clear"></div>
+                                                #if $Extras.has_key("enable_daylight") and $Extras.enable_daylight != '1'
                                                 #if os.path.exists("celestial.inc")
                                                 <div class="sun-moon-modal"><a href="#almanac" data-toggle="modal" data-target="#almanac">$obs.label.almanac_more_details</a></div>
                                                 <!-- Almanac Modal -->
@@ -297,9 +300,15 @@
                                                     </div>
                                                 </div>
                                                 #end if
+                                                #end if
                                             </div>
                                         </td>
                                     </tr>
+                                    #if $Extras.has_key("enable_daylight") and $Extras.enable_daylight == '1'
+                                       #if os.path.exists("index_hook_daylight.inc")
+                                          #include "index_hook_daylight.inc"
+                                       #end if
+                                    #end if
                                 </tbody>
                             </table>
                         </div>

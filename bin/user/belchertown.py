@@ -5,6 +5,7 @@
 # Pat O'Brien, August 19, 2018
 
 from __future__ import with_statement
+from lxml import html
 import datetime
 import time
 import calendar
@@ -14,6 +15,7 @@ import os.path
 import syslog
 import sys
 import locale
+import requests
 
 import weewx
 import weecfg
@@ -37,6 +39,25 @@ from weeutil.config import search_up
 # This helps with locale. https://stackoverflow.com/a/40346898/1177153
 reload(sys)
 sys.setdefaultencoding("utf-8")
+
+def get_alert(xpath, html_tree):
+    try:
+        alert = html_tree.xpath(xpath)[0].encode('utf-8')
+        return alert
+    except:
+        alert = ""
+        return alert
+
+def get_tree(ws_url):
+    try:
+        page = requests.get(ws_url)
+        html_tree = html.fromstring(page.text)
+        loginf( "Successful SMN Alert Request" )
+        return html_tree
+    except:
+        loginf( "SMN Alert Request failed!!!" )
+        html_tree = ""
+        return html_tree
 
 def logmsg(level, msg):
     syslog.syslog(level, 'Belchertown Extension: %s' % msg)
@@ -469,7 +490,73 @@ class getData(SearchList):
             # There's an error - I've seen this on first run and the stats folder is not created yet. Skip this section.
             pass
 
-            
+        """
+        Alerts Data
+        """
+        if self.generator.skin_dict['Extras']['smn_alert_enabled'] == "1":
+            smn_url = self.generator.skin_dict['Extras']['smn_url']
+            smn_region = self.generator.skin_dict['Extras']['smn_region']
+            smn_alert_loop = self.generator.skin_dict['Extras']['smn_alert_loop']
+            smn_incfile = self.generator.skin_dict['Extras']['smn_incfile']
+            html_file = local_skin_root + "/" + smn_incfile
+            smn_stale_timer = self.generator.skin_dict['Extras']['smn_stale']
+            smn_is_stale = False
+            unknown_loop = 0
+
+            # Determine if the file exists and get it's modified time
+            if os.path.isfile( html_file ):
+                if ( int( time.time() ) - int( os.path.getmtime( html_file ) ) ) > int( smn_stale_timer ):
+                    smn_is_stale = True
+            else:
+                # File doesn't exist, download a new copy
+                smn_is_stale = True
+
+                # File is stale, download a new copy
+            if smn_is_stale:
+                # Download new alert data
+                tree = get_tree(smn_url)
+                html_body = []
+                loginf( "Start searching SMN alerts for %s" % smn_region )
+
+                if len(tree) != 0:
+                   for i in range(1, int(smn_alert_loop) + 1):
+                       div = str(i)
+                       alert_zone_xp = '//*[@id="block-system-main"]/div[' + div + ']/ul[1]/li/text()'
+                       alert_zone = get_alert(alert_zone_xp, tree)
+                       if alert_zone.find(smn_region) != -1:
+                          alert_head_xp = '//*[@id="block-system-main"]/div[' + div + ']/div[1]/h2/text()'
+                          alert_dat_xp = '//*[@id="block-system-main"]/div[' + div + ']/ul[2]/li[1]/text()'
+                          html_body.append('<span class="alerts"><i class="fa fa-exclamation-triangle"></i></span><a href="' + \
+                                          smn_url + '" target="_blank" title="Alertas SMN"><span class="alerts_text">' + \
+                                          get_alert(alert_head_xp, tree).encode('utf-8') + ' - ' + \
+                                          get_alert(alert_dat_xp, tree).encode('utf-8') + '</span></a>\n')
+                   else:
+                      loginf( "Stop searching SMN alerts for %s" % smn_region )
+
+                   f = open(html_file, "w")
+
+                   if len(html_body) != 0:
+                      loginf( "SMN alerts found for %s" % smn_region )
+                      f.write('<!DOCTYPE html>\n')
+                      f.write('<html>\n')
+                      f.write('<body>\n')
+                      f.write('<div>\n')
+                      for i in range(len(html_body)):
+                          f.write(html_body[i])
+                      f.write('</div>\n')
+                      f.write('</body>\n')
+                      f.write('</html>\n')
+                   else:
+                      f.write('<!DOCTYPE html>\n')
+                      f.write('<html>\n')
+                      f.write('<body>\n')
+                      f.write('</body>\n')
+                      f.write('</html>\n')
+                      loginf( "No SMN alerts found for %s" % smn_region )
+                   f.close()
+        else:
+            loginf("SMN alerts disabled")
+
         """
         Forecast Data
         """
