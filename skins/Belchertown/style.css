@@ -1705,6 +1705,7 @@ table.celestial td.label {
 
 .moon-container {
 	font-size:14.5px; /* Fix CC */
+        padding-bottom: 10px; /* Fix CC */
 }
 
 .moon {
@@ -1724,8 +1725,8 @@ table.celestial td.label {
 }
 
 .daylight {
-        padding-top: 15px;
-        font-size:15px;
+   /*   padding-top: 15px; Fix CC */
+        font-size:16px;
         line-height: 1.3;
         text-align:center;
 }
