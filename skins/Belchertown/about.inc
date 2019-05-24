@@ -209,7 +209,7 @@ Debido a la geografia urbana donde se encuentra instalada la estación, la misma
     <li><a href="https://windy.com/" target="_blank">Windy radar map.</a> - Interactive Weather forecasting services.</li>
     <li><a href="https://darksky.net/poweredby/" target="_blank">Darksky forecast data and maps</a> - Weather forecasting and visualization services.</li>
     <li><a href="https://www.meteored.com.ar" target="_blank">Meteored Weather Services</a> - Thanks for providing an easy way to access SMN Images.</li>
-    <li><a href="https://www.smn.gob.ar" target="_blank">Imágenes Satelitales y Alertas</a> - Gracias al Servicio Meteorologico Nacional - Argentina. Excelente nuevo sitio web!</li>
+    <li><a href="https://www.smn.gob.ar" target="_blank">Imágenes Satelitales y Alertas</a> - Gracias al Servicio Meteorologico Nacional - Argentina.<br>¡Exitos por el nuevo sitio web!</li>
     <li>Earthquake data from <a href="http://earthquake.usgs.gov/fdsnws/event/1/" target="_blank">USGS.gov</a> - Earthquake Catalog Developer API.</li>
 </ul>
 </div>
