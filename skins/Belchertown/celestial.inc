@@ -27,7 +27,7 @@
     #set $seconds %= 3600
     #set $minutes = $seconds//60
     #set $seconds %= 60
-    #set $daylight_str = "%02d:%02d:%02d" % ($hours, $minutes, $seconds)
+    #set $daylight_str = "%02d:%02d:%02d Hs" % ($hours, $minutes, $seconds)
 
     #set $yesterday = $now - 24*3600
     #set $yesterday_daylight = $almanac($almanac_time=$yesterday).sun.set.raw - $almanac($almanac_time=$yesterday).sun.rise.raw
