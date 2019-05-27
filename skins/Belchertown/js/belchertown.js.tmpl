@@ -590,36 +590,34 @@ function update_forecast_data( data ) {
 // Live website using MQTT Websockets enabled //
 //============================================//
 
-function ajaximages() {
+function ajaximages(section=false, reload_timer_interval_seconds=false) {
     // This function only runs if the elements have an img src.
-    if ( document.querySelectorAll(".radar-map img").length > 0 ) {
-        if (belchertown_debug > 0) {
-            console.log("Updating radar image");
+    // Update images within the specific section
+    if ( section ) {
+        if ( section == "radar" ) {
+            if (belchertown_debug > 0) {
+                console.log("Updating radar image");
+            }
+            if ( document.querySelectorAll(".radar-map img").length > 0 ) {
+                var radar_html = jQuery('.radar-map').children('img').attr('src').split('?')[0] // Get the img src and remove everything after "?" so we don't stack ?'s onto the image during updates
+                jQuery('.radar-map').children('img').attr('src', radar_html + "?" + Math.floor(Math.random() * 999999999));
+            }
+        } else {
+            if (belchertown_debug > 0) {
+                console.log("Updating " + section + " images");
+            }
+            // Reload the images
+            jQuery('.'+section+' img').each(function(){
+                new_image_url = jQuery(this).attr('src').split('?')[0] + "?" + Math.floor(Math.random() * 999999999);
+                jQuery(this).attr('src', new_image_url);
+            });
         }
-        var radar_html = jQuery('.radar-map').children('img').attr('src').split('?')[0] // Get the img src and remove everything after "?" so we don't stack ?'s onto the image during updates
-        jQuery('.radar-map').children('img').attr('src', radar_html + "?" + Math.floor(Math.random() * 999999999));
+        // Set the new timer
+        if ( reload_timer_interval_seconds ) {
+            var reload_timer_ms = reload_timer_interval_seconds * 1000; // convert to millis
+            setTimeout(function() { ajaximages(section, reload_timer_interval_seconds); }, reload_timer_ms);
+        }
     }
-    
-    #if $Extras.has_key("reload_hook_images") and $Extras.reload_hook_images == '1'
-    // Update images within the hook .inc files
-    jQuery('.index-hook-after-station-info img').each(function(){
-        new_image_url = jQuery(this).attr('src').split('?')[0] + "?" + Math.floor(Math.random() * 999999999);
-        jQuery(this).attr('src', new_image_url);
-    });
-    jQuery('.index-hook-after-forecast img').each(function(){
-        new_image_url = jQuery(this).attr('src').split('?')[0] + "?" + Math.floor(Math.random() * 999999999);
-        jQuery(this).attr('src', new_image_url);
-    });
-    jQuery('.index-hook-after-snapshot img').each(function(){
-        new_image_url = jQuery(this).attr('src').split('?')[0] + "?" + Math.floor(Math.random() * 999999999);
-        jQuery(this).attr('src', new_image_url);
-    });
-    jQuery('.index-hook-after-charts img').each(function(){
-        new_image_url = jQuery(this).attr('src').split('?')[0] + "?" + Math.floor(Math.random() * 999999999);
-        jQuery(this).attr('src', new_image_url);
-    });
-    #end if
-    
 }
 
 // MQTT connect
@@ -1170,7 +1168,7 @@ function showChart(json_file, prepend_renderTo=false) {
                     options.yAxis.push({ // Secondary yAxis
                                 opposite: true,
                                 title: {
-                                    text: s.name + " " + s.yAxisLabel,
+                                    text: s.yAxisLabel,
                                 },
                             }),
                     // Associate this series to the new yAxis 1
@@ -1178,12 +1176,12 @@ function showChart(json_file, prepend_renderTo=false) {
                                         
                     // We may have already passed through array 0 in the series without setting the "multi axis label", go back and explicitly define it.
                     if ( yAxis_index >= 1 ) {
-                        options.yAxis[0].title.text = options.series[0].name + " " + options.series[0].yAxisLabel;
+                        options.yAxis[0].title.text = options.series[0].yAxisLabel;
                     } 
                 } else {
                     if ( yAxis1_active ) {
                         // This yAxis is first in the data series, so we can set labels without needing to double back
-                        options.yAxis[0].title.text = s.name + " " + s.yAxisLabel;
+                        options.yAxis[0].title.text = s.yAxisLabel;
                     } else {
                         // Apply the normal yAxis 0's label without observation name
                         options.yAxis[0].title.text = s.yAxisLabel;

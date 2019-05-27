@@ -34,8 +34,16 @@ from collections import OrderedDict
 from weewx.cheetahgenerator import SearchList
 from weewx.tags import TimespanBinder
 from weeutil.weeutil import to_bool, TimeSpan, to_int, archiveDaySpan, archiveWeekSpan, archiveMonthSpan, archiveYearSpan, startOfDay, timestamp_to_string, option_as_list
-from weeutil.config import search_up
-
+try:
+    from weeutil.config import search_up
+except:
+    # Pass here because chances are we have an old version of weewx which will get caught below. 
+    pass
+    
+# Check weewx version. Many things like search_up, weeutil.weeutil.KeyDict (label_dict) are from 3.9
+if weewx.__version__ < "3.9":
+    raise weewx.UnsupportedFeature("weewx 3.9 and newer is required, found %s" % weewx.__version__)   
+    
 # This helps with locale. https://stackoverflow.com/a/40346898/1177153
 reload(sys)
 sys.setdefaultencoding("utf-8")
@@ -1126,7 +1134,20 @@ class JsonGenerator(weewx.reportengine.ReportGenerator):
                         obs_label = "rain"
                     else:
                         obs_label = observation_type
-                    unit_label = line_options.get('y_label', weewx.units.get_label_string(self.formatter, self.converter, obs_label))
+                    unit_label = line_options.get('yAxisLabel_unit', weewx.units.get_label_string(self.formatter, self.converter, obs_label))
+                    
+                    # Set the yAxis label. Place into series for custom JavaScript. Highcharts will ignore these by default
+                    yAxisLabel_config = line_options.get('yAxisLabel', None)
+                    # Set a default yAxis label if graphs.conf yAxisLabel is none and there's a unit_label - e.g. Temperature (F)
+                    if yAxisLabel_config is None and unit_label:
+                        yAxisLabel = name + " (" + unit_label.strip() + ")"
+                    elif yAxisLabel_config:
+                        yAxisLabel = yAxisLabel_config
+                    else:
+                        # Unknown observation, set the default label to ""
+                        yAxisLabel = ""
+                    output[chart_group][plotname]["options"]["yAxisLabel"] = yAxisLabel
+                    output[chart_group][plotname]["series"][line_name]["yAxisLabel"] = yAxisLabel
                     
                     # Look for aggregation type:
                     aggregate_type = line_options.get('aggregate_type')
@@ -1153,19 +1174,11 @@ class JsonGenerator(weewx.reportengine.ReportGenerator):
                     # Override any highcharts series configs with standardized data, then generate the data output
                     output[chart_group][plotname]["series"][line_name]["name"] = name
 
-                    # Set the yAxis label. Place into series for custom JavaScript. Highcharts will ignore these by default
-                    yAxisLabel = plot_options.get('yAxisLabel', None)
-                    if yAxisLabel is None:
-                        yAxisLabel = "(" + unit_label.strip() + ")"
-                    output[chart_group][plotname]["options"]["yAxisLabel"] = yAxisLabel
-                    output[chart_group][plotname]["series"][line_name]["yAxisLabel"] = yAxisLabel
-                        
-                                    
                     # Set the yAxis min and max if present. Useful for the rxCheckPercent plots
-                    yaxis_min = plot_options.get('yaxis_min', None)
+                    yaxis_min = line_options.get('yaxis_min', None)
                     if yaxis_min:
                         output[chart_group][plotname]["series"][line_name]["yaxis_min"] = yaxis_min
-                    yaxis_max = plot_options.get('yaxis_max', None)
+                    yaxis_max = line_options.get('yaxis_max', None)
                     if yaxis_max:
                         output[chart_group][plotname]["series"][line_name]["yaxis_max"] = yaxis_max
                         

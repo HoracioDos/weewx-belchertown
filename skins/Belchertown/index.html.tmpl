@@ -81,11 +81,57 @@
                 showChart(homepage_graphgroup);
                 #end if
             });
+            
+            #if $Extras.has_key("reload_hook_images") and $Extras.reload_hook_images == '1'
+            // Update any images in the radar section or hooks
+        
+            #if $Extras.has_key("reload_images_radar") and $Extras.reload_images_radar != '-1'
+                var reload_radar_timer = $Extras.reload_images_radar * 1000; // convert to millis
+                setTimeout(function() { ajaximages("radar", $Extras.reload_images_radar); }, reload_radar_timer);
+            #end if
+            
+            #if $Extras.has_key("reload_images_hook_asi") and $Extras.reload_images_hook_asi != '-1'
+                var reload_asi_timer = $Extras.reload_images_hook_asi * 1000; // convert to millis
+                setTimeout(function() { ajaximages("index-hook-after-station-info", $Extras.reload_images_hook_asi); }, reload_asi_timer);
+            #end if
+
+            #if $Extras.has_key("reload_images_hook_af") and $Extras.reload_images_hook_af != '-1'
+                var reload_af_timer = $Extras.reload_images_hook_af * 1000; // convert to millis
+                setTimeout(function() { ajaximages("index-hook-after-forecast", $Extras.reload_images_hook_af); }, reload_af_timer);
+            #end if
+
+            #if $Extras.has_key("reload_images_hook_as") and $Extras.reload_images_hook_as != '-1'
+                var reload_as_timer = $Extras.reload_images_hook_as * 1000; // convert to millis
+                setTimeout(function() { ajaximages("index-hook-after-snapshot", $Extras.reload_images_hook_as); }, reload_as_timer);
+            #end if
+
+            #if $Extras.has_key("reload_images_hook_ac") and $Extras.reload_images_hook_ac != '-1'
+                var reload_ac_timer = $Extras.reload_images_hook_ac * 1000; // convert to millis
+                setTimeout(function() { ajaximages("index-hook-after-charts", $Extras.reload_images_hook_ac); }, reload_ac_timer);
+            #end if
+            
+            #end if
+            
             #else
-            // MQTT Websockets not enabled, update the Last Updated timestamp with moment.js
-            updated = moment.unix( $current.dateTime.raw ).utcOffset($moment_js_utc_offset).format("LL, LTS");
+            // MQTT Websockets not enabled
+
+            #if $Extras.has_key("show_last_updated_alert") and $Extras.show_last_updated_alert == '1'
+            // Check if we need to alert on old information - if time now, minus the last update is greater than the threshold, show an alert.
+            if ( ( Math.floor(new Date().getTime()/1000.0) - $Extras.last_updated_alert_threshold ) > $current.dateTime.raw ) {
+                if (belchertown_debug > 0) {
+                    console.log("Last Updated Alert: The weewx report timestamp is "+$current.dateTime.raw+". The current timestamp is "+Math.floor(new Date().getTime()/1000.0)+". The threshold is "+$Extras.last_updated_alert_threshold+". Report timestamp is greater than threshold of current time, showing no update alert.");
+                }
+                last_updated_alert_text = "<i class='fa fa-exclamation-triangle' style='color:red;'></i> $obs.label.header_last_updated_alert";
+                jQuery(".last-updated-alert").html( last_updated_alert_text );
+                jQuery(".last-updated-alert").show();
+            }
+            #end if
+            
+            // Update the Last Updated timestamp with moment.js,
+            updated = moment.unix( $current.dateTime.raw ).utcOffset($moment_js_utc_offset).format("$obs.label.time_lastUpdated");
             updated_text = "$obs.label.header_last_updated " + updated;
             jQuery(".updated").html( updated_text );
+            
             #end if
         });
         
@@ -120,6 +166,7 @@
                     $social_html
                     #end if
                     <div class="clear"></div>
+                    <div class="last-updated-alert" style="display:none;"></div><!-- AJAX moment.js -->
                     #if $Extras.has_key("forecast_alert_enabled") and $Extras.forecast_alert_enabled == '1'
                         <div class="wx-stn-alert"><span class="wx-stn-alert-text"></span></div><!-- AJAX -->
                         #if $Extras.has_key("smn_alert_enabled") and $Extras.smn_alert_enabled == '1'
