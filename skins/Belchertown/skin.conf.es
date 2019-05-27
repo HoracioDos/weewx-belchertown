@@ -141,6 +141,9 @@ sitio."
         earthquake_no_data          = Sin información disponible
         
         # Home Page Text and Titles
+        second                      = "segundo", "segundos"
+        minute                      = "minuto", "minutos"
+        hour                        = "hora", "horas"
         sun                         = Sol
         moon                        = Luna
         sun_and_moon                = Sol & Luna
