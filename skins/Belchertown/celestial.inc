@@ -36,8 +36,8 @@
       #set $delta = abs($difference)
       ##set $minutes_text = $obs.label.minute[0] if ( (int($delta) // 60) == 1 ) else $obs.label.minute[1]
       ##set $seconds_text = $obs.label.second[0] if ( ($delta % 60) == 1 ) else $obs.label.second[1]
-      ##set $amt_str = "%s%ds" % (str(int($delta) // 60) + 'm ' if ($delta // 60) > 0 else '', $delta % 60 if ($delta // 60) > 0 else $delta)    
-      #set $amt_str = "%s%d %s" % (str(int($delta) // 60) + ' ' + $minutes_text + ', ' if ($delta // 60) > 0 else '', $delta % 60 if ($delta // 60) > 0 else $delta, $seconds_text)
+      ##set $amt_str = "%s%d %s" % (str(int($delta) // 60) + ' ' + $minutes_text + ', ' if ($delta // 60) > 0 else '', $delta % 60 if ($delta // 60) > 0 else $delta, $seconds_text)
+      #set $amt_str = "%s%ds" % (str(int($delta) // 60) + 'm ' if ($delta // 60) > 0 else '', $delta % 60 if ($delta // 60) > 0 else $delta)    
       #if $difference > 0
         #set $delta_str = "%s %s" % ( $amt_str, $obs.label.more_than_yesterday )
       #else
