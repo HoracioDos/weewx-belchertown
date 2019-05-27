@@ -1621,7 +1621,8 @@ p.entry-meta {
 }
 
 .curwindspeed, .curwindgust {
-	font-size:30px;
+	/* font-size:30px; Fix CC */
+	font-size:28px;
 }
 
 .mph { 
