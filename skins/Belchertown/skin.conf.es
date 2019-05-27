@@ -152,7 +152,7 @@ sitio."
         highest_temperature         = Máxima
         lowest_temperature          = Mínima
         forecast_header             = Pronóstico a 8 días
-        header_last_updated         = Last Updated
+        header_last_updated         = Ultima Actualización
         mqtt_websockets_connecting  = Conectando en vivo con la estación.
         mqtt_websockets_waiting     = Conectado en vivo. Esperando datos.
         mqtt_websockets_connected   = Conectado en vivo. Datos recibidos:
