@@ -1,7 +1,7 @@
 # Customized Belchertown weewx skin
 
 This fork from [weewx-belchertown skin](https://github.com/poblabs/weewx-belchertown) have been customized mainly to change some small aspects in the layout and style. Some other modifications are related to my own needs and interests. This is how it looks like online: https://climacolegiales.com.ar/
-This version was synced upstream to **v1.0rc9.2** on **May 27, 2019**. 
+This version was synced upstream to **v1.0rc9.3** on **May 28, 2019**. 
 
 ![homepage_screenshot](https://raw.githubusercontent.com/HoracioDos/weewx-belchertown/master/assets/homepage_screenshot.png)
 
