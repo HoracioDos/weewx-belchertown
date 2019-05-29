@@ -159,15 +159,15 @@ DIA  PROM    MAX    MAX    MIN    MIN VELOC  40  40-30 30-20 20-10   10  DIR
     #set $LWindCount=0
     #set $VLWindCount=0
     #for $hour in $day.hours
-        #if $hour.windspeed.avg.raw >= 40.0
+        #if $hour.windSpeed.avg.raw >= 40.0
            #set $VHWindCount +=1
-        #else if $hour.windspeed.avg.raw >= 30.0 and $hour.windspeed.avg.raw < 40.0
+        #else if $hour.windSpeed.avg.raw >= 30.0 and $hour.windSpeed.avg.raw < 40.0
            #set $HWindCount +=1
-        #else if $hour.windspeed.avg.raw >= 20.0 and $hour.windspeed.avg.raw < 30.0
+        #else if $hour.windSpeed.avg.raw >= 20.0 and $hour.windSpeed.avg.raw < 30.0
            #set $NWindCount +=1
-        #else if $hour.windspeed.avg.raw >= 10.0 and $hour.windspeed.avg.raw < 20.0
+        #else if $hour.windSpeed.avg.raw >= 10.0 and $hour.windSpeed.avg.raw < 20.0
            #set $LWindCount +=1
-        #else if $hour.windspeed.avg.raw < 10.0
+        #else if $hour.windSpeed.avg.raw < 10.0
            #set $VLWindCount +=1
         #end if
     #end for
