@@ -80,7 +80,7 @@ def logerr(msg):
     logmsg(syslog.LOG_ERR, msg)
     
 # Print version in syslog for easier troubleshooting
-VERSION = "1.0rc9.3"
+VERSION = "1.0"
 loginf("version %s" % VERSION)
 
 class getData(SearchList):
@@ -938,10 +938,10 @@ class getData(SearchList):
         return [search_list_extension]
 
 # =============================================================================
-# JsonGenerator
+# HighchartsJsonGenerator
 # =============================================================================
 
-class JsonGenerator(weewx.reportengine.ReportGenerator):
+class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
     """Class for generating JSON files for the Highcharts. 
     Adapted from the ImageGenerator class.
     
@@ -1006,7 +1006,7 @@ class JsonGenerator(weewx.reportengine.ReportGenerator):
             output[chart_group]["generated_timestamp"] = time.strftime('%m/%d/%Y %H:%M:%S')
             
             # Default back to Highcharts standards
-            colors = chart_options.get("colors", "#7cb5ec, #434348, #90ed7d, #f7a35c, #8085e9, #f15c80, #e4d354, #8085e8, #8d4653, #91e8e1") 
+            colors = chart_options.get("colors", "#7cb5ec, #b2df8a, #f7a35c, #8c6bb1, #dd3497, #e4d354, #268bd2, #f45b5b, #6a3d9a, #33a02c") 
             output[chart_group]["colors"] = colors
             
             # chartgroup_title is used on the graphs page
@@ -1159,8 +1159,8 @@ class JsonGenerator(weewx.reportengine.ReportGenerator):
                             # Aggregation specified. Get the interval.
                             aggregate_interval = line_options.as_int('aggregate_interval')
                         except KeyError:
-                            syslog.syslog(syslog.LOG_ERR, "JsonGenerator: aggregate interval required for aggregate type %s" % aggregate_type)
-                            syslog.syslog(syslog.LOG_ERR, "JsonGenerator: line type %s skipped" % observation_type)
+                            syslog.syslog(syslog.LOG_ERR, "HighchartsJsonGenerator: aggregate interval required for aggregate type %s" % aggregate_type)
+                            syslog.syslog(syslog.LOG_ERR, "HighchartsJsonGenerator: line type %s skipped" % observation_type)
                             continue
                     
                     mirrored_value = line_options.get('mirrored_value', None)
@@ -1216,8 +1216,12 @@ class JsonGenerator(weewx.reportengine.ReportGenerator):
                                      self.skin_dict['HTML_ROOT'],
                                      "json")
             json_filename = html_dest_dir + "/" + chart_group + ".json"
-            with open(json_filename, mode='w') as fd:
-                    fd.write( json.dumps( output[chart_group] ) )
+            with open(json_filename, mode='w') as jf:
+                jf.write( json.dumps( output[chart_group] ) )
+            # Save the graphs.conf to a json file for future debugging
+            chart_json_filename = html_dest_dir + "/graphs.json"
+            with open(chart_json_filename, mode='w') as cjf:
+                cjf.write( json.dumps( self.chart_dict ) )
 
     def _getObservationData(self, observation, start_ts, end_ts, aggregate_type, aggregate_interval, time_length, xaxis_groupby, xaxis_categories, mirrored_value):
         """Get the SQL vectors for the observation, the aggregate type and the interval of time"""
