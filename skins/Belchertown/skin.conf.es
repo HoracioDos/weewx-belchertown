@@ -43,9 +43,21 @@
     
     # If mqtt_websockets_enabled is set to 0, but want the page to full reload on an interval, specify this below in milliseconds. 300000 = 5 minutes - Si ha configurado mqtt_websockets_enabled con valor 0 (mqtt desactivado) pero aun desea refrescar la pagina web periodicamente, defina el periodo de tiempo en milisegundos. 300000 = 5 minutos.
     webpage_autorefresh = 0
-    
-    # Enable reloading of images in the index hook pages. Useful if there's webcams in these sections. - Habilitar la actualización periódica de las imágenes que haya incluido en las páginas index hook. Esta opción puede serle útil si utiliza cámaras web en alguna de estas secciones.
+
+    # Image Reload Section.
+    # Set reload_hook_images to 1 to enable, then set the number of *seconds* for each section to reload.
+    # A value of -1 will disable reloading images in that section.
+    # radar = the radar image if you used radar_html setting
+    # asi = index_hook_after_station_info.inc
+    # af = index_hook_after_forecast.inc
+    # as = index_hook_after_snapshot.inc
+    # ac = index_hook_after_charts.inc
     reload_hook_images = 0
+    reload_images_radar = 300
+    reload_images_hook_asi = -1
+    reload_images_hook_af = -1
+    reload_images_hook_as = -1
+    reload_images_hook_ac = -1
     
     # Forecast defaults - Valores por Defecto del Pronóstico
     forecast_enabled = 0
@@ -492,6 +504,6 @@ sitio."
 # The list of generators that are to be run:
 #
 [Generators]
-    generator_list = weewx.cheetahgenerator.CheetahGenerator, weewx.reportengine.CopyGenerator, user.belchertown.JsonGenerator
+    generator_list = weewx.cheetahgenerator.CheetahGenerator, weewx.reportengine.CopyGenerator, user.belchertown.HighchartsJsonGenerator
 
 
