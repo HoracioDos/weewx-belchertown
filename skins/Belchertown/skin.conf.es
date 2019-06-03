@@ -446,13 +446,13 @@ sitio."
         # Reports that summarize "by month"
         [[[stats_month]]]
             encoding = strict_ascii
-            template = stats/stats-YYYY-MM.txt.tmpl
+            template = NOAA/NOAA-YYYY-MM.txt.tmpl
 
     [[SummaryByYear]]
         # Reports that summarize "by year"
         [[[stats_year]]]
             encoding = strict_ascii
-            template = stats/stats-YYYY.txt.tmpl
+            template = NOAA/NOAA-YYYY.txt.tmpl
         
     [[ToDate]]
         # Reports that show statistics "to date", such as day-to-date,
