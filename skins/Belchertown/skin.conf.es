@@ -132,7 +132,7 @@ sitio."
         records_page_header     = "Registros de Máximos y Mínimos"
         reports_page_header     = "Reportes Históricos del Clima"
         about_page_header       = "Acerca de esta Estación Meteorológica"
-        powered_by              = "Las observaciones son registradas por una <a href="/about" target="_blank">Estación Meteorológica Personal</a>"
+        powered_by              = "Las observaciones son registradas por una Estación Meteorológica Personal"
         
         # DarkSky translations
         alert_in_effect             = Vigente hasta
