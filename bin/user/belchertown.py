@@ -80,7 +80,7 @@ def logerr(msg):
     logmsg(syslog.LOG_ERR, msg)
     
 # Print version in syslog for easier troubleshooting
-VERSION = "1.0.1b3"
+VERSION = "1.0.1b4"
 loginf("version %s" % VERSION)
 
 class getData(SearchList):
@@ -1230,6 +1230,9 @@ class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
                     else:
                         # No custom series data overrides, so just add series_data to the chart series data
                         output[chart_group][plotname]["series"][line_name]["data"] = series_data
+                        
+                    # Final pass through self._highchartsSeriesOptionsToInt() to convert any integer back to int which ConfigObj made a string. Highcharts typically wants integers
+                    output[chart_group][plotname]["series"][line_name] = self._highchartsSeriesOptionsToInt(output[chart_group][plotname]["series"][line_name])
             
             # This consolidates all chart_groups into the chart_group JSON (day.json, week.json, month.json, year.json) and saves them to HTML_ROOT/json
             html_dest_dir = os.path.join(self.config_dict['WEEWX_ROOT'],
@@ -1721,3 +1724,22 @@ class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
         elif (degree >= 348.76 and degree <= 360):
             return "N"
     
+    def _highchartsSeriesOptionsToInt(self, d):
+        # Recurse through all the series options and set any strings that should be integers back to integers. 
+        # https://stackoverflow.com/a/54565277/1177153
+        try:
+            for k, v in d.items():
+                if isinstance(v, dict):
+                    # Check nested dicts
+                    self._highchartsSeriesOptionsToInt(v)
+                else:
+                    try:
+                        v = to_int(v)
+                        d.update({k: v})
+                    except:
+                        pass
+            return d
+        except:
+            # This item isn't a dict, so return it back
+            return d
+

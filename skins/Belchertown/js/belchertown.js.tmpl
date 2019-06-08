@@ -975,6 +975,8 @@ function showChart(json_file, prepend_renderTo=false) {
                             enabled: false,
                             radius: 2
                         },
+                        threshold: null,
+                        softThreshold: true
                     },
                     line: {
                         lineWidth: 2,
@@ -1012,14 +1014,6 @@ function showChart(json_file, prepend_renderTo=false) {
                             radius: 2
                         },
                     },
-                    series: {
-                        states: {
-                            hover: {
-                                // This disables the overly large hover markers
-                                enabled: false
-                            }
-                        }
-                    }
                 },
                 
                 // Highstock is needed for gapsize. Disable these 3 to make it look like standard Highcharts
@@ -1299,10 +1293,12 @@ function showChart(json_file, prepend_renderTo=false) {
                     options.series.push(ns);
                 });
             }
-                        
+            
             // Finally all options are done, now show the chart
-            belchertown_debug("Highcharts.chart('container', " + JSON.stringify(options) + ");");
             var chart = new Highcharts.chart(options);
+            
+            // If using debug, show a copy paste debug for use with jsfiddle
+            belchertown_debug("Highcharts.chart('container', " + JSON.stringify(options) + ");");
 
         });
     
