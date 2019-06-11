@@ -1411,6 +1411,7 @@ p.entry-meta {
 
 .alerts_text {
  /* padding-left: 10px; Fix CC */
+    color: #FF0000;
 }
 
 

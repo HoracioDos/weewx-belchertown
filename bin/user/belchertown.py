@@ -558,8 +558,8 @@ class getData(SearchList):
                           alert_dat_xp = '//*[@id="block-system-main"]/div[' + div + ']/ul[2]/li[1]/text()'
                           html_body_alerts.append('<span class="alerts"><i class="fa fa-exclamation-triangle"></i></span><a href="' + \
                                           smn_url_alerts + '" target="_blank" title="Alertas SMN"><span class="alerts_text">' + \
-                                          get_alert(alert_head_xp, tree).encode('utf-8') + ' - ' + \
-                                          get_alert(alert_dat_xp, tree).encode('utf-8') + '</span></a>\n')
+                                          get_alert(alert_head_xp, tree).encode('utf-8') + '</span></a><span class="alerts"><i class="fa fa-calendar"></i></span>' + \
+                                          '<span class="alerts_text">' +  get_alert(alert_dat_xp, tree).encode('utf-8') + '</span>\n')
                    else:
                       loginf( "Stop searching SMN alerts for %s" % smn_region )
 
@@ -581,8 +581,8 @@ class getData(SearchList):
                           i -= 1
                           html_body_reports.append('<span class="alerts"><i class="fa fa-exclamation-triangle"></i></span><a href="' + \
                                           smn_url_reports + '" target="_blank" title="Alertas SMN"><span class="alerts_text">' + \
-                                          get_alert(alert_head_xp, tree).encode('utf-8') + ' - ' + \
-                                          get_alert(alert_dat_xp, tree).encode('utf-8') + '</span></a>\n')
+                                          get_alert(alert_head_xp, tree).encode('utf-8') + '</span></a><span class="alerts"><i class="fa fa-calendar"></i></span>' + \
+                                          '<span class="alerts_text">' + get_alert(alert_dat_xp, tree).encode('utf-8') + '</span>\n')
                    else:
                       loginf( "Stop searching SMN reports for %s" % smn_region )
 
