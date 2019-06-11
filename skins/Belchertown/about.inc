@@ -188,6 +188,7 @@ Debido a la geografia urbana donde se encuentra instalada la estación, la misma
         </tr>
     </table>  
 <br>
+#if $Extras.has_key("enable_ext_sites") and $Extras.enable_ext_sites == '1'
 <div class="about-title">
   <p>Esta estación sube datos a los siguientes sitios:</p>
 </div>
@@ -199,6 +200,7 @@ Debido a la geografia urbana donde se encuentra instalada la estación, la misma
     <li><a href="https://openweathermap.org/city" target="_blank">TEST123</a> en OpenWeatherMap.org</li>
     <li><a href="https://app.weathercloud.net/d0882834506" target="_blank">TEST123</a> en Weathercloud.net</li>
 </ul>
+#end if
 <div class="about-title">
   <p>Créditos:</p>
 </div>  
