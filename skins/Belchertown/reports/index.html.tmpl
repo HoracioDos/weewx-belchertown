@@ -9,11 +9,11 @@
             var month = getURLvar("mo");
             var year = getURLvar("yr");
             if ( ( year !== undefined ) && ( month !== undefined ) ) {
-                url = '$belchertown_root_url/stats/stats-'+year+'-'+month+'.txt';
+                url = '$relative_url/stats/stats-'+year+'-'+month+'.txt';
             } else if ( year !== undefined ) {
-                url = '$belchertown_root_url/stats/stats-'+year+'.txt';
+                url = '$relative_url/stats/stats-'+year+'.txt';
             } else {
-                url = '$belchertown_root_url/stats/$default_stats_file';
+                url = '$relative_url/stats/$default_stats_file';
             }
             
             // Load the file into the pre

@@ -1,6 +1,7 @@
 #import datetime
 {
-    "site": "$belchertown_root_url",
+    "site": "$station.location",
+    "station_url": "$station.station_url",
     "version": "$station.version",
     "belchertown_version": "$belchertown_version",
     "weewxuptime": "$station.uptime",
@@ -16,6 +17,7 @@
     #end if
     "extras": {
         "belchertown_theme": "$Extras.theme",
+        "theme_toggle_enabled": "$Extras.theme_toggle_enabled",
         "belchertown_locale": "$Extras.belchertown_locale",
         "reload_hook_images": "$Extras.reload_hook_images",
         "reload_images_radar": "$Extras.reload_images_radar",
@@ -24,9 +26,7 @@
         "reload_images_hook_as": "$Extras.reload_images_hook_as",
         "reload_images_hook_ac": "$Extras.reload_images_hook_ac",
         "station_observations": "$Extras.station_observations",
-        "highcharts_homepage_graphgroup": "$Extras.highcharts_homepage_graphgroup",
-        "show_apptemp": "$Extras.show_apptemp",
-        "show_windrun": "$Extras.show_windrun"
+        "highcharts_homepage_graphgroup": "$Extras.highcharts_homepage_graphgroup"
     },
     "station": {
         "hardware": "$station.hardware",

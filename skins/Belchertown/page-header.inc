@@ -2,7 +2,7 @@
     <div class="row">
         #if $Extras.has_key("enable_weather_icon") and $Extras.enable_weather_icon == '1'
            <div class="col-sm-1 wx-stn-info-current-obs">
-               <span class="obs-header-icon">$current_obs_icon</span>
+               <span class="obs-header-icon"><img src="$relative_url/images/$current_obs_icon"></span>
                <span class="obs-header-outtemp">$current.outTemp</span>
            </div>
         #end if
