@@ -8,7 +8,6 @@
 
     # General Site Defaults - Opciones Generales por Defecto.
     belchertown_debug = 0
-    belchertown_root_url = ""
     belchertown_locale = "auto"
     theme = light
     theme_toggle_enabled = 1
