@@ -42,20 +42,15 @@ connectNulls = "true"
     gapsize = 300000 # This should be your archive_interval from weewx.conf multiplied by 1000 to get milliseconds. Standard is 5 minutes
 
     [[chart1]]
-        title = Temperatura y Humedad
+        title = Temperatura
         [[[outTemp]]]
             zIndex = 1
             name = Temperatura
-            color = red
+        [[[windchill]]]
         [[[appTemp]]]
             color = "#f7a35c"
         [[[dewpoint]]]
             color = purple
-        [[[outHumidity]]]
-            yAxis = 1
-            color = "#438BD2"
-            yaxis_min = 0
-            yaxis_max = 100
     
     [[chart2]]
         title = Precipitación
@@ -77,24 +72,21 @@ connectNulls = "true"
             yAxis = 1
             yaxis_max = 360
             lineWidth = 0
-            color = "#D33681"
             [[[[marker]]]]
                 enabled = 1
             [[[[states]]]]
                 [[[[[hover]]]]]
                         lineWidthPlus = 0
         [[[windGust]]]
-            color = "#90ed7d"
         [[[windSpeed]]]
-            type = areaspline
-            color = "#8085e9"
-
+            type = area
+       
     [[chart5]]
         title = Presión Barométrica
         type = spline
         [[[barometer]]]
             color = "#BECC00"
-            # yAxis_tickInterval = 0.01
+            yAxis_tickInterval = 0.01
 
     [[chart6]]
         title = Indice UV y Radiación Solar
@@ -121,34 +113,24 @@ connectNulls = "true"
     title = "Esta Semana"
     show_button = true
     button_text = "Semana"
+    aggregate_type = max
     aggregate_interval = 3600 # 1 hour
     time_length = 604800 # Last 7 days
     gapsize = 3600000 # 1 hour in milliseconds
-    aggregate_type = avg
 
     [[chart1]]
-        title = Temperatura y Humedad
+        title = Temperatura
         [[[outTemp]]]
             zIndex = 1
             name = Temperatura
-            color = red 
-            aggregate_type = avg
+        [[[windchill]]]
         [[[appTemp]]]
             color = "#f7a35c"
-            aggregate_type = avg
         [[[dewpoint]]]
             color = purple
-            aggregate_type = avg
-        [[[outHumidity]]]
-            yAxis = 1
-            color = "#438BD2"
-            yaxis_min = 0
-            yaxis_max = 100
-            aggregate_type = avg
 
     [[chart2]]
         title = Precipitación 
-        aggregate_type = max
         [[[rainRate]]]
             yAxis = 1
         [[[rainTotal]]]
@@ -160,7 +142,7 @@ connectNulls = "true"
 
     [[chart4]]
         # The combined Wind Chart works best in this configuration
-        title = Dirección y Velocidad de Viento
+        title = Wind Speed and Direction
         yaxis_min = 0
         [[[windDir]]]
             zIndex = 1
@@ -168,17 +150,14 @@ connectNulls = "true"
             yaxis_max = 360
             lineWidth = 0
             aggregate_type = avg
-            color = "#D33681"
             [[[[marker]]]]
                 enabled = 1
             [[[[states]]]]
                 [[[[[hover]]]]]
                         lineWidthPlus = 0
         [[[windGust]]]
-            color = "#90ed7d"
         [[[windSpeed]]]
-            type = areaspline
-            color = "#8085e9"
+            type = area
        
     [[chart5]]
         title = Presión Barométrica
@@ -212,42 +191,31 @@ connectNulls = "true"
     title = "Este Mes"
     show_button = true
     button_text = "Mes"
-    # type = spline
+    type = spline
+    aggregate_type = max
     aggregate_interval = 86400 # 1 day
     time_length = 2592000 # Last 30 days
     gapsize = 86400000 # 1 day in milliseconds
-    aggregate_type = avg
 
     [[chart1]]
-        title = Temperatura y Humedad
-        type = spline
+        title = Temperatura
         [[[outTemp]]]
             zIndex = 1
             name = Temperatura Máxima
-            aggregate_type = max
             color = red
         [[[outTemp_min]]]
             name = Temperature Mínima
             observation_type = outTemp
             aggregate_type = min
             color = "#7cb5ec"
-        [[[outHumidity]]]
-            yAxis = 1
-            color = purple
-            yaxis_min = 0
-            yaxis_max = 100
-            aggregate_type = avg	
 
     [[chart2]]
         title = Precipitación
         type = line
-        aggregate_type = max
         [[[rainRate]]]
-            type = spline
             yAxis = 1
         [[[rainTotal]]]
             name = Precipitación Acumulada
-            type = spline
 
     [[chart3]]
         title = Rosa de los Vientos
@@ -257,57 +225,28 @@ connectNulls = "true"
         # The combined Wind Chart works best in this configuration
         title = Dirección y Velocidad del Viento
         yaxis_min = 0
-        [[[windDir]]]
-            type = spline
+	        [[[windDir]]]
             zIndex = 1
             yAxis = 1
             yaxis_max = 360
             lineWidth = 0
             # Here we can override the timespan default aggregate type with our own specific to this chart
             aggregate_type = avg
-            color = "#D33681"
             [[[[marker]]]]
                 enabled = 1
-                radius = 3
-                [[[[[states]]]]]
-                    [[[[[[hover]]]]]]
-                        radius = 3
             [[[[states]]]]
                 [[[[[hover]]]]]
                         lineWidthPlus = 0
         [[[windGust]]]
-            color = "#90ed7d"
-            aggregate_type = max
-            type = spline
         [[[windSpeed]]]
-            type = areaspline
-            color = "#8085e9"
-            aggregate_type = max
-
+            type = area
+    
     [[chart5]]
         title = Presión Barométrica
-        type = areaspline
-        [[[barometer_max]]]
-            name = Presión Barométrica Máxima
-            observation_type = barometer
-            aggregate_type = max
-            color = "#9DC8F1"
-            fillOpacity = 1
+        aggregate_type = avg
         [[[barometer]]]
-            observation_type = barometer
-            aggregate_type = avg
-            color = "#596372"
-            fillOpacity = 1
-            [[[[marker]]]]
-                enabled = 1
-                radius = 3
-                symbol = circle
-        [[[barometer_min]]]
-            name = Presión Barométrica Mínima
-            observation_type = barometer
-            aggregate_type = min
-            color = "#82CA7B"
-            fillOpacity = 1
+            color = "#BECC00"
+            # yAxis_tickInterval = 0.01
 
     [[chart6]]
         title = Indice UV y Radiación Solar
@@ -335,33 +274,26 @@ connectNulls = "true"
     show_button = true
     button_text = "Año"
     type = spline
+    aggregate_type = max
     aggregate_interval = 86400 # 1 day
     time_length = year
     gapsize = 86400000 # 1 day in milliseconds
-    aggregate_type = avg
+
     [[chart1]]
-        title = Temperatura y Humedad
+        title = Temperatura
         [[[outTemp]]]
             zIndex = 1
             name = Temperatura Máxima
-            aggregate_type = max
             color = red
         [[[outTemp_min]]]
             name = Temperatura Mínima
             observation_type = outTemp
             aggregate_type = min
             color = "#7cb5ec"
-        [[[outHumidity]]]
-            yAxis = 1
-            color = purple
-            yaxis_min = 0
-            yaxis_max = 100
-            aggregate_type = avg
 
     [[chart2]]
         title = Precipitación
         type = line
-        aggregate_type = max
         [[[rainRate]]]
             yAxis = 1
         [[[rainTotal]]]
@@ -382,46 +314,21 @@ connectNulls = "true"
             lineWidth = 0
             # Here we can override the timespan default aggregate type with our own specific to this chart
             aggregate_type = avg
-            color = "#D33681"
             [[[[marker]]]]
                 enabled = 1
-                radius = 3
-                [[[[[states]]]]]
-                    [[[[[[hover]]]]]]
-                          radius = 3
             [[[[states]]]]
                 [[[[[hover]]]]]
-                    lineWidthPlus = 0
+                     lineWidthPlus = 0
         [[[windGust]]]
-            color = "#90ed7d"
         [[[windSpeed]]]
-            type = areaspline
-            color = "#8085e9"
+            type = area
     
     [[chart5]]
         title = Presión Barométrica
-        type = areaspline
-        [[[barometer_max]]]
-            name = Presión Barométrica Máxima
-            observation_type = barometer
-            aggregate_type = max
-            color = "#9DC8F1"
-            fillOpacity = 1
+        aggregate_type = avg
         [[[barometer]]]
-            observation_type = barometer
-            aggregate_type = avg
-            color = "#596372"
-            fillOpacity = 1
-            [[[[marker]]]]
-                enabled = 1
-                radius = 3
-                symbol = circle
-        [[[barometer_min]]]
-            name = Presión Barométrica Mínima
-            observation_type = barometer
-            aggregate_type = min
-            color = "#82CA7B"
-            fillOpacity = 1
+            color = "#BECC00"
+            # yAxis_tickInterval = 0.01
         
     [[chart6]]
         title = Indice UV y Radiación Solar
@@ -451,23 +358,17 @@ connectNulls = "true"
     time_length = days_ago
     time_ago = 1
     gapsize = 300000 # This should be your archive_interval from weewx.conf multiplied by 1000 to get milliseconds. Standard is 5 minutes
-    # aggregate_interval = 3600
-    
+
     [[chart1]]
-        title = Temperatura y Humedad
+        title = Temperatura
         [[[outTemp]]]
             zIndex = 1
             name = Temperatura
-            color = red
+        [[[windchill]]]
         [[[appTemp]]]
             color = "#f7a35c"
         [[[dewpoint]]]
             color = purple
-        [[[outHumidity]]]
-            yAxis = 1
-            color = "#438BD2"
-            yaxis_min = 0
-            yaxis_max = 100
     
     [[chart2]]
         title = Precipitación
@@ -490,17 +391,14 @@ connectNulls = "true"
             yAxis = 1
             yaxis_max = 360
             lineWidth = 0
-            color = "#D33681"
             [[[[marker]]]]
                 enabled = 1
             [[[[states]]]]
                 [[[[[hover]]]]]
                         lineWidthPlus = 0
         [[[windGust]]]
-            color = "#90ed7d"
         [[[windSpeed]]]
-            type = areaspline
-            color = "#8085e9"
+            type = area
        
     [[chart5]]
         title = Presión Barométrica
@@ -529,41 +427,31 @@ connectNulls = "true"
            name = Indice UV
            zIndex = 2
 
-[last_year]
+[last_week]
     # Chart Timespan Defaults
-    title = "Ultimo Año"
+    title = Ultima Semana
     show_button = true
-    button_text = "Ultimo Año"
-    type = spline
-    tooltip_date_format = "dddd LL"
-    aggregate_interval = 86400 # 1 day
-    time_length = years_ago
+    button_text = "Ultima Semana"
+    tooltip_date_format = "LLLL"
+    aggregate_type = max
+    aggregate_interval = 3600 # 1 hour
+    time_length = weeks_ago
     time_ago = 1
-    gapsize = 86400000 # 1 day in milliseconds
-    aggregate_type = avg
+    gapsize = 3600000 # 1 hour in milliseconds
+
     [[chart1]]
-        title = Temperatura y Humedad
+        title = Temperatura
         [[[outTemp]]]
             zIndex = 1
-            name = Temperatura Máxima
-            aggregate_type = max
-            color = red
-        [[[outTemp_min]]]
-            name = Temperatura Mínima
-            observation_type = outTemp
-            aggregate_type = min
-            color = "#7cb5ec"
-        [[[outHumidity]]]
-            yAxis = 1
+            name = Temperatura
+        [[[windchill]]]
+        [[[heatindex]]]
+            color = "#f7a35c"
+        [[[dewpoint]]]
             color = purple
-            yaxis_min = 0
-            yaxis_max = 100
-            aggregate_type = avg
 
     [[chart2]]
-        title = Precipitación
-        type = line
-        aggregate_type = max
+        title = Precipitación 
         [[[rainRate]]]
             yAxis = 1
         [[[rainTotal]]]
@@ -584,35 +472,22 @@ connectNulls = "true"
             lineWidth = 0
             # Here we can override the timespan default aggregate type with our own specific to this chart
             aggregate_type = avg
-            color = "#D33681"
             [[[[marker]]]]
                 enabled = 1
             [[[[states]]]]
                 [[[[[hover]]]]]
                         lineWidthPlus = 0
         [[[windGust]]]
-            color = "#90ed7d"
         [[[windSpeed]]]
-            type = areaspline
-            color = "#8085e9"
-    
+            type = area
+       
     [[chart5]]
         title = Presión Barométrica
+        type = spline
         [[[barometer]]]
             color = "#BECC00"
-            yAxis_tickInterval = 0.01
-            aggregate_type = avg
-        [[[barometer_min]]]
-            name = Presión Barométrica Mínima
-            observation_type = barometer
-            aggregate_type = min
-            color = "#7CB5EC"
-        [[[barometer_max]]]
-            name = Presión Barométrica Máxima
-            observation_type = barometer
-            aggregate_type = max
-            color = "#B2DF8A"
-    
+            # yAxis_tickInterval = 0.01
+
     [[chart6]]
         title = Indice UV y Radiación Solar
         [[[radiation]]]
@@ -633,65 +508,225 @@ connectNulls = "true"
            name = Indice UV
            zIndex = 2
 
-#    title = "Valores Climatológicos Medios 2018-2019"
-#    show_button = true
-#    button_text = Clima 2018-2019
-#    type = spline
-#    time_length = year_specific
-#    year_specific = 2018
-#    aggregate_type = max
-#    aggregate_interval = 86400 # 1 day
-#    gapsize = 86400000
-#    xaxis_groupby = month
-#    xaxis_categories = 'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'
-#    [[chart2]]
-#        title = "Valores Climatológicos Medios 2018"
-#        [[[outTemp]]]
-#           zIndex = 1
-#           name = Temperatura Máx
-#           color = red
-#        [[[outTemp_min]]]
-#           name = Temperatura Mín
-#           observation_type = outTemp
-#           aggregate_type = min
-#           color = "#7cb5ec"
-#        [[[rainTotal]]]
-#           name = Precipitación Acumulada
-#           type = column
-#           yAxis = 1
-#           zIndex = -1
-
-
-[clima2019]
-    title = "Valores Climatológicos Medios 2019"
+[last_month]
+    # Chart Timespan Defaults
+    title = Ultimo Mes
     show_button = true
-    button_text = Clima 2019
+    button_text = Ultimo Mes
+    type = spline
+    tooltip_date_format = "dddd LL"
+    aggregate_type = max
+    aggregate_interval = 86400 # 1 day
+    time_length = months_ago
+    time_ago = 1
+    gapsize = 86400000 # 1 day in milliseconds
+
     [[chart1]]
-        # title = "Valores Climatológicos Medios 2019"
-        # show_button = true
-        # button_text = Clima 2019
+        title = Temperatura
+        [[[outTemp]]]
+            zIndex = 1
+            name = Temperatura Máxima
+            color = red
+        [[[outTemp_min]]]
+            name = Temperature Mínima
+            observation_type = outTemp
+            aggregate_type = min
+            color = "#7cb5ec"
+
+    [[chart2]]
+        title = Precipitación
+        type = line
+        [[[rainRate]]]
+            yAxis = 1
+        [[[rainTotal]]]
+            name = Precipitación Acumulada
+
+    [[chart3]]
+        title = Rosa de los Vientos
+        [[[windRose]]]
+  
+    [[chart4]]
+        # The combined Wind Chart works best in this configuration
+        title = Wind Speed and Direction
+        yaxis_min = 0
+        [[[windDir]]]
+            zIndex = 1
+            yAxis = 1
+            yaxis_max = 360
+            lineWidth = 0
+            # Here we can override the timespan default aggregate type with our own specific to this chart
+            aggregate_type = avg
+            [[[[marker]]]]
+                enabled = 1
+            [[[[states]]]]
+                [[[[[hover]]]]]
+                        lineWidthPlus = 0
+        [[[windGust]]]
+        [[[windSpeed]]]
+            type = area
+    
+    [[chart5]]
+        title = Barometer
+        aggregate_type = avg
+        [[[barometer]]]
+            color = "#BECC00"
+            # yAxis_tickInterval = 0.01
+    
+    [[chart6]]
+        title = Indice UV y Radiación Solar
+        [[[radiation]]]
+           name = Radiación Solar
+           zIndex = 1
+           color = "#ffc83f"
+        [[[maxSolarRad]]]
+           name = Máxima Radiación Solar Teórica
+           type = area
+           color = "#f7f2b4"
+           y_label = "W/m2"
+        [[[UV]]]
+           yAxis = 1
+           yaxis_min = 0
+           yaxis_max = 14
+           color = "#90ed7d"
+           y_label = "UV"
+           name = Indice UV
+           zIndex = 2
+    
+[last_year]
+    # Chart Timespan Defaults
+    title = "Ultimo Año"
+    show_button = true
+    button_text = "Ultimo Año"
+    type = spline
+    tooltip_date_format = "dddd LL"
+    aggregate_type = max
+    aggregate_interval = 86400 # 1 day
+    time_length = years_ago
+    time_ago = 1
+    gapsize = 86400000 # 1 day in milliseconds
+
+    [[chart1]]
+        title = Temperatura
+        [[[outTemp]]]
+            zIndex = 1
+            name = Temperatura Máxima
+            color = red
+        [[[outTemp_min]]]
+            name = Temperatura Mínima
+            observation_type = outTemp
+            aggregate_type = min
+            color = "#7cb5ec"
+
+    [[chart2]]
+        title = Precipitación
+        type = line
+        [[[rainRate]]]
+            yAxis = 1
+        [[[rainTotal]]]
+            name = Precipitación Acumulada
+    
+    [[chart3]]
+        title = Rosa de los Vientos
+        [[[windRose]]]
+
+    [[chart4]]
+        # The combined Wind Chart works best in this configuration
+        title = Wind Speed and Direction
+        yaxis_min = 0
+        [[[windDir]]]
+            zIndex = 1
+            yAxis = 1
+            yaxis_max = 360
+            lineWidth = 0
+            # Here we can override the timespan default aggregate type with our own specific to this chart
+            aggregate_type = avg
+            [[[[marker]]]]
+                enabled = 1
+            [[[[states]]]]
+                [[[[[hover]]]]]
+                        lineWidthPlus = 0
+        [[[windGust]]]
+        [[[windSpeed]]]
+            type = area
+    
+    [[chart5]]
+        title = Presión Barométrica
+        [[[barometer]]]
+            color = "#BECC00"
+            yAxis_tickInterval = 0.01
+        
+    [[chart6]]
+        title = Indice UV y Radiación Solar
+        [[[radiation]]]
+           name = Radiación Solar
+           zIndex = 1
+           color = "#ffc83f"
+        [[[maxSolarRad]]]
+           name = Máxima Radiación Solar Teórica
+           type = area
+           color = "#f7f2b4"
+           y_label = "W/m2"
+        [[[UV]]]
+           yAxis = 1
+           yaxis_min = 0
+           yaxis_max = 14
+           color = "#90ed7d"
+           y_label = "UV"
+           name = Indice UV
+           zIndex = 2
+
+[clima]
+    title = "Valores Climatológicos Medios 2018-2019"
+    show_button = true
+    button_text = Clima 2018-2019
+    type = spline
+    time_length = year_specific
+    year_specific = 2018
+    aggregate_type = max
+    aggregate_interval = 86400 # 1 day
+    gapsize = 86400000
+    xaxis_groupby = month
+    xaxis_categories = 'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'
+
+    [[chart1]]
+        title = "Valores Climatológicos Medios 2018"
+        [[[outTemp]]]
+           zIndex = 1
+           name = Temperatura Máx
+           color = red
+        [[[outTemp_min]]]
+           name = Temperatura Mín
+           observation_type = outTemp
+           aggregate_type = min
+           color = "#7cb5ec"
+        [[[rainTotal]]]
+           name = Precipitación Acumulada
+           type = column
+           yAxis = 1
+           zIndex = -1
+
+    [[chart2]]
+        title = "Valores Climatológicos Medios 2019"
         type = spline
         time_length = year
         aggregate_type = max
         aggregate_interval = 86400 # 1 day
         gapsize = 86400000
         xaxis_groupby = month
-        # xaxis_categories = 'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'
-        xaxis_categories = 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'
+        xaxis_categories = 'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'
         [[[outTemp]]]
             zIndex = 1
             name = Temperatura Máx
-            color = "#ED0507"
+            color = red
         [[[outTemp_min]]]
             name = Temperature Mín
             observation_type = outTemp
             aggregate_type = min
-            color = "#1C3C69"
+            color = "#7cb5ec"
         [[[rainTotal]]]
             name = Precipitación Acumulada
             type = column
             yAxis = 1
             zIndex = -1
-            color = "#5CA4EE"
 
 
