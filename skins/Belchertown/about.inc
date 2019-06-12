@@ -39,17 +39,18 @@
 #end for
 
 #if $Extras.has_key("show_gps_location") and $Extras.show_gps_location == '1'
-  <p>Estación meteorológica modelo: $station.hardware situada en el barrio de <a href="https://es.wikipedia.org/wiki/Colegiales_(Buenos_Aires)" target="_blank"> Colegiales</a> , CABA - Argentina ($station.latitude[0]&deg;$station.latitude[1]' $station.latitude[2], $station.longitude[0]&deg;$station.longitude[1]' $station.longitude[2] a $station.altitude de altura.)
+  <p>Estación meteorológica experimental modelo: $station.hardware situada en el barrio de <a href="https://es.wikipedia.org/wiki/Colegiales_(Buenos_Aires)" target="_blank"> Colegiales</a> , CABA - Argentina ($station.latitude[0]&deg;$station.latitude[1]' $station.latitude[2], $station.longitude[0]&deg;$station.longitude[1]' $station.longitude[2] a $station.altitude de altura.)
 #else
-  <p>Estación meteorológica modelo: $station.hardware situada en el barrio de <a href="https://es.wikipedia.org/wiki/Colegiales_(Buenos_Aires)" target="_blank"> Colegiales</a> , CABA - Argentina.
+  <p>Estación meteorológica experimental modelo: $station.hardware situada en el barrio de <a href="https://es.wikipedia.org/wiki/Colegiales_(Buenos_Aires)" target="_blank"> Colegiales</a> , CABA - Argentina.
 #end if  
 <br>
 #if $Extras.has_key("sensors_review") and $Extras.sensors_review == '1'
-<strong>En este momento algunos sensores se encuentran desconectados. Esperamos incorporarlos en breve.</strong>
+<strong>Se han incorporado los sensores que estaban desconectados. El sensor lumínico se encuentra bajo observación. Actualmente está orientado en dirección Norte.</strong>
 <br>
 #end if
-Debido a la geografia urbana donde se encuentra instalada la estación, la misma no adhiere completamente a las recomendaciones establecidas por la WMO (World Meteorological Organization) para su emplazamiento. A pesar de ello, las mediciones meteorológicas se ajustan por software para lograr la mayor exactitud posible.
-<br>
+Debido a la geografia urbana donde se encuentra instalada la estación, la misma no adhiere completamente a las recomendaciones establecidas por la WMO (World Meteorological Organization) para su emplazamiento. Las observaciones  meteorológicas se calculan con el fin de lograr la mayor exactitud posible.
+<br>Este sitio es de libre acceso, no desarrolla ninguna actividad comercial y no tiene fin de lucro alguno. Tampoco realiza ninguna explotación comercial sobre la información de las visitas recibidas.
+<br><br><span class="boxed">¡Importante! Se recuerda a los sres. usuarios que no deben tomar ninguna decisión basada en este sitio que pueda poner en riesgo vidas humanas o bienes materiales.</span><br><br>
   </p>
 
 <div class="col-sm-4">

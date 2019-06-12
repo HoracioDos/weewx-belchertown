@@ -1414,6 +1414,13 @@ p.entry-meta {
     color: #FF0000;
 }
 
+.boxed {
+ /* border: 1px solid #FF0000; */
+    background: black;
+    color: white;
+    font-weight: bold;
+    padding: 5px;
+}
 
 .wx-fb, .wx-share-sep, .wx-twitter {
     display:inline-block;
