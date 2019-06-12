@@ -50,7 +50,7 @@
 #end if
 Debido a la geografia urbana donde se encuentra instalada la estación, la misma no adhiere completamente a las recomendaciones establecidas por la WMO (World Meteorological Organization) para su emplazamiento. Las observaciones  meteorológicas se calculan con el fin de lograr la mayor exactitud posible.
 <br>Este sitio es de libre acceso, no desarrolla ninguna actividad comercial y no tiene fin de lucro alguno. Tampoco realiza ninguna explotación comercial sobre la información de las visitas recibidas.
-<br><br><span class="boxed">¡Importante! Se recuerda a los sres. usuarios que no deben tomar ninguna decisión basada en este sitio que pueda poner en riesgo vidas humanas o bienes materiales.</span><br><br>
+<br><span class="boxed">Se recuerda a los visitantes que no deben tomar ninguna decisión basada en este sitio que pueda poner en riesgo vidas humanas o bienes materiales.</span>
   </p>
 
 <div class="col-sm-4">

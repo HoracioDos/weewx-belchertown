@@ -1415,11 +1415,11 @@ p.entry-meta {
 }
 
 .boxed {
- /* border: 1px solid #FF0000; */
-    background: black;
-    color: white;
-    font-weight: bold;
-    padding: 5px;
+ /* background: black; */
+ /* color: white;     */ 
+    font-weight: bolder;
+ /* padding: 5px; */
+    text-decoration: underline;
 }
 
 .wx-fb, .wx-share-sep, .wx-twitter {
