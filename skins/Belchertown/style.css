@@ -1471,7 +1471,7 @@ p.entry-meta {
 	padding-top:20px !important;
 }
 
-.current_temp .temp {
+.current_temp .outtemp_outer {
 	font-size:65px;
 }
 
@@ -1479,7 +1479,7 @@ p.entry-meta {
 	font-size:40px;
 }
 
-.tempsup { 
+.outtempunitlabelsuper {
 	top:-1.0em;
 	font-size:50%;
 }
@@ -2018,7 +2018,7 @@ input:checked + .slider:before {
         padding-top: 0px !important;
     }
     
-    .current_temp .temp {
+    .current_temp .outtemp_outer {
         font-size: 55px;
     }
 	
@@ -2309,7 +2309,7 @@ input:checked + .slider:before {
         /* text-align: center; */
     }
     
-    .pi .temp {
+    .pi .outtemp_outer {
         font-size:40px;
         font-weight:bold;
         float:right;
