@@ -32,12 +32,14 @@ class BelchertownInstaller(ExtensionInstaller):
                                           'skins/Belchertown/about.inc',
                                           'skins/Belchertown/celestial.inc',
                                           'skins/Belchertown/graphs.conf',
+                                          'skins/Belchertown/graphs.conf.example',
                                           'skins/Belchertown/page-header.inc',
                                           'skins/Belchertown/manifest.json.tmpl',
                                           'skins/Belchertown/index_hook_daylight.inc',
                                           'skins/Belchertown/index_hook_after_forecast.inc',
                                           'skins/Belchertown/robots.txt',
                                           'skins/Belchertown/skin.conf',
+                                          'skins/Belchertown/skin.conf.es',
                                           'skins/Belchertown/belchertown-dark.min.css',
                                           'skins/Belchertown/style.css'
                                          ]
