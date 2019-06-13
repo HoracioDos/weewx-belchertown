@@ -546,7 +546,6 @@ class getData(SearchList):
                 # Download new alert data
                 tree = get_tree(smn_url_alerts,"Alerts")
                 html_body_alerts = []
-                loginf( "Start searching SMN alerts for %s" % smn_region.encode('utf-8') )
 
                 if len(tree) != 0:
                     for i in range(1, int(smn_alert_loop) + 1):
@@ -562,13 +561,10 @@ class getData(SearchList):
                                                 get_alert(alert_head_xp, tree).encode('utf-8') + \
                                                 '</span></a><span class="alerts"><i class="fa fa-calendar"></i></span><span class="alerts_text">' + \
                                                 get_alert(alert_dat_xp, tree).encode('utf-8') + '</span>\n')
-                    else:
-                        loginf( "Stop searching SMN alerts for %s" % smn_region.encode('utf-8') )
 
                 # Download new report data
                 tree = get_tree(smn_url_reports,"Reports")
                 html_body_reports = []
-                loginf( "Start searching SMN reports for %s" % smn_region.encode('utf-8') )
 
                 if len(tree) != 0:
                     for i in range(1, int(smn_alert_loop) + 1):
@@ -586,13 +582,10 @@ class getData(SearchList):
                                                 get_alert(alert_head_xp, tree).encode('utf-8') + \
                                                 '</span></a><span class="alerts"><i class="fa fa-calendar"></i></span><span class="alerts_text">' + \
                                                 get_alert(alert_dat_xp, tree).encode('utf-8') + '</span>\n')
-                    else:
-                        loginf( "Stop searching SMN reports for %s" % smn_region.encode('utf-8') )
 
                 # Download new acp data
                 tree = get_tree(smn_url_acp, "ACP")
                 html_body_acp = []
-                loginf( "Start searching SMN acp for %s" % smn_region.encode('utf-8') )
 
                 if len(tree) != 0:
                     for i in range(1, int(smn_alert_loop) + 1):
@@ -614,8 +607,6 @@ class getData(SearchList):
                                                     get_alert(alert_head_xp, tree).encode('utf-8') + \
                                                     '</span></a><span class="alerts"><i class="fa fa-calendar"></i></span><span class="alerts_text">' + \
                                                     get_alert(alert_dat_xp, tree).encode('utf-8') + '</span>\n')
-                    else:
-                        loginf( "Stop searching SMN acp for %s" % smn_region.encode('utf-8') )
 
                 f = open(html_file, "w")
 
@@ -642,7 +633,6 @@ class getData(SearchList):
                     f.write('<body>\n')
                     f.write('</body>\n')
                     f.write('</html>\n')
-                    loginf( "No SMN alerts, reports or acp found for %s" % smn_region.encode('utf-8'))
                 f.close()
         else:
             loginf("SMN alerts, reports & acp disabled")
