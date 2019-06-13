@@ -56,14 +56,14 @@ def get_alert(xpath, html_tree):
         alert = ""
         return alert
 
-def get_tree(ws_url):
+def get_tree(ws_url, smn_rqs):
     try:
         page = requests.get(ws_url)
         html_tree = html.fromstring(page.text)
-        loginf( "Successful SMN Alerts & Reports Request" )
+        loginf( "Successful SMN %s Request" % smn_rqs)
         return html_tree
     except:
-        loginf( "SMN Alerts & Reports Request failed!!!" )
+        loginf( "SMN %s Request failed!!!" % smn_rqs)
         html_tree = ""
         return html_tree
 
@@ -525,13 +525,13 @@ class getData(SearchList):
         if self.generator.skin_dict['Extras']['smn_alert_enabled'] == "1":
             smn_url_alerts = self.generator.skin_dict['Extras']['smn_url_alerts']
             smn_url_reports = self.generator.skin_dict['Extras']['smn_url_reports']
+            smn_url_acp = self.generator.skin_dict['Extras']['smn_url_acp']
             smn_region = self.generator.skin_dict['Extras']['smn_region']
             smn_alert_loop = self.generator.skin_dict['Extras']['smn_alert_loop']
             smn_incfile = self.generator.skin_dict['Extras']['smn_incfile']
             html_file = local_skin_root + "/" + smn_incfile
             smn_stale_timer = self.generator.skin_dict['Extras']['smn_stale']
             smn_is_stale = False
-            unknown_loop = 0
 
             # Determine if the file exists and get it's modified time
             if os.path.isfile( html_file ):
@@ -544,76 +544,108 @@ class getData(SearchList):
                 # File is stale, download a new copy
             if smn_is_stale:
                 # Download new alert data
-                tree = get_tree(smn_url_alerts)
+                tree = get_tree(smn_url_alerts,"Alerts")
                 html_body_alerts = []
-                loginf( "Start searching SMN alerts for %s" % smn_region )
+                loginf( "Start searching SMN alerts for %s" % smn_region.encode('utf-8') )
 
                 if len(tree) != 0:
-                   for i in range(1, int(smn_alert_loop) + 1):
-                       div = str(i)
-                       alert_zone_xp = '//*[@id="block-system-main"]/div[' + div + ']/ul[1]/li/text()'
-                       alert_zone = get_alert(alert_zone_xp, tree)
-                       if alert_zone.find(smn_region) != -1:
-                          alert_head_xp = '//*[@id="block-system-main"]/div[' + div + ']/div[1]/h2/text()'
-                          alert_dat_xp = '//*[@id="block-system-main"]/div[' + div + ']/ul[2]/li[1]/text()'
-                          html_body_alerts.append('<span class="alerts"><i class="fa fa-exclamation-triangle"></i></span><a href="' + \
-                                          smn_url_alerts + '" target="_blank" title="Alertas SMN"><span class="alerts_text">' + \
-                                          get_alert(alert_head_xp, tree).encode('utf-8') + '</span></a><span class="alerts"><i class="fa fa-calendar"></i></span>' + \
-                                          '<span class="alerts_text">' +  get_alert(alert_dat_xp, tree).encode('utf-8') + '</span>\n')
-                   else:
-                      loginf( "Stop searching SMN alerts for %s" % smn_region )
+                    for i in range(1, int(smn_alert_loop) + 1):
+                        alert_zone_xp = '//*[@id="block-system-main"]/div[' + str(i) + ']/ul[1]/li/text()'
+                        alert_zone = get_alert(alert_zone_xp, tree)
+                        for a in range(len(smn_region)):
+                            if alert_zone.find(smn_region[a]) != -1:
+                                loginf( "SMN alerts found for %s" % smn_region[a])
+                                alert_head_xp = '//*[@id="block-system-main"]/div[' + str(i) + ']/div[1]/h2/text()'
+                                alert_dat_xp = '//*[@id="block-system-main"]/div[' + str(i) + ']/ul[2]/li[1]/text()'
+                                html_body_alerts.append('<span class="alerts"><i class="fa fa-exclamation-triangle"></i></span><a href="' + \
+                                                smn_url_alerts + '" target="_blank" title="Alertas SMN"><span class="alerts_text">' + \
+                                                get_alert(alert_head_xp, tree).encode('utf-8') + \
+                                                '</span></a><span class="alerts"><i class="fa fa-calendar"></i></span><span class="alerts_text">' + \
+                                                get_alert(alert_dat_xp, tree).encode('utf-8') + '</span>\n')
+                    else:
+                        loginf( "Stop searching SMN alerts for %s" % smn_region.encode('utf-8') )
 
-                # Download new alert data
-                tree = get_tree(smn_url_reports)
+                # Download new report data
+                tree = get_tree(smn_url_reports,"Reports")
                 html_body_reports = []
-                loginf( "Start searching SMN reports for %s" % smn_region )
+                loginf( "Start searching SMN reports for %s" % smn_region.encode('utf-8') )
 
                 if len(tree) != 0:
-                   for i in range(1, int(smn_alert_loop) + 1):
-                       div = str(i)
-                       alert_zone_xp = '//*[@id="block-system-main"]/div/ul[' + div + ']/li/text()'
-                       alert_zone = get_alert(alert_zone_xp, tree)
-                       if alert_zone.find(smn_region) != -1:
-                          alert_head_xp = '//*[@id="block-system-main"]/div/div[' + div + ']/h2/text()'
-                          i += 1
-                          div = str(i)
-                          alert_dat_xp = '//*[@id="block-system-main"]/div/ul[' + div + ']/li/text()'
-                          i -= 1
-                          html_body_reports.append('<span class="alerts"><i class="fa fa-exclamation-triangle"></i></span><a href="' + \
-                                          smn_url_reports + '" target="_blank" title="Alertas SMN"><span class="alerts_text">' + \
-                                          get_alert(alert_head_xp, tree).encode('utf-8') + '</span></a><span class="alerts"><i class="fa fa-calendar"></i></span>' + \
-                                          '<span class="alerts_text">' + get_alert(alert_dat_xp, tree).encode('utf-8') + '</span>\n')
-                   else:
-                      loginf( "Stop searching SMN reports for %s" % smn_region )
+                    for i in range(1, int(smn_alert_loop) + 1):
+                        alert_zone_xp = '//*[@id="block-system-main"]/div/ul[' + str(i) + ']/li/text()'
+                        alert_zone = get_alert(alert_zone_xp, tree)
+                        for a in range(len(smn_region)):
+                            if alert_zone.find(smn_region[a]) != -1:
+                                loginf("SMN reports found for %s" % smn_region[a])
+                                alert_head_xp = '//*[@id="block-system-main"]/div/div[' + str(i) + ']/h2/text()'
+                                i += 1
+                                alert_dat_xp = '//*[@id="block-system-main"]/div/ul[' + str(i) + ']/li/text()'
+                                i -= 1
+                                html_body_alerts.append('<span class="alerts"><i class="fa fa-exclamation-triangle"></i></span><a href="' + \
+                                                smn_url_reports + '" target="_blank" title="Alertas SMN"><span class="alerts_text">' + \
+                                                get_alert(alert_head_xp, tree).encode('utf-8') + \
+                                                '</span></a><span class="alerts"><i class="fa fa-calendar"></i></span><span class="alerts_text">' + \
+                                                get_alert(alert_dat_xp, tree).encode('utf-8') + '</span>\n')
+                    else:
+                        loginf( "Stop searching SMN reports for %s" % smn_region.encode('utf-8') )
 
-                   f = open(html_file, "w")
+                # Download new acp data
+                tree = get_tree(smn_url_acp, "ACP")
+                html_body_acp = []
+                loginf( "Start searching SMN acp for %s" % smn_region.encode('utf-8') )
 
-                   if len(html_body_alerts) != 0 or len(html_body_reports) != 0:
-                      f.write('<!DOCTYPE html>\n')
-                      f.write('<html>\n')
-                      f.write('<body>\n')
-                      f.write('<div>\n')
-                      if len(html_body_alerts) != 0:
-                         loginf( "SMN alerts found for %s" % smn_region )
-                         for i in range(len(html_body_alerts)):
-                             f.write(html_body_alerts[i])
-                      if len(html_body_reports) != 0:
-                         loginf( "SMN reports found for %s" % smn_region )
-                         for i in range(len(html_body_reports)):
-                             f.write(html_body_reports[i])
-                      f.write('</div>\n')
-                      f.write('</body>\n')
-                      f.write('</html>\n')
-                   else:
-                      f.write('<!DOCTYPE html>\n')
-                      f.write('<html>\n')
-                      f.write('<body>\n')
-                      f.write('</body>\n')
-                      f.write('</html>\n')
-                      loginf( "No SMN alerts or reports found for %s" % smn_region )
-                   f.close()
+                if len(tree) != 0:
+                    for i in range(1, int(smn_alert_loop) + 1):
+                        for x in range(0,5):
+                            if x == 0:
+                                alert_zone_xp = '//*[@id="block-system-main"]/div[' + str(i) + ' ]/ul[1]/li/text()'
+                            else:
+                                alert_zone_xp = '//*[@id="block-system-main"]/div[' + str(i) + ' ]/ul[1]/li/text()[' + str(x) + ']'
+                            alert_zone = get_alert(alert_zone_xp, tree)
+                            for a in range(len(smn_region)):
+                                if alert_zone.find(smn_region[a]) != -1:
+                                    loginf( "SMN ACP found for %s" % smn_region[a])
+                                    alert_head_xp = '//*[@id="block-system-main"]/div/div[' + str(i) + ']/h2/text()'
+                                    i += 1
+                                    alert_dat_xp = '//*[@id="block-system-main"]/div[1]/ul[' + str(i) + ']/li[1]/text()'
+                                    i -= 1
+                                    html_body_alerts.append('<span class="alerts"><i class="fa fa-exclamation-triangle"></i></span><a href="' + \
+                                                    smn_url_acp + '" target="_blank" title="Alertas SMN"><span class="alerts_text">' + \
+                                                    get_alert(alert_head_xp, tree).encode('utf-8') + \
+                                                    '</span></a><span class="alerts"><i class="fa fa-calendar"></i></span><span class="alerts_text">' + \
+                                                    get_alert(alert_dat_xp, tree).encode('utf-8') + '</span>\n')
+                    else:
+                        loginf( "Stop searching SMN acp for %s" % smn_region.encode('utf-8') )
+
+                f = open(html_file, "w")
+
+                if len(html_body_alerts) != 0 or len(html_body_reports) != 0 or len(html_body_acp) != 0:
+                    f.write('<!DOCTYPE html>\n')
+                    f.write('<html>\n')
+                    f.write('<body>\n')
+                    f.write('<div>\n')
+                    if len(html_body_alerts) != 0:
+                        for i in range(len(html_body_alerts)):
+                            f.write(html_body_alerts[i])
+                    if len(html_body_reports) != 0:
+                        for i in range(len(html_body_reports)):
+                            f.write(html_body_reports[i])
+                    if len(html_body_acp) != 0:
+                        for i in range(len(html_body_acp)):
+                            f.write(html_body_acp[i])
+                    f.write('</div>\n')
+                    f.write('</body>\n')
+                    f.write('</html>\n')
+                else:
+                    f.write('<!DOCTYPE html>\n')
+                    f.write('<html>\n')
+                    f.write('<body>\n')
+                    f.write('</body>\n')
+                    f.write('</html>\n')
+                    loginf( "No SMN alerts, reports or acp found for %s" % smn_region.encode('utf-8'))
+                f.close()
         else:
-            loginf("SMN alerts & reports disabled")
+            loginf("SMN alerts, reports & acp disabled")
 
         """
         Forecast Data
