@@ -1465,8 +1465,9 @@ p.entry-meta {
 }
 
 .current-obs-text {
-    text-align:center;
-	font-size:20px;
+	text-align:center;
+	font-size:18px;
+/*  font-size:20px; FIX CC */ 
 }
 
 #wxicon {
