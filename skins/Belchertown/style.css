@@ -1643,7 +1643,7 @@ p.entry-meta {
 }
 
 .curwindspeed, .curwindgust {
-	font-size:28px;
+	font-size:28px; /* Fix CC */
 }
 
 .mph { 
@@ -1711,7 +1711,7 @@ p.entry-meta {
 
 .celestial_body { 
     display:inline-block;
-    min-width:49%;
+    min-width:49%; /* Fix CC */
 }
 
 table.celestial td.label { 
@@ -1719,10 +1719,10 @@ table.celestial td.label {
     display: inline-block;
     text-align:left;
     font-size:initial;
-    line-height: normal;	
+    line-height: normal; /* Fix CC */	
 }
 
-.modal-title {
+.modal-title {  /*Fix CC */
     font-size: 25px;
     text-align: center;
 }
@@ -1739,10 +1739,6 @@ table.celestial td.label {
 
 .moon {
 	text-align:right;
-}
-
-.moon-container {
-    /*	color:#808080; fix CC */
 }
 
 .moon-icon {
@@ -1923,7 +1919,7 @@ table.celestial td.label {
     /* padding-top:30px; */
 }
 
-#stats_contents {
+.stats_contents {
     width: 95%;
     margin: 0 auto;
     font-size: 18px;
@@ -2269,7 +2265,11 @@ input:checked + .slider:before {
         padding: 0px;
         overflow: hidden;
         overflow-x: hidden;
+        overflow-y:hidden;
+        overflow: -moz-scrollbars-none;
+        -ms-overflow-style: none;
     }
+    body::-webkit-scrollbar { width: 0 !important }
 	
     /* bold kiosk display font if chosen in skin.conf or weewx.conf */	
 	.pi .site-inner-bold {
@@ -2429,7 +2429,7 @@ input:checked + .slider:before {
     .pi .station-observations {
 		font-size: 18px;
         line-height: 20px;
-		margin-top: 25px;
+		margin-top: 20px;
 	}
     
     .pi .small-almanac {
@@ -2440,7 +2440,7 @@ input:checked + .slider:before {
 	
 	.pi .maxgustouter {
 		font-size: 18px;
-		margin: 5px;
+		margin: 0px;
 	}	
 
 	.pi .sunrise-set-image {
