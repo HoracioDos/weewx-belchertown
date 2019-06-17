@@ -1414,6 +1414,12 @@ p.entry-meta {
     color: #FF0000;
 }
 
+.alerts_subtext {
+    padding-left: 10px;
+    color: #FF0000;
+    font-size: 14px;
+}
+
 .boxed {
  /* background: black; */
  /* color: white;     */ 
@@ -1446,7 +1452,13 @@ p.entry-meta {
 
 .station-observations-label {
     min-width: 100px;
+    font-size: 18px; /* Fix CC */
 }
+
+.dayRain, .rainRate {
+    font-size: 18px; /*Fix CC */
+}
+
 
 .current_temp, .current_wind {
 	text-align:center;
@@ -1465,9 +1477,9 @@ p.entry-meta {
 }
 
 .current-obs-text {
-	text-align:center;
+        text-align:center;
 	font-size:18px;
-/*  font-size:20px; FIX CC */ 
+    /*  font-size:20px; FIX CC */ 
 }
 
 #wxicon {

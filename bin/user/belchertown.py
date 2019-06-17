@@ -527,6 +527,7 @@ class getData(SearchList):
             smn_url_reports = self.generator.skin_dict['Extras']['smn_url_reports']
             smn_url_acp = self.generator.skin_dict['Extras']['smn_url_acp']
             smn_region = self.generator.skin_dict['Extras']['smn_region']
+            smn_source = self.generator.skin_dict['Extras']['smn_source']
             smn_alert_loop = self.generator.skin_dict['Extras']['smn_alert_loop']
             smn_incfile = self.generator.skin_dict['Extras']['smn_incfile']
             html_file = local_skin_root + "/" + smn_incfile
@@ -577,8 +578,8 @@ class getData(SearchList):
                                 i += 1
                                 alert_dat_xp = '//*[@id="block-system-main"]/div/ul[' + str(i) + ']/li/text()'
                                 i -= 1
-                                html_body_alerts.append('<span class="alerts"><i class="fa fa-exclamation-triangle"></i></span><a href="' + \
-                                                smn_url_reports + '" target="_blank" title="Alertas SMN"><span class="alerts_text">' + \
+                                html_body_reports.append('<span class="alerts"><i class="fa fa-exclamation-triangle"></i></span><a href="' + \
+                                                smn_url_reports + '" target="_blank" title="Reportes SMN"><span class="alerts_text">' + \
                                                 get_alert(alert_head_xp, tree).encode('utf-8') + \
                                                 '</span></a><span class="alerts"><i class="fa fa-calendar"></i></span><span class="alerts_text">' + \
                                                 get_alert(alert_dat_xp, tree).encode('utf-8') + '</span>\n')
@@ -589,7 +590,7 @@ class getData(SearchList):
 
                 if len(tree) != 0:
                     for i in range(1, int(smn_alert_loop) + 1):
-                        for x in range(0,5):
+                        for x in range(0, int(smn_alert_loop)):
                             if x == 0:
                                 alert_zone_xp = '//*[@id="block-system-main"]/div[' + str(i) + ' ]/ul[1]/li/text()'
                             else:
@@ -598,12 +599,14 @@ class getData(SearchList):
                             for a in range(len(smn_region)):
                                 if alert_zone.find(smn_region[a]) != -1:
                                     loginf( "SMN ACP found for %s" % smn_region[a])
-                                    alert_head_xp = '//*[@id="block-system-main"]/div/div[' + str(i) + ']/h2/text()'
-                                    i += 1
-                                    alert_dat_xp = '//*[@id="block-system-main"]/div[1]/ul[' + str(i) + ']/li[1]/text()'
-                                    i -= 1
-                                    html_body_alerts.append('<span class="alerts"><i class="fa fa-exclamation-triangle"></i></span><a href="' + \
-                                                    smn_url_acp + '" target="_blank" title="Alertas SMN"><span class="alerts_text">' + \
+                                    # alert_head_xp = '//*[@id="block-system-main"]/div/div[' + str(i) + ']/h2/text()'
+                                    alert_head_xp = '//*[@id="block-system-main"]/div[' + str(i) + ']/div[1]/h2/text()'
+                                    # i += 1
+                                    # alert_dat_xp = '//*[@id="block-system-main"]/div[1]/ul[' + str(i) + ']/li[1]/text()'
+                                    alert_dat_xp = '//*[@id="block-system-main"]/div[' + str(i) + ']/ul[2]/li[1]/text()'
+                                    # i -= 1
+                                    html_body_acp.append('<span class="alerts"><i class="fa fa-exclamation-triangle"></i></span><a href="' + \
+                                                    smn_url_acp + '" target="_blank" title="ACP SMN"><span class="alerts_text">' + \
                                                     get_alert(alert_head_xp, tree).encode('utf-8') + \
                                                     '</span></a><span class="alerts"><i class="fa fa-calendar"></i></span><span class="alerts_text">' + \
                                                     get_alert(alert_dat_xp, tree).encode('utf-8') + '</span>\n')
@@ -624,6 +627,7 @@ class getData(SearchList):
                     if len(html_body_acp) != 0:
                         for i in range(len(html_body_acp)):
                             f.write(html_body_acp[i])
+                    f.write('<span class="alerts_subtext">' + smn_source + '</span>\n')
                     f.write('</div>\n')
                     f.write('</body>\n')
                     f.write('</html>\n')
