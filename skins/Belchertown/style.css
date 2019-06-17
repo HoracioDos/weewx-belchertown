@@ -1919,7 +1919,7 @@ table.celestial td.label {
     /* padding-top:30px; */
 }
 
-.stats_contents {
+#stats_contents {
     width: 95%;
     margin: 0 auto;
     font-size: 18px;
