@@ -80,6 +80,7 @@
 
     # This is the display of the Pi Kiosk which is in the /pi folder
     pi_kiosk_bold = "false"
+    pi_theme = "auto"
 
 ###############################################################################
 
@@ -94,7 +95,7 @@
 
         # Extra Observation labels
         appTemp              = Sensación Térmica
-        cloudbase            = Techo Nuboso
+        cloudbase            = Techo Nub.
         visibility           = Visibilidad
         windrun              = Distancia del Viento
         
@@ -116,7 +117,7 @@ sitio."
         twitter_hashtags = "weewx #weather"
         
         # Station Observation Table
-        rainWithRainRate     = Precipitación
+        rainWithRainRate     = Precipitac.
         
         # Navigation Menu
         nav_home        = Inicio
