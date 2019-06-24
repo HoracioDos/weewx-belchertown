@@ -23,21 +23,21 @@
     #set $today_daylight = $sunset_ts -  $sunrise_ts
 
     #set $seconds = $today_daylight
-    #set $hours = $seconds //3600
+    #set $hours = $seconds // 3600
     #set $seconds %= 3600
-    #set $minutes = $seconds//60
+    #set $minutes = $seconds // 60
     #set $seconds %= 60
-    #set $daylight_str = "%02d:%02d:%02d hs" % ($hours, $minutes, $seconds)
-    ##set $daylight_str = "%d %s, %d %s, %d %s" % ($hours, $obs.label.hour[0] if ( $hours == 1 ) else $obs.label.hour[1], $minutes, $obs.label.minute[0] if ( $minutes == 1 ) else $obs.label.minute[1], $seconds, $obs.label.second[0] if ( $seconds == 1 ) else $obs.label.second[1])
+    #set $daylight_str = "%02d:%02d:%02d hs" % ($hours, $obs.label.hour[0] if ( $hours == 1 ) else $obs.label.hour[1], $minutes, $obs.label.minute[0] if ( $minutes == 1 ) else $obs.label.minute[1], $seconds, $obs.label.second[0] if ( $seconds == 1 ) else $obs.label.second[1])
+
     #set $yesterday = $now - 24*3600
     #set $yesterday_daylight = $almanac($almanac_time=$yesterday).sun.set.raw - $almanac($almanac_time=$yesterday).sun.rise.raw
     #set $difference = $today_daylight - $yesterday_daylight
     #if $difference
       #set $delta = abs($difference)
-      ##set $minutes_text = $obs.label.minute[0] if ( (int($delta) // 60) == 1 ) else $obs.label.minute[1]
-      ##set $seconds_text = $obs.label.second[0] if ( ($delta % 60) == 1 ) else $obs.label.second[1]
-      ##set $amt_str = "%s%d %s" % (str(int($delta) // 60) + ' ' + $minutes_text + ', ' if ($delta // 60) > 0 else '', $delta % 60 if ($delta // 60) > 0 else $delta, $seconds_text)
-      #set $amt_str = "%s%ds" % (str(int($delta) // 60) + 'm ' if ($delta // 60) > 0 else '', $delta % 60 if ($delta // 60) > 0 else $delta)    
+      #set $minute_difference = (int($delta) // 60)
+      #set $minutes_text = $obs.label.minute[0] if ( $minute_difference == 1 ) else $obs.label.minute[1]
+      #set $seconds_text = $obs.label.second[0] if ( int($delta) == 1 ) else $obs.label.second[1]
+      #set $amt_str = "%s%d %s" % (str(int($delta) // 60) + 'm ' + $minutes_text + ', ' if ($delta // 60) > 0 else '', $delta % 60 if ($delta // 60) > 0 else $delta, $seconds_text)
       #if $difference > 0
         #set $delta_str = "%s %s" % ( $amt_str, $obs.label.more_than_yesterday )
       #else

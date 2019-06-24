@@ -1420,14 +1420,6 @@ p.entry-meta {
     font-size: 14px;
 }
 
-.boxed {
- /* background: black; */
- /* color: white;     */ 
-    font-weight: bolder;
- /* padding: 5px; */
-    text-decoration: underline;
-}
-
 .wx-fb, .wx-share-sep, .wx-twitter {
     display:inline-block;
 }
@@ -1735,6 +1727,7 @@ table.celestial td.label {
 .moon-container {
 	font-size:14.5px; /* Fix CC */
         padding-bottom: 10px; /* Fix CC */
+   /*   color:#808080;  Fix CC */
 }
 
 .moon {
@@ -2133,6 +2126,10 @@ input:checked + .slider:before {
 	
     .sun { float: left; }
     .moon { float: right; }
+    
+    .page .sun-moon-modal a {
+        font-size: 20px;
+    }
 	
 	.forecast-subtitle {
 		display: block;
