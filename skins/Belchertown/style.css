@@ -1420,6 +1420,14 @@ p.entry-meta {
     font-size: 14px;
 }
 
+.boxed {
+ /* background: black; */
+ /* color: white;     */
+    font-weight: bolder;
+ /* padding: 5px; */
+    text-decoration: underline;
+}
+
 .wx-fb, .wx-share-sep, .wx-twitter {
     display:inline-block;
 }
