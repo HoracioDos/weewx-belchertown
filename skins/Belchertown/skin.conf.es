@@ -163,6 +163,7 @@ sitio."
         daily_forecast              = Pronóstico
         wind_speed                  = Veloc.
         wind_gust                   = Racha
+        wind_today_max              = Máx Hoy
         feels_like                  = Sensación
         highest_temperature         = Máxima
         lowest_temperature          = Mínima
