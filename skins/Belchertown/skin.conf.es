@@ -268,6 +268,9 @@ sitio."
         reports_click_here_link     = Cliquee aquí
         reports_view_more           = para ver este reporte. Selecione el mes o el año para elegir otro diferente.
         
+        # Pi Page Text and Titles
+        mqtt_websockets_connected_pi        = Connectado. Recibido
+
         # moment.js default labels formats
         time_earthquake                         = "LLL"
         time_lastUpdated                        = "LL, LTS"
