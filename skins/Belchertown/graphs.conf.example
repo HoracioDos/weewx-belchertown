@@ -514,11 +514,10 @@ connectNulls = "true"
     show_button = true
     button_text = Ultimo Mes
     type = spline
+    time_length = 2592000 # Last 30 days
     tooltip_date_format = "dddd LL"
     aggregate_type = max
     aggregate_interval = 86400 # 1 day
-    time_length = months_ago
-    time_ago = 1
     gapsize = 86400000 # 1 day in milliseconds
 
     [[chart1]]
@@ -598,11 +597,10 @@ connectNulls = "true"
     show_button = true
     button_text = "Ultimo Año"
     type = spline
+    time_length = year
     tooltip_date_format = "dddd LL"
     aggregate_type = max
     aggregate_interval = 86400 # 1 day
-    time_length = years_ago
-    time_ago = 1
     gapsize = 86400000 # 1 day in milliseconds
 
     [[chart1]]
@@ -653,7 +651,7 @@ connectNulls = "true"
         title = Presión Barométrica
         [[[barometer]]]
             color = "#BECC00"
-            yAxis_tickInterval = 0.01
+            # yAxis_tickInterval = 0.01
         
     [[chart6]]
         title = Indice UV y Radiación Solar

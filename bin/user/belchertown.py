@@ -33,7 +33,7 @@ from collections import OrderedDict
 
 from weewx.cheetahgenerator import SearchList
 from weewx.tags import TimespanBinder
-from weeutil.weeutil import to_bool, TimeSpan, to_int, archiveDaySpan, archiveWeekSpan, archiveMonthSpan, archiveYearSpan, startOfDay, timestamp_to_string, option_as_list
+from weeutil.weeutil import to_bool, TimeSpan, to_float, to_int, archiveDaySpan, archiveWeekSpan, archiveMonthSpan, archiveYearSpan, startOfDay, timestamp_to_string, option_as_list
 try:
     from weeutil.config import search_up
 except:
@@ -780,7 +780,10 @@ class getData(SearchList):
 
             # Process the earthquake file        
             with open( earthquake_file, "r" ) as read_file:
-                eqdata = json.load( read_file )
+                try:
+                    eqdata = json.load( read_file )
+                except:
+                    eqdata = ""
             
             try:
                 eqtime = eqdata["features"][0]["properties"]["time"] / 1000
@@ -1355,8 +1358,9 @@ class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
                         # No custom series data overrides, so just add series_data to the chart series data
                         output[chart_group][plotname]["series"][line_name]["data"] = series_data
                         
-                    # Final pass through self._highchartsSeriesOptionsToInt() to convert any integer back to int which ConfigObj made a string. Highcharts typically wants integers
-                    output[chart_group][plotname]["series"][line_name] = self._highchartsSeriesOptionsToInt(output[chart_group][plotname]["series"][line_name])
+                    # Final pass through self._highchartsSeriesOptionsToFloat() to convert the remaining options with numeric values to float
+                    # such that Highcharts can make use of them.
+                    output[chart_group][plotname]["series"][line_name] = self._highchartsSeriesOptionsToFloat(output[chart_group][plotname]["series"][line_name])
             
             # This consolidates all chart_groups into the chart_group JSON (day.json, week.json, month.json, year.json) and saves them to HTML_ROOT/json
             html_dest_dir = os.path.join(self.config_dict['WEEWX_ROOT'],
@@ -1854,17 +1858,17 @@ class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
         elif (degree >= 348.76 and degree <= 360):
             return "N"
     
-    def _highchartsSeriesOptionsToInt(self, d):
-        # Recurse through all the series options and set any strings that should be integers back to integers. 
+    def _highchartsSeriesOptionsToFloat(self, d):
+        # Recurse through all the series options and set any strings that should be numbers to float.
         # https://stackoverflow.com/a/54565277/1177153
         try:
             for k, v in d.items():
                 if isinstance(v, dict):
                     # Check nested dicts
-                    self._highchartsSeriesOptionsToInt(v)
+                    self._highchartsSeriesOptionsToFloat(v)
                 else:
                     try:
-                        v = to_int(v)
+                        v = to_float(v)
                         d.update({k: v})
                     except:
                         pass
