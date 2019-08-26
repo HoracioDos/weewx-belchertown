@@ -80,7 +80,7 @@ def logerr(msg):
     logmsg(syslog.LOG_ERR, msg)
     
 # Print version in syslog for easier troubleshooting
-VERSION = "1.1b4"
+VERSION = "1.1b5"
 loginf("version %s" % VERSION)
 
 class getData(SearchList):
@@ -1312,6 +1312,9 @@ class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
                     
                     mirrored_value = line_options.get('mirrored_value', None)
                     
+                    css_class = line_options.get('css_class', None)
+                    output[chart_group][plotname]["options"]["css_class"] = css_class
+                    
                     # Build the final array items. 
                     
                     # This for loop is to get any user provided highcharts series config data. Built-in highcharts variable names accepted.  
@@ -1350,10 +1353,14 @@ class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
                     if isinstance(series_data, dict):
                         # If the returned type is a dict, then it's from the xaxis groupby section containing labels. Need to repack data, and update xaxis_categories.
                         # Use SQL Labels?
-                        if series_data["use_sql_labels"]:
-                            output[chart_group][plotname]["options"]["xaxis_categories"] = series_data["xaxis_groupby_labels"]
+                        if "use_sql_labels" in series_data:
+                            if series_data["use_sql_labels"]:
+                                output[chart_group][plotname]["options"]["xaxis_categories"] = series_data["xaxis_groupby_labels"]
+                        elif "weatherRadial" in series_data:
+                            output[chart_group][plotname]["series"][line_name]["radial_outTemp_unit"] = series_data["radial_outTemp_unit"]
+                        
                         # No matter what, reset data back to just the series data and not a dict of values
-                        output[chart_group][plotname]["series"][line_name]["data"] = series_data["xaxis_groupby_data"]
+                        output[chart_group][plotname]["series"][line_name]["data"] = series_data["obsdata"]
                     else:
                         # No custom series data overrides, so just add series_data to the chart series data
                         output[chart_group][plotname]["series"][line_name]["data"] = series_data
@@ -1662,6 +1669,52 @@ class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
             series.append(group_6)
             return series
         
+        # Special Belchertown Weather Radial
+        # https://www.highcharts.com/blog/tutorials/209-the-art-of-the-chart-weather-radials/
+        if observation == "weatherRadial":
+            obs_lookup = "outTemp"
+                
+            # Force 1 day if aggregate_interval
+            if not aggregate_interval:
+                aggregate_interval = 86400
+            
+            # Get min outTemp values
+            aggregate_type = "min"
+            try:
+                (time_start_vt, time_stop_vt, obs_vt) = archive.getSqlVectors(TimeSpan(start_ts, end_ts), obs_lookup, aggregate_type, aggregate_interval)
+            except Exception as e:
+                raise Warning( "Error trying to use database binding %s to graph observation %s. Error was: %s." % (binding, obs_lookup, e) )
+            
+            outTemp_min_obs_vt = self.converter.convert(obs_vt)
+            
+            # Get max outTemp values
+            aggregate_type = "max"
+            try:
+                (time_start_vt, time_stop_vt, obs_vt) = archive.getSqlVectors(TimeSpan(start_ts, end_ts), obs_lookup, aggregate_type, aggregate_interval)
+            except Exception as e:
+                raise Warning( "Error trying to use database binding %s to graph observation %s. Error was: %s." % (binding, obs_lookup, e) )
+            
+            outTemp_max_obs_vt = self.converter.convert(obs_vt)
+            
+            # Get avg outTemp values
+            aggregate_type = "avg"
+            try:
+                (time_start_vt, time_stop_vt, obs_vt) = archive.getSqlVectors(TimeSpan(start_ts, end_ts), obs_lookup, aggregate_type, aggregate_interval)
+            except Exception as e:
+                raise Warning( "Error trying to use database binding %s to graph observation %s. Error was: %s." % (binding, obs_lookup, e) )
+            
+            outTemp_avg_obs_vt = self.converter.convert(obs_vt)
+            
+            degree_unit = outTemp_avg_obs_vt[1]
+            
+            # Convert to millis and zip all together
+            time_ms = [float(x) * 1000 for x in time_start_vt[0]]            
+            outputData = zip(time_ms, outTemp_min_obs_vt[0], outTemp_max_obs_vt[0], outTemp_avg_obs_vt[0])
+            
+            data = {"weatherRadial": True, "obsdata": outputData, "radial_outTemp_unit": degree_unit}
+            
+            return data
+
         # Special Belchertown Skin rain counter
         if observation == "rainTotal":
             obs_lookup = "rain"
@@ -1738,9 +1791,9 @@ class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
 
             # Return a dict which has the value for if we need to add labels from sql or not. 
             if len(xaxis_categories) == 0:
-                data = {"use_sql_labels": True, "xaxis_groupby_labels": xaxis_labels, "xaxis_groupby_data": obsvalues}
+                data = {"use_sql_labels": True, "xaxis_groupby_labels": xaxis_labels, "obsdata": obsvalues}
             else:
-                data = {"use_sql_labels": False, "xaxis_groupby_labels": "", "xaxis_groupby_data": obsvalues}
+                data = {"use_sql_labels": False, "xaxis_groupby_labels": "", "obsdata": obsvalues}
             return data
         
         # Begin standard observation lookups
