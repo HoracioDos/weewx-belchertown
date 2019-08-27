@@ -167,7 +167,7 @@ sitio."
         feels_like                  = Sensación
         highest_temperature         = Máxima
         lowest_temperature          = Mínima
-        average_temperature         = Promedio
+        average_temperature         = Media
         forecast_header             = Pronóstico a 8 días
         header_last_updated         = Ultima Actualización
         header_last_updated_alert   = ¡Atención! La información puede estar desactualizada.
