@@ -167,6 +167,7 @@ sitio."
         feels_like                  = Sensación
         highest_temperature         = Máxima
         lowest_temperature          = Mínima
+        average_temperature         = Promedio
         forecast_header             = Pronóstico a 8 días
         header_last_updated         = Ultima Actualización
         header_last_updated_alert   = ¡Atención! La información puede estar desactualizada.
@@ -348,6 +349,7 @@ sitio."
         inHg               = %.3f
         inch               = %.2f
         inch_per_hour      = %.2f
+        km                 = %.2f
         km_per_hour        = %.0f
         km_per_hour2       = %.1f
         knot               = %.0f
@@ -356,6 +358,7 @@ sitio."
         meter              = %.0f
         meter_per_second   = %.1f
         meter_per_second2  = %.1f
+        mile               = %.2f
         mile_per_hour      = %.0f
         mile_per_hour2     = %.1f
         mm                 = %.1f
@@ -382,6 +385,7 @@ sitio."
         inHg              = " inHg"
         inch              = " in"
         inch_per_hour     = " in/hr"
+        km                = " km"
         km_per_hour       = " km/h"
         km_per_hour2      = " km/h"
         knot              = " nudos"
@@ -390,6 +394,7 @@ sitio."
         meter             = " metros"
         meter_per_second  = " m/s"
         meter_per_second2 = " m/s"
+        mile              = " miles"
         mile_per_hour     = " mph"
         mile_per_hour2    = " mph"
         mm                = " mm"
