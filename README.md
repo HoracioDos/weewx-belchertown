@@ -4,7 +4,7 @@ This fork from [weewx-belchertown skin](https://github.com/poblabs/weewx-belcher
 
 This version was synced upstream to **1.1b5** on **August 27, 2019**. 
 
-Latest commit: Development Branch **c5c73f5** 
+Latest commit: Development Branch **31576d6** 
 
 ![homepage_screenshot](https://raw.githubusercontent.com/HoracioDos/weewx-belchertown/master/assets/homepage_screenshot.png)
 
