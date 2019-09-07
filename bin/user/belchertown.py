@@ -5,6 +5,7 @@
 # Pat O'Brien, August 19, 2018
 
 from __future__ import with_statement
+from __future__ import print_function  # Python 2/3 compatiblity
 from lxml import html
 import datetime
 import time
@@ -39,14 +40,12 @@ try:
 except:
     # Pass here because chances are we have an old version of weewx which will get caught below. 
     pass
-    
-# Check weewx version. Many things like search_up, weeutil.weeutil.KeyDict (label_dict) are from 3.9
-if weewx.__version__ < "3.9":
-    raise weewx.UnsupportedFeature("weewx 3.9 and newer is required, found %s" % weewx.__version__)   
-    
-# This helps with locale. https://stackoverflow.com/a/40346898/1177153
-reload(sys)
-sys.setdefaultencoding("utf-8")
+try:
+    # weewx 4
+    from weeutil.config import accumulateLeaves
+except:
+    # weewx 3
+    from weeutil.weeutil import accumulateLeaves
 
 def get_alert(xpath, html_tree):
     try:
@@ -66,21 +65,46 @@ def get_tree(ws_url, smn_rqs):
         loginf( "SMN %s Request failed!!!" % smn_rqs)
         html_tree = ""
         return html_tree
+    
+# Check weewx version. Many things like search_up, weeutil.weeutil.KeyDict (label_dict) are from 3.9
+if weewx.__version__ < "3.9":
+    raise weewx.UnsupportedFeature("weewx 3.9 and newer is required, found %s" % weewx.__version__)   
 
-def logmsg(level, msg):
-    syslog.syslog(level, 'Belchertown Extension: %s' % msg)
+try:
+    # Test for new-style weewx v4 logging by trying to import weeutil.logger
+    import weeutil.logger
+    import logging
 
-def logdbg(msg):
-    logmsg(syslog.LOG_DEBUG, msg)
+    log = logging.getLogger(__name__)
 
-def loginf(msg):
-    logmsg(syslog.LOG_INFO, msg)
+    def logdbg(msg):
+        log.debug(msg)
 
-def logerr(msg):
-    logmsg(syslog.LOG_ERR, msg)
+    def loginf(msg):
+        log.info(msg)
+
+    def logerr(msg):
+        log.error(msg)
+
+except ImportError:
+    # Old-style weewx logging
+    import syslog
+
+    def logmsg(level, msg):
+        syslog.syslog(level, 'Belchertown Extension: %s' % msg)
+
+    def logdbg(msg):
+        logmsg(syslog.LOG_DEBUG, msg)
+
+    def loginf(msg):
+        logmsg(syslog.LOG_INFO, msg)
+
+    def logerr(msg):
+        logmsg(syslog.LOG_ERR, msg)
+
     
 # Print version in syslog for easier troubleshooting
-VERSION = "1.1b5"
+VERSION = "1.1b6"
 loginf("version %s" % VERSION)
 
 class getData(SearchList):
@@ -106,13 +130,6 @@ class getData(SearchList):
         binding = self.generator.config_dict['StdReport'].get('data_binding', 'wx_binding')
         manager = self.generator.db_binder.get_manager(binding)
 
-        # Setup belchertown_root_url for the absolute links
-        #try:
-        #    belchertown_root_url = self.generator.skin_dict['Extras']['belchertown_root_url']
-        #except:
-        #    # Force a blank root url if the default "" is removed from skin.conf
-        #    belchertown_root_url = ""
-            
         belchertown_debug = self.generator.skin_dict['Extras'].get('belchertown_debug', 0)
 
         # Find the right HTML ROOT
@@ -161,10 +178,23 @@ class getData(SearchList):
         except:
             system_locale_js = "en-US" # Error finding locale, set to en-US
             
-        try:
-            highcharts_decimal = locale.localeconv()["decimal_point"]
-        except:
-            highcharts_decimal = "." # Default to a period
+        highcharts_decimal = self.generator.skin_dict['Extras'].get('highcharts_decimal', None)
+        # Change the Highcharts decimal to the locale if the option is missing or on auto mode, otherwise use whats defined in Extras
+        if highcharts_decimal is None or highcharts_decimal == "auto":
+            try:
+                highcharts_decimal = locale.localeconv()["decimal_point"]
+            except:
+                # Locale not found, default back to a period
+                highcharts_decimal = "."
+
+        highcharts_thousands = self.generator.skin_dict['Extras'].get('highcharts_thousands', None)
+        # Change the Highcharts thousands separator to the locale if the option is missing or on auto mode, otherwise use whats defined in Extras
+        if highcharts_thousands is None or highcharts_thousands == "auto":
+            try:
+                highcharts_thousands = locale.localeconv()["thousands_sep"]
+            except:
+                # Locale not found, default back to a comma
+                highcharts_thousands = ","
             
         # Get the archive interval for the highcharts gapsize
         try:
@@ -668,13 +698,17 @@ class getData(SearchList):
             
             # File is stale, download a new copy
             if forecast_is_stale:
-                # Download new forecast data
                 try:
-                    import urllib2
+                    try:
+                        # Python 3
+                        from urllib.request import Request, urlopen
+                    except ImportError:
+                        # Python 2
+                        from urllib2 import Request, urlopen
                     user_agent = 'Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_4; en-US) AppleWebKit/534.3 (KHTML, like Gecko) Chrome/6.0.472.63 Safari/534.3'
                     headers = { 'User-Agent' : user_agent }
-                    req = urllib2.Request( forecast_url, None, headers )
-                    response = urllib2.urlopen( req )
+                    req = Request( forecast_url, None, headers )
+                    response = urlopen( req )
                     page = response.read()
                     response.close()
                 except Exception as error:
@@ -682,10 +716,10 @@ class getData(SearchList):
                     
                 # Save forecast data to file. w+ creates the file if it doesn't exist, and truncates the file and re-writes it everytime
                 try:
-                    with open( forecast_file, 'w+' ) as file:
+                    with open( forecast_file, 'wb+' ) as file:
                         file.write( page )
                         loginf( "New forecast file downloaded to %s" % forecast_file )
-                except IOError, e:
+                except IOError as e:
                     raise Warning( "Error writing forecast info to %s. Reason: %s" % ( forecast_file, e) )
 
             # Process the forecast file
@@ -746,11 +780,16 @@ class getData(SearchList):
             if earthquake_is_stale:
                 # Download new earthquake data
                 try:
-                    import urllib2
+                    try:
+                        # Python 3
+                        from urllib.request import Request, urlopen
+                    except ImportError:
+                        # Python 2
+                        from urllib2 import Request, urlopen
                     user_agent = 'Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_4; en-US) AppleWebKit/534.3 (KHTML, like Gecko) Chrome/6.0.472.63 Safari/534.3'
                     headers = { 'User-Agent' : user_agent }
-                    req = urllib2.Request( earthquake_url, None, headers )
-                    response = urllib2.urlopen( req )
+                    req = Request( earthquake_url, None, headers )
+                    response = urlopen( req )
                     page = response.read()
                     response.close()
                     if weewx.debug:
@@ -771,11 +810,11 @@ class getData(SearchList):
 
                 # Save earthquake data to file. w+ creates the file if it doesn't exist, and truncates the file and re-writes it everytime
                 try:
-                    with open( earthquake_file, 'w+' ) as file:
+                    with open( earthquake_file, 'wb+' ) as file:
                         file.write( page )
                         if weewx.debug:
                             logdbg( "Earthquake data saved to %s" % earthquake_file )
-                except IOError, e:
+                except IOError as e:
                     raise Warning( "Error writing earthquake data to %s. Reason: %s" % ( earthquake_file, e) )
 
             # Process the earthquake file        
@@ -831,11 +870,16 @@ class getData(SearchList):
             if github_version_is_stale:
                 # Download new GitHub data
                 try:
-                    import urllib2
+                    try:
+                        # Python 3
+                        from urllib.request import Request, urlopen
+                    except ImportError:
+                        # Python 2
+                        from urllib2 import Request, urlopen
                     user_agent = 'Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_4; en-US) AppleWebKit/534.3 (KHTML, like Gecko) Chrome/6.0.472.63 Safari/534.3'
                     headers = { 'User-Agent' : user_agent }
-                    req = urllib2.Request( github_version_url, None, headers )
-                    response = urllib2.urlopen( req )
+                    req = Request( github_version_url, None, headers )
+                    response = urlopen( req )
                     #page = response.read()
                     page = json.load( response )
                     response.close()
@@ -847,10 +891,10 @@ class getData(SearchList):
                     tag_name = page["tag_name"].split("-")[2]
                     try:
                         # Save data to file. w+ creates the file if it doesn't exist, and truncates the file and re-writes it everytime
-                        with open( github_version_file, 'w+' ) as file:
+                        with open( github_version_file, 'wb+' ) as file:
                             file.write( tag_name )
                             loginf( "Update Checker: New GitHub Version file downloaded to %s" % github_version_file )
-                    except IOError, e:
+                    except IOError as e:
                         logerr( "Update Checker: Error writing GitHub Version info to %s. Reason: %s" % ( github_version_file, e) )
                 except:
                     pass
@@ -859,7 +903,7 @@ class getData(SearchList):
                 # Process the file
                 with open( github_version_file, "r" ) as read_file:
                     data = read_file.read()
-            except IOError, e:
+            except IOError as e:
                 logerr( "Update Checker: Unable to open %s. Reason: %s" % ( github_version_file, e) )
                 data = ""
             
@@ -1029,6 +1073,7 @@ class getData(SearchList):
                                   'system_locale_js': system_locale_js,
                                   'locale_encoding': locale_encoding,
                                   'highcharts_decimal': highcharts_decimal,
+                                  'highcharts_thousands': highcharts_thousands,
                                   'radar_html': radar_html,
                                   'archive_interval_ms': archive_interval_ms,
                                   'ordinate_names': ordinate_names,
@@ -1131,7 +1176,7 @@ class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
         # Loop through each timespan
         for chart_group in self.chart_dict.sections:
             output[chart_group] = OrderedDict() # This retains the order in which to load the charts on the page.
-            chart_options = weeutil.weeutil.accumulateLeaves(self.chart_dict[chart_group])
+            chart_options = accumulateLeaves(self.chart_dict[chart_group])
                 
             output[chart_group]["belchertown_version"] = VERSION
             output[chart_group]["generated_timestamp"] = time.strftime('%m/%d/%Y %H:%M:%S')
@@ -1158,7 +1203,7 @@ class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
                 output[chart_group][plotname]["options"]["renderTo"] = plotname # daychart1, weekchart1, etc. Used for the graphs page and the different chart_groups
                 output[chart_group][plotname]["options"]["chart_group"] = chart_group
                 
-                plot_options = weeutil.weeutil.accumulateLeaves(self.chart_dict[chart_group][plotname])
+                plot_options = accumulateLeaves(self.chart_dict[chart_group][plotname])
                 
                 # Setup the database binding, default to weewx.conf's binding if none supplied. 
                 binding = plot_options.get('data_binding', self.config_dict['StdReport'].get('data_binding', 'wx_binding'))
@@ -1204,12 +1249,24 @@ class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
                 plot_tooltip_date_format = plot_options.get('tooltip_date_format', None)
                 output[chart_group][plotname]["options"]["plot_tooltip_date_format"] = plot_tooltip_date_format
                 
+                # Width and height specific CSS overrides
+                output[chart_group][plotname]["options"]["css_width"] = plot_options.get('width', "")
+                output[chart_group][plotname]["options"]["css_height"] = plot_options.get('height', "")
+                
+                # Setup exporting option
+                exporting = plot_options.get('exporting', None)
+                if exporting is not None and to_bool(exporting):
+                    # Only turn on exporting if it's not none and it's true (1 or True)
+                    output[chart_group][plotname]["options"]["exporting"] = "true"
+                else:
+                    output[chart_group][plotname]["options"]["exporting"] = "false"
+                
                 # Loop through each observation within the chart chart_group
                 for line_name in self.chart_dict[chart_group][plotname].sections:
                     output[chart_group][plotname]["series"][line_name] = {}
                     output[chart_group][plotname]["series"][line_name]["obsType"] = line_name
                     
-                    line_options = weeutil.weeutil.accumulateLeaves(self.chart_dict[chart_group][plotname][line_name])
+                    line_options = accumulateLeaves(self.chart_dict[chart_group][plotname][line_name])
                     
                     # Look for any keyword timespans first and default to those start/stop times for the chart
                     time_length = line_options.get('time_length', 86400)
@@ -1266,24 +1323,24 @@ class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
                     # Find the observation type if specified (e.g. more than 1 of the same on a chart). (e.g. outTemp, rainFall, windDir, etc.)
                     observation_type = line_options.get('observation_type', line_name)
                     
-                    # If we have a weather radial, define what the actual observation type to lookup in the db is, and to use for yAxis labels
-                    weatherRadial_obsLookup = line_options.get('radial_type', None)
+                    # If we have a weather range, define what the actual observation type to lookup in the db is, and to use for yAxis labels
+                    weatherRange_obsLookup = line_options.get('range_type', None)
                     
                     # Get any custom names for this observation 
                     name = line_options.get('name', None)
                     if not name:
                         # No explicit name. Look up a generic one. NB: label_dict is a KeyDict which
                         # will substitute the key if the value is not in the dictionary.
-                        if weatherRadial_obsLookup is not None:
-                            name = label_dict[weatherRadial_obsLookup]
+                        if weatherRange_obsLookup is not None:
+                            name = label_dict[weatherRange_obsLookup]
                         else:
                             name = label_dict[observation_type]
                     
                     # Get the unit label
                     if observation_type == "rainTotal":
                         obs_label = "rain"
-                    elif observation_type == "weatherRadial" and weatherRadial_obsLookup is not None:
-                        obs_label = weatherRadial_obsLookup
+                    elif observation_type == "weatherRange" and weatherRange_obsLookup is not None:
+                        obs_label = weatherRange_obsLookup
                     else:
                         obs_label = observation_type
                     unit_label = line_options.get('yAxisLabel_unit', weewx.units.get_label_string(self.formatter, self.converter, obs_label))
@@ -1324,9 +1381,7 @@ class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
                     
                     # Setup polar charts
                     polar = line_options.get('polar', None)
-                    if polar is not None:
-                        polar = to_bool(polar)
-                    if polar:
+                    if polar is not None and to_bool(polar):
                         # Only turn on polar if it's not none and it's true (1 or True)
                         output[chart_group][plotname]["series"][line_name]["polar"] = "true"
                     else:
@@ -1362,7 +1417,7 @@ class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
                         output[chart_group][plotname]["series"][line_name]["rounding"] = "-1"
                     
                     # Build series data
-                    series_data = self._getObservationData(binding, archive, observation_type, minstamp, maxstamp, aggregate_type, aggregate_interval, time_length, xaxis_groupby, xaxis_categories, mirrored_value, weatherRadial_obsLookup)
+                    series_data = self._getObservationData(binding, archive, observation_type, minstamp, maxstamp, aggregate_type, aggregate_interval, time_length, xaxis_groupby, xaxis_categories, mirrored_value, weatherRange_obsLookup)
 
                     # Build the final series data JSON
                     if isinstance(series_data, dict):
@@ -1371,33 +1426,34 @@ class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
                         if "use_sql_labels" in series_data:
                             if series_data["use_sql_labels"]:
                                 output[chart_group][plotname]["options"]["xaxis_categories"] = series_data["xaxis_groupby_labels"]
-                        elif "weatherRadial" in series_data:
-                            output[chart_group][plotname]["series"][line_name]["radial_unit"] = series_data["radial_unit"]
-                            output[chart_group][plotname]["series"][line_name]["radial_unit_label"] = series_data["radial_unit_label"]
+                        elif "weatherRange" in series_data:
+                            output[chart_group][plotname]["series"][line_name]["range_unit"] = series_data["range_unit"]
+                            output[chart_group][plotname]["series"][line_name]["range_unit_label"] = series_data["range_unit_label"]
                         
                         # No matter what, reset data back to just the series data and not a dict of values
-                        output[chart_group][plotname]["series"][line_name]["data"] = series_data["obsdata"]
+                        output[chart_group][plotname]["series"][line_name]["data"] = list(series_data["obsdata"])
                     else:
                         # No custom series data overrides, so just add series_data to the chart series data
-                        output[chart_group][plotname]["series"][line_name]["data"] = series_data
+                        output[chart_group][plotname]["series"][line_name]["data"] = list(series_data)
                         
                     # Final pass through self._highchartsSeriesOptionsToFloat() to convert the remaining options with numeric values to float
                     # such that Highcharts can make use of them.
                     output[chart_group][plotname]["series"][line_name] = self._highchartsSeriesOptionsToFloat(output[chart_group][plotname]["series"][line_name])
             
-            # This consolidates all chart_groups into the chart_group JSON (day.json, week.json, month.json, year.json) and saves them to HTML_ROOT/json
+            # This consolidates all chart_groups into the chart_group JSON file and saves them to HTML_ROOT/json
             html_dest_dir = os.path.join(self.config_dict['WEEWX_ROOT'],
                                      self.skin_dict['HTML_ROOT'],
                                      "json")
             json_filename = html_dest_dir + "/" + chart_group + ".json"
             with open(json_filename, mode='w') as jf:
                 jf.write( json.dumps( output[chart_group] ) )
+            
             # Save the graphs.conf to a json file for future debugging
             chart_json_filename = html_dest_dir + "/graphs.json"
             with open(chart_json_filename, mode='w') as cjf:
                 cjf.write( json.dumps( self.chart_dict ) )
 
-    def _getObservationData(self, binding, archive, observation, start_ts, end_ts, aggregate_type, aggregate_interval, time_length, xaxis_groupby, xaxis_categories, mirrored_value, weatherRadial_obsLookup):
+    def _getObservationData(self, binding, archive, observation, start_ts, end_ts, aggregate_type, aggregate_interval, time_length, xaxis_groupby, xaxis_categories, mirrored_value, weatherRange_obsLookup):
         """Get the SQL vectors for the observation, the aggregate type and the interval of time"""
         
         if observation == "windRose":
@@ -1685,15 +1741,15 @@ class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
             series.append(group_6)
             return series
         
-        # Special Belchertown Weather Radial
+        # Special Belchertown Weather Range (radial)
         # https://www.highcharts.com/blog/tutorials/209-the-art-of-the-chart-weather-radials/
-        if observation == "weatherRadial":
+        if observation == "weatherRange":
             
             # Define what we are looking up
-            if weatherRadial_obsLookup is not None:
-                obs_lookup = weatherRadial_obsLookup
+            if weatherRange_obsLookup is not None:
+                obs_lookup = weatherRange_obsLookup
             else:
-                raise Warning( "Error trying to create the weather radial graph. You are missing the radial_type configuration item." )
+                raise Warning( "Error trying to create the weather range graph. You are missing the range_type configuration item." )
                 
             # Force 1 day if aggregate_interval. These charts are meant to show a column range for high, low and average for a full day.
             if not aggregate_interval:
@@ -1733,7 +1789,7 @@ class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
             time_ms = [float(x) * 1000 for x in time_start_vt[0]]            
             outputData = zip(time_ms, min_obs_vt[0], max_obs_vt[0], avg_obs_vt[0])
             
-            data = {"weatherRadial": True, "obsdata": outputData, "radial_unit": obs_unit, "radial_unit_label": obs_unit_label}
+            data = {"weatherRange": True, "obsdata": outputData, "range_unit": obs_unit, "range_unit_label": obs_unit_label}
             
             return data
 
@@ -1870,7 +1926,7 @@ class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
         if value is not None:
             try:
                 value = round(value, places)
-            except Exception, e:
+            except Exception as e:
                 value = None
         return value
 

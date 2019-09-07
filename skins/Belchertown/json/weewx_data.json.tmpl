@@ -26,7 +26,9 @@
         "reload_images_hook_as": "$Extras.reload_images_hook_as",
         "reload_images_hook_ac": "$Extras.reload_images_hook_ac",
         "station_observations": "$Extras.station_observations",
-        "highcharts_homepage_graphgroup": "$Extras.highcharts_homepage_graphgroup"
+        "highcharts_homepage_graphgroup": "$Extras.highcharts_homepage_graphgroup",
+        "highcharts_decimal": "$Extras.highcharts_decimal",
+        "highcharts_thousands": "$Extras.highcharts_thousands"
     },
     "station": {
         "hardware": "$station.hardware",
@@ -52,6 +54,7 @@
         "outHumidity": "$current.outHumidity",
         #if $day.appTemp.has_data
         "appTemp": "$current.appTemp",
+        "appTemp_formatted": "$current.appTemp.formatted",
         #end if
         "windchill": "$current.windchill",
         "heatindex": "$current.heatindex",
@@ -59,6 +62,7 @@
         "barometer": "$current.barometer",
         "barometer_trend": "$trend.barometer",
         "windspeed": "$current.windSpeed",
+        "windspeed_formatted": "$current.windSpeed.formatted",
         "winddir": "$current.windDir",
         "winddir_formatted": "$current.windDir.formatted",
         "windGust": "$current.windGust",

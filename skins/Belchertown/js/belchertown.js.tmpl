@@ -1,4 +1,11 @@
+#encoding UTF-8
 #import datetime
+
+#if "-" in str($station.stn_info.latitude_f)
+#set global $hemisphere = "southern-hemisphere"
+#else
+#set global $hemisphere = "northern-hemisphere"
+#end if
 
 var pages = ["graphs", "records", "reports", "about"];
 // If this page we're on now is listed as a subpage, use ".." to get to the relative root
@@ -274,6 +281,10 @@ function highcharts_tooltip_factory(obsvalue, point_obsType, highchartsReturn=fa
                 if ( typeof decimalPoint === "undefined" ) {
                     decimalPoint = "$highcharts_decimal";
                 }
+                // If thousandsSep is undefined, use the auto detect from the skin since this comes from the skin.
+                if ( typeof thousandsSep === "undefined" ) {
+                    thousandsSep = "$highcharts_thousands";
+                }
                     
                 output = Highcharts.numberFormat(obsvalue, rounding, decimalPoint, thousandsSep);
             }
@@ -470,25 +481,25 @@ function update_weewx_data( data ) {
             jQuery(".moon-icon").html( "<div class='wi wi-moon-alt-new'></div>" );
             break;
         case "1":
-            jQuery(".moon-icon").html( "<div class='wi wi-moon-alt-waxing-crescent-1'></div>" );
+            jQuery(".moon-icon").html( "<div class='wi wi-moon-alt-waxing-crescent-1 $hemisphere'></div>" );
             break;
         case "2":
-            jQuery(".moon-icon").html( "<div class='wi wi-moon-alt-first-quarter'></div>" );
+            jQuery(".moon-icon").html( "<div class='wi wi-moon-alt-first-quarter $hemisphere'></div>" );
             break;
         case "3":
-            jQuery(".moon-icon").html( "<div class='wi wi-moon-alt-waxing-gibbous-3'></div>" );
+            jQuery(".moon-icon").html( "<div class='wi wi-moon-alt-waxing-gibbous-3 $hemisphere'></div>" );
             break;
         case "4":
             jQuery(".moon-icon").html( "<div class='wi wi-moon-alt-full'></div>" );
             break;
         case "5":
-            jQuery(".moon-icon").html( "<div class='wi wi-moon-alt-waning-gibbous-3'></div>" );
+            jQuery(".moon-icon").html( "<div class='wi wi-moon-alt-waning-gibbous-3 $hemisphere'></div>" );
             break;
         case "6":
-            jQuery(".moon-icon").html( "<div class='wi wi-moon-alt-first-quarter'></div>" );
+            jQuery(".moon-icon").html( "<div class='wi wi-moon-alt-first-quarter $hemisphere'></div>" );
             break;
         case "7":
-            jQuery(".moon-icon").html( "<div class='wi wi-moon-alt-waning-crescent-4'></div>" );
+            jQuery(".moon-icon").html( "<div class='wi wi-moon-alt-waning-crescent-4 $hemisphere'></div>" );
             break;
     }
     jQuery(".moon-phase").html( titleCase( data["almanac"]["moon"]["moon_phase"] ) ); // Javascript function above
@@ -900,7 +911,8 @@ Highcharts.setOptions({
         timezoneOffset: $highcharts_timezoneoffset
     },
     lang: {
-        decimalPoint: '$highcharts_decimal'
+        decimalPoint: '$highcharts_decimal',
+        thousandsSep: '$highcharts_thousands'
     }
 });
 
@@ -979,6 +991,15 @@ function showChart(json_file, prepend_renderTo=false) {
                     case "css_class":
                         css_class = optionVal;
                         break;
+                    case "css_height":
+                        css_height = optionVal;
+                        break;
+                    case "css_width":
+                        css_width = optionVal;
+                        break;
+                    case "exporting":
+                        exporting_enabled = optionVal;
+                        break;
                 }
             });
             
@@ -993,6 +1014,10 @@ function showChart(json_file, prepend_renderTo=false) {
                     spacing: [5, 10, 10, 0],
                     type: '',
                     zoomType: 'x'
+                },
+                
+                exporting: {
+                    enabled: JSON.parse( String( exporting_enabled ) ) // Convert string to bool
                 },
 
                 title: {
@@ -1374,16 +1399,16 @@ function showChart(json_file, prepend_renderTo=false) {
                 });
             }
             
-            // If weather radial is present, configure a special chart to show that data
+            // If weather range is present, configure a special chart to show that data
             // https://www.highcharts.com/blog/tutorials/209-the-art-of-the-chart-weather-radials/
-            if (observation_type == "weatherRadial") {
+            if (observation_type == "weatherRange") {
                 options.chart.type = "columnrange";
                 // If polar is defined, use it and add a special dark mode CSS class
                 if ( JSON.parse( String( options.series[0].polar.toLowerCase() ) ) ) {
                     options.chart.polar = true; // Make sure the option is a string, then convert to bool
-                    options.chart.className = "highcharts-weatherRadial belchertown-polar"; // Used for dark mode
+                    options.chart.className = "highcharts-weatherRange belchertown-polar"; // Used for dark mode
                 } else {
-                    options.chart.className = "highcharts-weatherRadial"; // Used for dark mode
+                    options.chart.className = "highcharts-weatherRange"; // Used for dark mode
                 }
                 
                 options.legend = { "enabled": false }
@@ -1395,16 +1420,16 @@ function showChart(json_file, prepend_renderTo=false) {
                     minimum_flattened.push(seriesData[1]);
                     maximum_flattened.push(seriesData[2]);
                 });
-                var radial_min = Math.min(...minimum_flattened);
-                var radial_max = Math.max(...maximum_flattened);
+                var range_min = Math.min(...minimum_flattened);
+                var range_max = Math.max(...maximum_flattened);
                 
-                var yAxis_tickInterval = Math.ceil( Math.round(radial_max / 5) / 5 ) * 5; // Divide max outTemp by 5 and round it, then round that value up to the nearest 5th multiple. This gives clean yAxis tick lines. 
+                var yAxis_tickInterval = Math.ceil( Math.round(range_max / 5) / 5 ) * 5; // Divide max outTemp by 5 and round it, then round that value up to the nearest 5th multiple. This gives clean yAxis tick lines. 
                 
                 options.yAxis = {
                     showFirstLabel: true,
                     tickInterval: yAxis_tickInterval,
-                    min: radial_min,
-                    max: radial_max,
+                    min: range_min,
+                    max: range_max,
                     title: {
                         text: options.series[0].yAxisLabel,
                     },
@@ -1427,6 +1452,7 @@ function showChart(json_file, prepend_renderTo=false) {
                     turboThreshold: 0,
                     stacking: "normal",
                     showInLegend: false,
+                    borderWidth: 0,
                   }
                 }
 
@@ -1448,14 +1474,14 @@ function showChart(json_file, prepend_renderTo=false) {
                 // Update data
                 var currentSeries = options.series;
                 var currentSeriesData = options.series[0].data;
-                var radial_unit = options.series[0].radial_unit;
+                var range_unit = options.series[0].range_unit;
                 var newSeriesData = [];
                 currentSeriesData.forEach( seriesData => {
                     if ( options.series[0].color ) {
                         var color = options.series[0].color;
                     } else {
                         // Set color of the column based on the average temperature, or return default if not temperature
-                        var color = get_outTemp_color( radial_unit, seriesData[3], true );                    
+                        var color = get_outTemp_color( range_unit, seriesData[3], true );                    
                     }
                     newSeriesData.push({
                         x: seriesData[0],
@@ -1468,9 +1494,21 @@ function showChart(json_file, prepend_renderTo=false) {
                 options.series = [];
                 options.series.push({
                     data: newSeriesData,
-                    obsType: "weatherRadial",
-                    obsUnit: radial_unit
+                    obsType: "weatherRange",
+                    obsUnit: range_unit
                 });
+            }
+            
+            // Apply any width, height CSS overrides to the parent div of the chart
+            if ( css_height != "" ) {
+                jQuery("#"+options.chart.renderTo).parent().css({
+                   'height' : css_height,
+                   'padding' : '0px 15px',
+                   'margin-bottom' : '20px'
+                });
+            }
+            if ( css_width != "" ) {
+                jQuery("#"+options.chart.renderTo).parent().css('width', css_width);
             }
             
             // Finally all options are done, now show the chart

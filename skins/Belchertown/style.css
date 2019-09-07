@@ -1700,6 +1700,15 @@ p.entry-meta {
     text-decoration:none;
 }
 
+/* Flip the weather icons for southern hemisphere */
+.southern-hemisphere {
+    -moz-transform: scale(-1, 1);
+    -webkit-transform: scale(-1, 1);
+    -o-transform: scale(-1, 1);
+    -ms-transform: scale(-1, 1);
+    transform: scale(-1, 1);
+}
+
 .modal-lg {
     /* width: 900px !important; */
     /* margin: 30px auto; */
@@ -1842,6 +1851,12 @@ table.celestial td.label {
     padding-top:10px;
     padding-bottom:10px;
     text-align:center;
+}
+
+.graph_outer {
+    width: 100%;
+    margin: 0 auto;
+    text-align: center;
 }
 
 .highcharts-row {

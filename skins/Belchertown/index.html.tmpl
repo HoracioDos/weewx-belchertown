@@ -55,7 +55,7 @@
             // Loop through the graph groups for this page and add the graph divs to the page
             try {
                 thisPageGraphs.forEach( graphID => {
-                    jQuery(".graph_outer").append('<div class="col-sm-6"><div id="' + graphID + '" style="width:100%;height:350px;margin-top:20px;"></div></div>');
+                    jQuery(".graph_outer").append('<div class="col-sm-6"><div id="' + graphID + '" style="width:100%;height:100%;margin-top:20px;"></div></div>');
                 });
                 showChart(homepage_graphgroup);
             } catch(err) {
@@ -303,19 +303,19 @@
                                                             #if $almanac.moon_index == 0
                                                                 <div class='wi wi-moon-alt-new'></div>
                                                             #else if $almanac.moon_index == 1
-                                                                <div class='wi wi-moon-alt-waxing-crescent-1'></div>
+                                                                <div class='wi wi-moon-alt-waxing-crescent-1 $hemisphere'></div>
                                                             #else if $almanac.moon_index == 2
-                                                                <div class='wi wi-moon-alt-first-quarter'></div>
+                                                                <div class='wi wi-moon-alt-first-quarter $hemisphere'></div>
                                                             #else if $almanac.moon_index == 3
-                                                                <div class='wi wi-moon-alt-waxing-gibbous-3'></div>
+                                                                <div class='wi wi-moon-alt-waxing-gibbous-3 $hemisphere'></div>
                                                             #else if $almanac.moon_index == 4
                                                                 <div class='wi wi-moon-alt-full'></div>
                                                             #else if $almanac.moon_index == 5
-                                                                <div class='wi wi-moon-alt-waning-gibbous-3'></div>
+                                                                <div class='wi wi-moon-alt-waning-gibbous-3 $hemisphere'></div>
                                                             #else if $almanac.moon_index == 6
-                                                                <div class='wi wi-moon-alt-first-quarter'></div>
+                                                                <div class='wi wi-moon-alt-first-quarter $hemisphere'></div>
                                                             #else if $almanac.moon_index == 7
-                                                                <div class='wi wi-moon-alt-waning-crescent-4'></div>
+                                                                <div class='wi wi-moon-alt-waning-crescent-4 $hemisphere'></div>
                                                             #end if
                                                         </span>
                                                         <strong><span class="moon-phase">#echo $almanac.moon_phase.title()#</span></strong><!-- AJAX -->
