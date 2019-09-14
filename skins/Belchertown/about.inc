@@ -1,6 +1,8 @@
 ## sensors module for weewx skins
 ## Copyright Tom Keffer, Matthew Wall
 ## See LICENSE.txt for your rights
+
+#encoding UTF-8
 #errorCatcher Echo
 
 ## this is a conditional display of sensor data, including connectivity,
