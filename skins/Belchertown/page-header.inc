@@ -1,3 +1,4 @@
+#encoding UTF-8
 <div class="wx-stn-info-container">
     <div class="row">
         #if $Extras.has_key("enable_weather_icon") and $Extras.enable_weather_icon == '1'

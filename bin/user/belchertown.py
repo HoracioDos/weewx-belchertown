@@ -103,7 +103,7 @@ except ImportError:
         logmsg(syslog.LOG_ERR, msg)
     
 # Print version in syslog for easier troubleshooting
-VERSION = "1.1b6"
+VERSION = "1.1b7"
 loginf("version %s" % VERSION)
 
 class getData(SearchList):
@@ -1172,13 +1172,19 @@ class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
         # Final output dict
         output = {}
         
-        # Loop through each timespan
+        # Loop through each [section]. This is the first bracket group of options including global options.
         for chart_group in self.chart_dict.sections:
             output[chart_group] = OrderedDict() # This retains the order in which to load the charts on the page.
             chart_options = accumulateLeaves(self.chart_dict[chart_group])
                 
             output[chart_group]["belchertown_version"] = VERSION
             output[chart_group]["generated_timestamp"] = time.strftime('%m/%d/%Y %H:%M:%S')
+            
+            # Setup the JSON file name for each chart group
+            html_dest_dir = os.path.join(self.config_dict['WEEWX_ROOT'],
+                                    self.skin_dict['HTML_ROOT'],
+                                    "json")
+            json_filename = html_dest_dir + "/" + chart_group + ".json"
             
             # Default back to Highcharts standards
             colors = chart_options.get("colors", "#7cb5ec, #b2df8a, #f7a35c, #8c6bb1, #dd3497, #e4d354, #268bd2, #f45b5b, #6a3d9a, #33a02c") 
@@ -1193,7 +1199,43 @@ class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
             tooltip_date_format = chart_options.get('tooltip_date_format', "LLLL")
             output[chart_group]["tooltip_date_format"] = tooltip_date_format
             
-            # Loop through each chart within the chart_group
+            # Check if there are any user override on generation periods.
+            # Takes the crontab approach. If the words hourly, daily, monthly, yearly are present use them, otherwise use an integer interval if available.
+            # Since weewx could be restarted, we'll lose our end-timestamp to trigger off of for chart staleness. 
+            # So we have to use the timestamp of the file to generate this. If the file does not exist, we need to create it first.
+            # Once created we use that to see if we need to generate a fresh data set for the chart.
+            generate = chart_options.get('generate', None)
+            if generate is not None:
+                # Default to not making a new chart
+                create_new_chart = False
+                
+                # Get our intervals. Minus 60 seconds so that it'll run a little more reliably on the next interval.
+                if generate.lower() == "hourly":
+                    chart_stale_timer = 3540
+                elif generate.lower() == "daily":
+                    chart_stale_timer = 86340
+                elif generate.lower() == "weekly":
+                    chart_stale_timer = 604740
+                elif generate.lower() == "monthly":
+                    chart_stale_timer = 2629686
+                elif generate.lower() == "yearly":
+                    chart_stale_timer = 31556892
+                else:
+                    chart_stale_timer = int(generate)
+                    
+                if not os.path.isfile(json_filename):
+                    # File doesn't exist. Chart is stale no matter what. 
+                    create_new_chart = True
+                else:
+                    # The file exists get timestamp to compare against what the user wants for an interval
+                    if ( int( time.time() ) - int( os.path.getmtime( json_filename ) ) ) >= int( chart_stale_timer ):
+                        create_new_chart = True
+                
+                # Chart isn't stale, so continue to next chart (this current chart_group is skipped and not generated)
+                if not create_new_chart:
+                    continue
+            
+            # Loop through each [[chart_group]] within the section.
             for plotname in self.chart_dict[chart_group].sections:
                 output[chart_group][plotname] = {}
                 output[chart_group][plotname]["series"] = OrderedDict() # This retains the observation position in the dictionary to match the order in the conf so the chart is in the right user-defined order
@@ -1260,7 +1302,7 @@ class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
                 else:
                     output[chart_group][plotname]["options"]["exporting"] = "false"
                 
-                # Loop through each observation within the chart chart_group
+                # Loop through each [[[observation]]] within the chart_group.
                 for line_name in self.chart_dict[chart_group][plotname].sections:
                     output[chart_group][plotname]["series"][line_name] = {}
                     output[chart_group][plotname]["series"][line_name]["obsType"] = line_name
@@ -1439,11 +1481,7 @@ class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
                     # such that Highcharts can make use of them.
                     output[chart_group][plotname]["series"][line_name] = self._highchartsSeriesOptionsToFloat(output[chart_group][plotname]["series"][line_name])
             
-            # This consolidates all chart_groups into the chart_group JSON file and saves them to HTML_ROOT/json
-            html_dest_dir = os.path.join(self.config_dict['WEEWX_ROOT'],
-                                     self.skin_dict['HTML_ROOT'],
-                                     "json")
-            json_filename = html_dest_dir + "/" + chart_group + ".json"
+            # Write the output to the JSON file
             with open(json_filename, mode='w') as jf:
                 jf.write( json.dumps( output[chart_group] ) )
             
