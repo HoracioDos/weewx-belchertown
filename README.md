@@ -2,9 +2,9 @@
 
 This fork from [weewx-belchertown skin](https://github.com/poblabs/weewx-belchertown) have been customized mainly to change some small aspects in the layout and style. Some other modifications are related to my own needs and interests. This is how it looks like online: https://climacolegiales.com.ar/ 
 
-This version was synced upstream to **1.1b7** on **September 22, 2019**. 
+This version was synced upstream to **1.1b7** on **October 13, 2019**. 
 
-Latest commit: Development Branch **131146fc** 
+Latest commit: Development Branch **32be5d2** 
 
 ![homepage_screenshot](https://raw.githubusercontent.com/HoracioDos/weewx-belchertown/master/assets/homepage_screenshot.png)
 

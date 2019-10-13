@@ -579,7 +579,7 @@ img.alignright {
 }
 
 .header-image .site-title > a {
-	background: url('') no-repeat left;
+	/* background: url('') no-repeat left; */
 	float: left;
 	min-height: 80px;
 	width: 100%;
@@ -1005,7 +1005,6 @@ p.entry-meta {
 	
 	.site-header .widget-area {
 		float: none;
-		text-align: auto;
 	}
 	
 	.menu-toggle {
@@ -2284,8 +2283,6 @@ input:checked + .slider:before {
         font-weight: normal;
         padding: 0px;
         overflow: hidden;
-        overflow-x: hidden;
-        overflow-y:hidden;
         overflow: -moz-scrollbars-none;
         -ms-overflow-style: none;
     }
