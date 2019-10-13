@@ -559,7 +559,8 @@ class getData(SearchList):
             smn_source = self.generator.skin_dict['Extras']['smn_source']
             smn_alert_loop = self.generator.skin_dict['Extras']['smn_alert_loop']
             smn_incfile = self.generator.skin_dict['Extras']['smn_incfile']
-            html_file = local_skin_root + "/" + smn_incfile
+            html_file = local_root + "/" + smn_incfile
+            # html_file = local_skin_root + "/" + smn_incfile
             smn_stale_timer = self.generator.skin_dict['Extras']['smn_stale']
             smn_is_stale = False
 
