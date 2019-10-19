@@ -25,7 +25,6 @@
 
 # Global Chart Defaults
 # These are fallback options that charts will use if an option is not defined. 
-
 aggregate_type = None
 time_length = 90000 # Last 25 hours
 type = line
@@ -66,14 +65,14 @@ connectNulls = "true"
     [[chart4]]
         # The combined Wind Chart works best in this configuration
         title = Dirección y Velocidad de Viento
-        yaxis_min = 0
+        yAxis_min = 0
         [[[windDir]]]
             zIndex = 1
             yAxis = 1
-            yaxis_max = 360
+            yAxis_max = 360
             lineWidth = 0
             [[[[marker]]]]
-                enabled = 1
+                enabled = true
             [[[[states]]]]
                 [[[[[hover]]]]]
                         lineWidthPlus = 0
@@ -101,8 +100,8 @@ connectNulls = "true"
            y_label = "W/m2"
         [[[UV]]]
            yAxis = 1
-           yaxis_min = 0
-           yaxis_max = 14
+           yAxis_min = 0
+           yAxis_max = 14
            color = "#90ed7d"
            y_label = "UV"
            name = Indice UV
@@ -143,15 +142,15 @@ connectNulls = "true"
     [[chart4]]
         # The combined Wind Chart works best in this configuration
         title = Wind Speed and Direction
-        yaxis_min = 0
+        yAxis_min = 0
         [[[windDir]]]
             zIndex = 1
             yAxis = 1
-            yaxis_max = 360
+            yAxis_max = 360
             lineWidth = 0
             aggregate_type = avg
             [[[[marker]]]]
-                enabled = 1
+                enabled = true
             [[[[states]]]]
                 [[[[[hover]]]]]
                         lineWidthPlus = 0
@@ -161,10 +160,10 @@ connectNulls = "true"
        
     [[chart5]]
         title = Presión Barométrica
-        aggregate_type = avg
+        type = spline
         [[[barometer]]]
             color = "#BECC00"
-            # yAxis_tickInterval = 0.01
+            yAxis_tickInterval = 0.01
 
     [[chart6]]
         title = Indice UV y Radiación Solar
@@ -179,39 +178,43 @@ connectNulls = "true"
            y_label = "W/m2"
         [[[UV]]]
            yAxis = 1
-           yaxis_min = 0
-           yaxis_max = 14
+           yAxis_min = 0
+           yAxis_max = 14
            color = "#90ed7d"
            y_label = "UV"
            name = Indice UV
            zIndex = 2
-       
-[month]
+            
+[week]
     # Chart Timespan Defaults
-    title = "Este Mes"
+    title = "Esta Semana"
     show_button = true
-    button_text = "Mes"
-    type = spline
+    button_text = "Semana"
     aggregate_type = max
-    aggregate_interval = 86400 # 1 day
-    time_length = 2592000 # Last 30 days
-    gapsize = 86400000 # 1 day in milliseconds
+    aggregate_interval = 3600 # 1 hour
+    time_length = 604800 # Last 7 days
+    gapsize = 3600000 # 1 hour in milliseconds
 
     [[chart1]]
         title = Temperatura
         [[[outTemp]]]
             zIndex = 1
-            name = Temperatura Máxima
-            color = red
-        [[[outTemp_min]]]
-            name = Temperature Mínima
-            observation_type = outTemp
-            aggregate_type = min
-            color = "#7cb5ec"
+            name = Temperatura
+        [[[windchill]]]
+        [[[appTemp]]]
+            color = "#f7a35c"
+        [[[dewpoint]]]
+            color = purple
 
     [[chart2]]
-        title = Precipitación
-        type = line
+        title = Precipitación 
+        [[[rainRate]]]
+            yAxis = 1
+        [[[rainTotal]]]
+            name = Precipitación Acumulada
+    
+    [[chart3]]
+        title = Rain
         [[[rainRate]]]
             yAxis = 1
         [[[rainTotal]]]
@@ -224,16 +227,16 @@ connectNulls = "true"
     [[chart4]]
         # The combined Wind Chart works best in this configuration
         title = Dirección y Velocidad del Viento
-        yaxis_min = 0
+        yAxis_min = 0
 	        [[[windDir]]]
             zIndex = 1
             yAxis = 1
-            yaxis_max = 360
+            yAxis_max = 360
             lineWidth = 0
             # Here we can override the timespan default aggregate type with our own specific to this chart
             aggregate_type = avg
             [[[[marker]]]]
-                enabled = 1
+                enabled = true
             [[[[states]]]]
                 [[[[[hover]]]]]
                         lineWidthPlus = 0
@@ -261,8 +264,8 @@ connectNulls = "true"
            y_label = "W/m2"
         [[[UV]]]
            yAxis = 1
-           yaxis_min = 0
-           yaxis_max = 14
+           yAxis_min = 0
+           yAxis_max = 14
            color = "#90ed7d"
            y_label = "UV"
            name = Indice UV
@@ -306,16 +309,16 @@ connectNulls = "true"
     [[chart4]]
         # The combined Wind Chart works best in this configuration
         title = Wind Speed and Direction
-        yaxis_min = 0
+        yAxis_min = 0
         [[[windDir]]]
             zIndex = 1
             yAxis = 1
-            yaxis_max = 360
+            yAxis_max = 360
             lineWidth = 0
             # Here we can override the timespan default aggregate type with our own specific to this chart
             aggregate_type = avg
             [[[[marker]]]]
-                enabled = 1
+                enabled = true
             [[[[states]]]]
                 [[[[[hover]]]]]
                      lineWidthPlus = 0
@@ -343,8 +346,8 @@ connectNulls = "true"
            y_label = "W/m2"
         [[[UV]]]
            yAxis = 1
-           yaxis_min = 0
-           yaxis_max = 14
+           yAxis_min = 0
+           yAxis_max = 14
            color = "#90ed7d"
            y_label = "UV"
            name = Indice UV
@@ -385,14 +388,14 @@ connectNulls = "true"
     [[chart4]]
         # The combined Wind Chart works best in this configuration
         title = Wind Speed and Direction
-        yaxis_min = 0
+        yAxis_min = 0
         [[[windDir]]]
             zIndex = 1
             yAxis = 1
-            yaxis_max = 360
+            yAxis_max = 360
             lineWidth = 0
             [[[[marker]]]]
-                enabled = 1
+                enabled = true
             [[[[states]]]]
                 [[[[[hover]]]]]
                         lineWidthPlus = 0
@@ -420,8 +423,8 @@ connectNulls = "true"
            y_label = "W/m2"
         [[[UV]]]
            yAxis = 1
-           yaxis_min = 0
-           yaxis_max = 14
+           yAxis_min = 0
+           yAxis_max = 14
            color = "#90ed7d"
            y_label = "UV"
            name = Indice UV
@@ -464,16 +467,16 @@ connectNulls = "true"
     [[chart4]]
         # The combined Wind Chart works best in this configuration
         title = Wind Speed and Direction
-        yaxis_min = 0
+        yAxis_min = 0
         [[[windDir]]]
             zIndex = 1
             yAxis = 1
-            yaxis_max = 360
+            yAxis_max = 360
             lineWidth = 0
             # Here we can override the timespan default aggregate type with our own specific to this chart
             aggregate_type = avg
             [[[[marker]]]]
-                enabled = 1
+                enabled = true
             [[[[states]]]]
                 [[[[[hover]]]]]
                         lineWidthPlus = 0
@@ -501,8 +504,8 @@ connectNulls = "true"
            y_label = "W/m2"
         [[[UV]]]
            yAxis = 1
-           yaxis_min = 0
-           yaxis_max = 14
+           yAxis_min = 0
+           yAxis_max = 14
            color = "#90ed7d"
            y_label = "UV"
            name = Indice UV
@@ -547,16 +550,16 @@ connectNulls = "true"
     [[chart4]]
         # The combined Wind Chart works best in this configuration
         title = Wind Speed and Direction
-        yaxis_min = 0
+        yAxis_min = 0
         [[[windDir]]]
             zIndex = 1
             yAxis = 1
-            yaxis_max = 360
+            yAxis_max = 360
             lineWidth = 0
             # Here we can override the timespan default aggregate type with our own specific to this chart
             aggregate_type = avg
             [[[[marker]]]]
-                enabled = 1
+                enabled = true
             [[[[states]]]]
                 [[[[[hover]]]]]
                         lineWidthPlus = 0
@@ -584,8 +587,8 @@ connectNulls = "true"
            y_label = "W/m2"
         [[[UV]]]
            yAxis = 1
-           yaxis_min = 0
-           yaxis_max = 14
+           yAxis_min = 0
+           yAxis_max = 14
            color = "#90ed7d"
            y_label = "UV"
            name = Indice UV
@@ -630,16 +633,16 @@ connectNulls = "true"
     [[chart4]]
         # The combined Wind Chart works best in this configuration
         title = Wind Speed and Direction
-        yaxis_min = 0
+        yAxis_min = 0
         [[[windDir]]]
             zIndex = 1
             yAxis = 1
-            yaxis_max = 360
+            yAxis_max = 360
             lineWidth = 0
             # Here we can override the timespan default aggregate type with our own specific to this chart
             aggregate_type = avg
             [[[[marker]]]]
-                enabled = 1
+                enabled = true
             [[[[states]]]]
                 [[[[[hover]]]]]
                         lineWidthPlus = 0
@@ -666,8 +669,8 @@ connectNulls = "true"
            y_label = "W/m2"
         [[[UV]]]
            yAxis = 1
-           yaxis_min = 0
-           yaxis_max = 14
+           yAxis_min = 0
+           yAxis_max = 14
            color = "#90ed7d"
            y_label = "UV"
            name = Indice UV
@@ -683,8 +686,8 @@ connectNulls = "true"
     aggregate_type = max
     aggregate_interval = 86400 # 1 day
     gapsize = 86400000
-    xaxis_groupby = month
-    xaxis_categories = 'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'
+    xAxis_groupby = month
+    xAxis_categories = 'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'
 
     [[chart1]]
         title = "Valores Climatológicos Medios 2018"
@@ -710,8 +713,8 @@ connectNulls = "true"
         aggregate_type = max
         aggregate_interval = 86400 # 1 day
         gapsize = 86400000
-        xaxis_groupby = month
-        xaxis_categories = 'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'
+        xAxis_groupby = month
+        xAxis_categories = 'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'
         [[[outTemp]]]
             zIndex = 1
             name = Temperatura Máx
