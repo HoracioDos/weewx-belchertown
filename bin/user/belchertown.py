@@ -103,7 +103,7 @@ except ImportError:
         logmsg(syslog.LOG_ERR, msg)
     
 # Print version in syslog for easier troubleshooting
-VERSION = "1.1b7"
+VERSION = "1.1b8"
 loginf("version %s" % VERSION)
 
 class getData(SearchList):
@@ -234,12 +234,18 @@ class getData(SearchList):
             charts[chart_timespan] = timespan_chart_list
         
         # Create a dict of chart group titles for use on the graphs page header. If no title defined, use the chart group name
-        chartgroup_titles = OrderedDict()
+        graphpage_titles = OrderedDict()
         for chartgroup in chart_dict.sections:
             if "title" in chart_dict[chartgroup]:
-                chartgroup_titles[chartgroup] = chart_dict[chartgroup]["title"]
+                graphpage_titles[chartgroup] = chart_dict[chartgroup]["title"]
             else:
-                chartgroup_titles[chartgroup] = chartgroup
+                graphpage_titles[chartgroup] = chartgroup
+
+        # Create a dict of chart group page content for use on the graphs page below the header. 
+        graphpage_content = OrderedDict()
+        for chartgroup in chart_dict.sections:
+            if "page_content" in chart_dict[chartgroup]:
+                graphpage_content[chartgroup] = chart_dict[chartgroup]["page_content"]
         
         # Setup the Graphs page button row based on the skin extras option and the button_text from graphs.conf
         graph_page_buttons = ""
@@ -1077,8 +1083,9 @@ class getData(SearchList):
                                   'archive_interval_ms': archive_interval_ms,
                                   'ordinate_names': ordinate_names,
                                   'charts': json.dumps(charts),
-                                  'chartgroup_titles': json.dumps(chartgroup_titles),
-                                  'chartgroup_titles_dict': chartgroup_titles,
+                                  'graphpage_titles': json.dumps(graphpage_titles),
+                                  'graphpage_titles_dict': graphpage_titles,
+                                  'graphpage_content': json.dumps(graphpage_content),
                                   'graph_page_buttons': graph_page_buttons,
                                   'alltime' : all_stats,
                                   'year_outTemp_range_max': year_outTemp_range_max,
@@ -1348,6 +1355,11 @@ class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
                         year_dt = datetime.datetime.strptime(str(year_specific) + '-8-1', '%Y-%m-%d')
                         yearstamp = int(time.mktime(year_dt.timetuple()))
                         minstamp, maxstamp = archiveYearSpan( yearstamp )
+                    elif time_length == "timespan_specific":
+                        minstamp = line_options.get('timespan_start', None)
+                        maxstamp = line_options.get('timespan_stop', None)
+                        if minstamp is None or maxstamp is None:
+                            raise Warning( "Error trying to create timespan_specific graph. You are missing either timespan_start or timespan_stop options." )
                     elif time_length == "all":
                         minstamp = start_ts
                         maxstamp = stop_ts
@@ -1932,10 +1944,10 @@ class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
                 usage_round = int(self.skin_dict['Units']['StringFormats'].get(obs_vt[2], "2f")[-2])
                 obs_round_vt = [self.round_none(x, usage_round) for x in obs_vt[0]]
             
-        # "Today" charts and floating timespan charts have the point timestamp on the stop time so we don't see the 
+        # "Today" charts, "timespan_specific" charts and floating timespan charts have the point timestamp on the stop time so we don't see the 
         # previous minute in the tooltip. (e.g. 4:59 instead of 5:00)
         # Everything else has it on the start time so we don't see the next day in the tooltip (e.g. Jan 2 instead of Jan 1)
-        if time_length == "today" or isinstance(time_length, int):
+        if time_length == "today" or time_length == "timespan_specific" or isinstance(time_length, int):
             point_timestamp = time_stop_vt
         else:
             point_timestamp = time_start_vt

@@ -263,7 +263,9 @@ sitio."
         records_sun_records                 = Solar
         records_high_solar_rad              = Radiación Solar Máxima
         records_high_uv                     = Radiación UV Máxima
-        
+        records_inTemp_records              = Temperatura Interior
+        records_high_inTemp                 = Temperatura Máxima Interior
+        records_low_inTemp                  = Temperatura Mínima Interior        
         # NOAA Reports Page Text and Titles
         reports_title               = Reportes NOAA
         reports_click_here_link     = Cliquee aquí
@@ -274,7 +276,7 @@ sitio."
 
         # moment.js default labels formats
         time_earthquake                         = "LLL"
-        time_lastUpdated                        = "LL, LTS"
+        time_last_updated                        = "LL, LTS"
         time_snapshot_records_today_header      = "dddd, LL"
         time_snapshot_records_month_header      = "MMMM YYYY"
         time_sunrise                            = "LT"
@@ -283,6 +285,7 @@ sitio."
         time_darksky_forecast_date              = "ddd M/DD"
         time_forecast_last_updated              = "LLL"
         time_mqtt_websockets_last_updated       = "LL, LTS"
+
         # Mejor Opcion para localizaciones en Español. Nombres cortos para meses
         time_records_page_full_date             = "lll"
         # Segunda mejor opcion excepto si desea formatos: __/__/__ ó __-__-__ 

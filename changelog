@@ -11,11 +11,15 @@ These changes are to align the skin closer to the way Highcharts has their optio
 * graphs.conf option yaxis_softmin is now yAxis_softMin (case sensitive)
 * graphs.conf option yaxis_softmax is now yAxis_softMax (case sensitive)
 * graphs.conf option yaxis_tickinterval is now yAxis_tickInterval (case sensitive)
+* skin.conf option time_lastUpdated is now called time_last_updated
+* skin.conf option time_mqtt_websockets_last_updated is deleted as it was a duplicate of time_last_updated
 
 ### Added
 * Added weatherRadial observation, unique to Belchertown, which shows the high and low outTemp for a given timespan, as a columnrange polar chart. See wiki for examples. 
-* Added per-chart width and height control overrides. If this is not specified than the default sizes will be used. 
+* Added new time_length option called timespan_specific. This allows you define a static start and end time to be graphed. For example 6 hours, or 2 specific days, or 4 specific months. This offers a lot of flexibility in your graphs. See Wiki for timespan_specific.
 * Added per-chart generation timers. You can control how often your charts are generated. Helpful if you have some data that's not updated frequently. Check Wiki for more info on the `generator` option.
+* Added new graph group option page_content. This option takes full HTML and will display on the graphs page under the title. Can be used as a content area for the page. Examples are a quick description of the graphs being displayed, or even more elaborate description with images. 
+* Added per-chart width and height control overrides. If this is not specified than the default sizes will be used. 
 * Added css_class option to the charts for more granular and detailed CSS overrides to the charts.
 * Added the ability to enable chart exporting using the Highcharts exporting utility.
 * Added permanent links (permalink) to individual graphs within the Graphs page. Just copy/paste the link from the title of the individual graph you want to directly link to. When accessing this URL, the page will scroll to the graph specified in the URL. The permalink is the name of the [[chart]] inside the double brackets in graphs.conf. To make this a pretty URL, you need to change the name of the [[chart]] inside graphs.conf.
@@ -28,6 +32,7 @@ These changes are to align the skin closer to the way Highcharts has their optio
 * Preparation in a lot of code for upcoming weewx v4 which will focus on Python 3
 * Moved the per-chart timespan to be available per observation. This allows different observations to have different timespans on a single chart. Like comparing rain for this year to rain for all time.
 * Moved the JavaScript outTemp color into 1 consolidated function.
+* Added timestamps to the MQTT Websocket connection status headers which will show when the weather data is current as of. Helpful if your MQTT broker isn't connecting or there's an error, this lets your visitors know how recent the data on the page is.
 * Updated footer layout
 
 ### Fixed

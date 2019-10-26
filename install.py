@@ -9,7 +9,7 @@ def loader():
 class BelchertownInstaller(ExtensionInstaller):
     def __init__(self):
         super(BelchertownInstaller, self).__init__(
-            version="1.1b7",
+            version="1.1b8",
             name='Belchertown',
             description='A clean modern skin with real time streaming updates and interactive charts. Modeled after BelchertownWeather.com',
             author="Pat OBrien",
@@ -32,9 +32,9 @@ class BelchertownInstaller(ExtensionInstaller):
                                           'skins/Belchertown/about.inc',
                                           'skins/Belchertown/celestial.inc',
                                           'skins/Belchertown/graphs.conf',
-                                          'skins/Belchertown/graphs.conf.example',
                                           'skins/Belchertown/page-header.inc',
                                           'skins/Belchertown/manifest.json.tmpl',
+                                          'skins/Belchertown/records-table.inc',
                                           'skins/Belchertown/index_hook_daylight.inc',
                                           'skins/Belchertown/index_hook_after_forecast.inc',
                                           'skins/Belchertown/robots.txt',
