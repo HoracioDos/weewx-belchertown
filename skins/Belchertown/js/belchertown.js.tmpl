@@ -522,135 +522,366 @@ function update_weewx_data( data ) {
 
 #if $Extras.has_key("forecast_enabled") and $Extras.forecast_enabled == '1'
 function ajaxforecast() {
-    jQuery.getJSON( get_relative_url() + "/json/darksky_forecast.json", update_forecast_data);
+    jQuery.getJSON( get_relative_url() + "/json/forecast.json", update_forecast_data);
 };
+
+function aeris_coded_weather( data, full_observation = false ) {
+    // https://www.aerisweather.com/support/docs/api/reference/weather-codes/
+    var output = "";
+    var coverage_code = data.split(":")[0]
+    var intensity_code = data.split(":")[1]
+    var weather_code = data.split(":")[2]
+        
+    var cloud_dict = {
+        "CL": "$obs.label.forecast_cloud_code_CL",
+        "FW": "$obs.label.forecast_cloud_code_FW",
+        "SC": "$obs.label.forecast_cloud_code_SC",
+        "BK": "$obs.label.forecast_cloud_code_BK",
+        "OV": "$obs.label.forecast_cloud_code_OV"
+    }
+    
+    var coverage_dict = {
+        "AR": "$obs.label.forecast_coverage_code_AR",
+        "BR": "$obs.label.forecast_coverage_code_BR",
+        "C": "$obs.label.forecast_coverage_code_C",
+        "D": "$obs.label.forecast_coverage_code_D",
+        "FQ": "$obs.label.forecast_coverage_code_FQ",
+        "IN": "$obs.label.forecast_coverage_code_IN",
+        "IS": "$obs.label.forecast_coverage_code_IS",
+        "L": "$obs.label.forecast_coverage_code_L",
+        "NM": "$obs.label.forecast_coverage_code_NM",
+        "O": "$obs.label.forecast_coverage_code_O",
+        "PA": "$obs.label.forecast_coverage_code_PA",
+        "PD": "$obs.label.forecast_coverage_code_PD",
+        "S": "$obs.label.forecast_coverage_code_S",
+        "SC": "$obs.label.forecast_coverage_code_SC",
+        "VC": "$obs.label.forecast_coverage_code_VC",
+        "WD": "$obs.label.forecast_coverage_code_WD"
+    }
+    
+    var intensity_dict = {
+        "VL": "$obs.label.forecast_intensity_code_VL",
+        "L": "$obs.label.forecast_intensity_code_L",
+        "H": "$obs.label.forecast_intensity_code_H",
+        "VH": "$obs.label.forecast_intensity_code_VH"
+    }
+    
+    var weather_dict = {
+        "A": "$obs.label.forecast_weather_code_A",
+        "BD": "$obs.label.forecast_weather_code_BD",
+        "BN": "$obs.label.forecast_weather_code_BN",
+        "BR": "$obs.label.forecast_weather_code_BR",
+        "BS": "$obs.label.forecast_weather_code_BS",
+        "BY": "$obs.label.forecast_weather_code_BY",
+        "F": "$obs.label.forecast_weather_code_F",
+        "FR": "$obs.label.forecast_weather_code_FR",
+        "H": "$obs.label.forecast_weather_code_H",
+        "IC": "$obs.label.forecast_weather_code_IC",
+        "IF": "$obs.label.forecast_weather_code_IF",
+        "IP": "$obs.label.forecast_weather_code_IP",
+        "K": "$obs.label.forecast_weather_code_K",
+        "L": "$obs.label.forecast_weather_code_L",
+        "R": "$obs.label.forecast_weather_code_R",
+        "RW": "$obs.label.forecast_weather_code_RW",
+        "RS": "$obs.label.forecast_weather_code_RS",
+        "SI": "$obs.label.forecast_weather_code_SI",
+        "WM": "$obs.label.forecast_weather_code_WM",
+        "S": "$obs.label.forecast_weather_code_S",
+        "SW": "$obs.label.forecast_weather_code_SW",
+        "T": "$obs.label.forecast_weather_code_T",
+        "UP": "$obs.label.forecast_weather_code_UP",
+        "VA": "$obs.label.forecast_weather_code_VA",
+        "WP": "$obs.label.forecast_weather_code_WP",
+        "ZF": "$obs.label.forecast_weather_code_ZF",
+        "ZL": "$obs.label.forecast_weather_code_ZL",
+        "ZR": "$obs.label.forecast_weather_code_ZR",
+        "ZY": "$obs.label.forecast_weather_code_ZY"
+    }
+    
+    // Check if the weather_code is in the cloud_dict and use that if it's there. If not then it's a combined weather code.
+    if ( cloud_dict.hasOwnProperty( weather_code ) ) { 
+        return cloud_dict[weather_code];
+    } else {
+        // Add the coverage if it's present, and full observation forecast is requested
+        if ( ( coverage_code ) && ( full_observation ) ) {
+            output += coverage_dict[coverage_code] + " ";
+        }
+        // Add the intensity if it's present
+        if ( intensity_code ) {
+            output += intensity_dict[intensity_code] + " ";
+        }
+        // Weather output
+        output += weather_dict[weather_code];
+    }
+    
+    return output;    
+}
+
+function aeris_icon( data ) {
+    // https://www.aerisweather.com/support/docs/api/reference/icon-list/
+    icon_name = data.split(".")[0]; // Remove .png
+    
+    var icon_dict = {
+        "blizzard": "snow",
+        "blizzardn": "snow",
+        "blowingsnow": "snow",
+        "blowingsnown": "snow",
+        "clear": "clear-day",
+        "clearn": "clear-night",
+        "cloudy": "cloudy",
+        "cloudyn": "cloudy",
+        "cloudyw": "cloudy",
+        "cloudywn": "cloudy",
+        "cold": "clear-day",
+        "coldn": "clear-night",
+        "drizzle": "rain",
+        "drizzlen": "rain",
+        "dust": "fog",
+        "dustn": "fog",
+        "fair": "clear-day",
+        "fairn": "clear-night",
+        "drizzlef": "rain",
+        "fdrizzlen": "rain",
+        "flurries": "sleet",
+        "flurriesn": "sleet",
+        "flurriesw": "sleet",
+        "flurrieswn": "sleet",
+        "fog": "fog",
+        "fogn": "fog",
+        "freezingrain": "rain",
+        "freezingrainn": "rain",
+        "hazy": "fog",
+        "hazyn": "fog",
+        "hot": "clear-day",
+        "N/A ": "unknown",
+        "mcloudy": "partly-cloudy-day",
+        "mcloudyn": "partly-cloudy-night",
+        "mcloudyr": "rain",
+        "mcloudyrn": "rain",
+        "mcloudyrw": "rain",
+        "mcloudyrwn": "rain",
+        "mcloudys": "snow",
+        "mcloudysn": "snow",
+        "mcloudysf": "snow",
+        "mcloudysfn": "snow",
+        "mcloudysfw": "snow",
+        "mcloudysfwn": "snow",
+        "mcloudysw": "partly-cloudy-day",
+        "mcloudyswn": "partly-cloudy-night",
+        "mcloudyt": "thunderstorm",
+        "mcloudytn": "thunderstorm",
+        "mcloudytw": "thunderstorm",
+        "mcloudytwn": "thunderstorm",
+        "mcloudyw": "partly-cloudy-day",
+        "mcloudywn": "partly-cloudy-night",
+        "na": "unknown",
+        "na": "unknown",
+        "pcloudy": "partly-cloudy-day",
+        "pcloudyn": "partly-cloudy-night",
+        "pcloudyr": "rain",
+        "pcloudyrn": "rain",
+        "pcloudyrw": "rain",
+        "pcloudyrwn": "rain",
+        "pcloudys": "snow",
+        "pcloudysn": "snow",
+        "pcloudysf": "snow",
+        "pcloudysfn": "snow",
+        "pcloudysfw": "snow",
+        "pcloudysfwn": "snow",
+        "pcloudysw": "partly-cloudy-day",
+        "pcloudyswn": "partly-cloudy-night",
+        "pcloudyt": "thunderstorm",
+        "pcloudytn": "thunderstorm",
+        "pcloudytw": "thunderstorm",
+        "pcloudytwn": "thunderstorm",
+        "pcloudyw": "partly-cloudy-day",
+        "pcloudywn": "partly-cloudy-night",
+        "rain": "rain",
+        "rainn": "rain",
+        "rainandsnow": "rain",
+        "rainandsnown": "rain",
+        "raintosnow": "rain",
+        "raintosnown": "rain",
+        "rainw": "rain",
+        "rainw": "rain",
+        "showers": "rain",
+        "showersn": "rain",
+        "showersw": "rain",
+        "showersw": "rain",
+        "sleet": "sleet",
+        "sleetn": "sleet",
+        "sleetsnow": "sleet",
+        "sleetsnown": "sleet",
+        "smoke": "fog",
+        "smoken": "fog",
+        "snow": "snow",
+        "snown": "snow",
+        "snoww": "snow",
+        "snowwn": "snow",
+        "snowshowers": "snow",
+        "snowshowersn": "snow",
+        "snowshowersw": "snow",
+        "snowshowerswn": "snow",
+        "snowtorain": "snow",
+        "snowtorainn": "snow",
+        "sunny": "partly-cloudy-day",
+        "sunnyn": "partly-cloudy-night",
+        "sunnyw": "partly-cloudy-day",
+        "sunnywn": "partly-cloudy-night",
+        "tstorm": "thunderstorm",
+        "tstormn": "thunderstorm",
+        "tstorms": "thunderstorm",
+        "tstormsn": "thunderstorm",
+        "tstormsw": "thunderstorm",
+        "tstormswn": "thunderstorm",
+        "wind": "wind",
+        "wind": "wind",
+        "wintrymix": "sleet",
+        "wintrymixn": "sleet"
+    }
+    
+    return icon_dict[icon_name];    
+}
 
 function update_forecast_data( data ) {
     belchertown_debug("Updating forecast data");
-    // WX icon in temperature box
-    if ( data['currently']['icon'] == "partly-cloudy-night" ) {
-        // partly-cloudy-night could also be clear-day
-        jQuery("#wxicon").attr( "src", get_relative_url() + "/images/partly-cloudy-night.png" );
-    } else {
-        jQuery("#wxicon").attr( "src", get_relative_url() + "/images/" + data['currently']['icon'] + ".png" );
-    }
+    // WX icon in temperature box    
+    var icon = get_relative_url() + "/images/" + aeris_icon( data["current"][0]["response"]["ob"]["icon"] ) + ".png";
+    jQuery("#wxicon").attr( "src", icon );
     
     #if $Extras.has_key("forecast_alert_enabled") and $Extras.forecast_alert_enabled == '1'
-    // Weather Alerts
-    if ( data['alerts'] ) {
-        var i, forecast_alert_text;
+    // Show the weather alerts if the array is populated
+    if ( data['alerts'][0]['response'][0] ) {
+        // Empty anything that's been appended from the previous run
+        jQuery(".wx-stn-alert-text").empty();
+        var i, forecast_alert_text, forecast_alert_text_body;
         forecast_alert_text = "";
-        for ( i = 0; i < data['alerts'].length; i++ ) { 
-            alert_expires = moment.unix( data['alerts'][i]['expires'] ).utcOffset($moment_js_utc_offset).format( '$obs.label.time_darksky_alert_expires' );
-            forecast_alert_text += "<i class='fa fa-exclamation-triangle'></i> <a href='" + data['alerts'][i]['uri'] + "' target='_blank'>" + data['alerts'][i]['title'] + " $obs.label.alert_in_effect " + alert_expires + "</a><br>";
+        forecast_alert_text_body = "";
+        for ( i = 0; i < data['alerts'][0]['response'].length; i++ ) { 
+            alert_expires = moment.unix( data['alerts'][0]['response'][i]['timestamps']['expires'] ).utcOffset($moment_js_utc_offset).format( '$obs.label.time_forecast_alert_expires' );
+            forecast_alert_text += "<i class='fa fa-exclamation-triangle'></i> <a href='#forecast-alert-"+i+"' data-toggle='modal' data-target='#forecast-alert-"+i+"'>" + data['alerts'][0]['response'][i]['details']['name'] + " $obs.label.alert_in_effect " + alert_expires + "</a><br>";
+            
+            forecast_alert_text_body += "<!-- Forecast Alert Modal "+i+" -->";
+                forecast_alert_text_body += "<div class='modal fade' id='forecast-alert-"+i+"' tabindex='-1' role='dialog' aria-labelledby='forecast-alert'>";
+                  forecast_alert_text_body += "<div class='modal-dialog' role='document'>";
+                    forecast_alert_text_body += "<div class='modal-content'>";
+                      forecast_alert_text_body += "<div class='modal-header'>";
+                        forecast_alert_text_body += "<button type='button' class='close' data-dismiss='modal' aria-label='Close'><span aria-hidden='true'>&times;</span></button>";
+                        forecast_alert_text_body += "<h4 class='modal-title' id='forecast-alert'>" + data['alerts'][0]['response'][i]['details']['name'] + "</h4>";
+                      forecast_alert_text_body += "</div>";
+                      forecast_alert_text_body += "<div class='modal-body'>";
+                        forecast_alert_text_body += data['alerts'][0]['response'][i]['details']['body'].replace(/\n/g, '<br>');
+                      forecast_alert_text_body += "</div>";
+                      forecast_alert_text_body += "<div class='modal-footer'>";
+                        forecast_alert_text_body += "<button type='button' class='btn btn-primary' data-dismiss='modal'>Close</button>";
+                      forecast_alert_text_body += "</div>";
+                    forecast_alert_text_body += "</div>";
+                  forecast_alert_text_body += "</div>";
+                forecast_alert_text_body += "</div>";
         }
-        jQuery(".wx-stn-alert-text").html( forecast_alert_text );
+        jQuery(".wx-stn-alert-text").append( forecast_alert_text );
+        jQuery(".wx-stn-alert-text").append( forecast_alert_text_body );
         jQuery(".wx-stn-alert").show();
     } else {
         jQuery(".wx-stn-alert").hide();
     }
     #end if
-    
+        
     // Current observation text
-    jQuery(".current-obs-text").html( data["currently"]["summary"] );
+    jQuery(".current-obs-text").html( aeris_coded_weather( data["current"][0]["response"]["ob"]["weatherPrimaryCoded"], true ) );
     
     // Visibility text in station observation table
+    if ( ( "$Extras.forecast_units" == "si" ) || ( "$Extras.forecast_units" == "ca" ) ) {
+        // si and ca = kilometer
+        visibility = data["current"][0]["response"]["ob"]["visibilityKM"];
+    } else {
+        // us and uk2 and default = miles
+        visibility = data["current"][0]["response"]["ob"]["visibilityMI"];
+    }
+    
     try {
-        visibility_output = parseFloat(parseFloat(data["currently"]["visibility"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["visibility"], maximumFractionDigits: unit_rounding_array["visibility"]}) + " " + unit_label_array["visibility"];
+        visibility_output = parseFloat(parseFloat( visibility )).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["visibility"], maximumFractionDigits: unit_rounding_array["visibility"]}) + " " + unit_label_array["visibility"];
 
         jQuery(".station-observations .visibility").html( visibility_output );
     } catch(err) {
         // Visibility not in the station observation table or any of the unit arrays, so silently exit
     }
     
-    // 8 day forecast
+    // Daily forecast
     var output_html = "";
-    for (i = 0; i < data["daily"]["data"].length; i++) {
-        var forecastDay = data["daily"]["data"][i];
-        if ( data['daily']['data'][i]['icon'] == "partly-cloudy-night" ) {
-            var image_url = get_relative_url() + "/images/clear-day.png";
-        } else { 
-            var image_url = get_relative_url() + "/images/"+data['daily']['data'][i]['icon']+".png";
+    for (i = 0; i < data["forecast"][0]["response"][0]["periods"].length; i++) {
+        var image_url = get_relative_url() + "/images/" + aeris_icon( data["forecast"][0]["response"][0]["periods"][i]["icon"] ) + ".png";
+        var condition_text = aeris_coded_weather( data["forecast"][0]["response"][0]["periods"][i]["weatherPrimaryCoded"], false );
+
+        // Determine temperature units
+        if ( ( "$Extras.forecast_units" == "ca" ) || ( "$Extras.forecast_units" == "uk" ) || ( "$Extras.forecast_units" == "si" ) ) {
+            minTemp = data["forecast"][0]["response"][0]["periods"][i]["minTempC"];
+            maxTemp = data["forecast"][0]["response"][0]["periods"][i]["maxTempC"];
+        } else {
+            // Default
+            minTemp = data["forecast"][0]["response"][0]["periods"][i]["minTempF"];
+            maxTemp = data["forecast"][0]["response"][0]["periods"][i]["maxTempF"];
         }
         
-        var condition_text = "";
-        switch ( data["daily"]["data"][i]["icon"] ) {
-            case "clear-day":
-                condition_text = "$obs.label.clear";
-                break;
-            case "clear-night":
-                condition_text = "$obs.label.clear";
-                break;
-            case "rain":
-                condition_text = "$obs.label.darksky_rain";
-                break;
-            case "snow":
-                condition_text = "$obs.label.snow";
-                break;
-            case "sleet":
-                condition_text = "$obs.label.sleet";
-                break;
-            case "wind":
-                condition_text = "$obs.label.windy";
-                break;
-            case "fog":
-                condition_text = "$obs.label.fog";
-                break;
-            case "cloudy":
-                condition_text = "$obs.label.overcast";
-                break;
-            case "partly-cloudy-day":
-                condition_text = "$obs.label.partly_cloudy";
-                break;
-            case "partly-cloudy-night":
-                condition_text = "$obs.label.clear"; // https://darksky.net/dev/docs/faq - So you can just treat partly-cloudy-night as an alias for clear-day.
-                break;
-            case "hail":
-                condition_text = "$obs.label.hail";
-                break;
-            case "thunderstorm":
-                condition_text = "$obs.label.thunderstorm";
-                break;
-            case "tornado":
-                condition_text = "$obs.label.tornado";
-                break;
+        // Determine wind units
+        if ( "$Extras.forecast_units" == "ca" ) {
+            // ca = kph
+            windSpeed = data["forecast"][0]["response"][0]["periods"][i]["windSpeedKPH"];
+            windGust = data["forecast"][0]["response"][0]["periods"][i]["windGustKPH"];
+        } else if ( "$Extras.forecast_units" == "si" ) {
+            // si = meters per second. MPS is KPH / 3.6
+            windSpeed = data["forecast"][0]["response"][0]["periods"][i]["windSpeedKPH"] / 3.6;
+            windGust = data["forecast"][0]["response"][0]["periods"][i]["windGustKPH"] / 3.6;
+        } else {
+            // us and uk2 and default = mph
+            windSpeed = data["forecast"][0]["response"][0]["periods"][i]["windSpeedMPH"];
+            windGust = data["forecast"][0]["response"][0]["periods"][i]["windGustMPH"];
         }
-        
+
         if ( i == 0 ) {
-            output_html += '<div class="col-sm-1-5 forecast-day">';
+            output_html += '<div class="col-sm-1-5 forecast-day forecast-today">';
         } else {
             output_html += '<div class="col-sm-1-5 forecast-day border-left">';
         }
-        //var weekday = moment.unix( data["daily"]["data"][i]["time"] ).utcOffset($moment_js_utc_offset).format( "ddd l" ).replace(/([A-Z])|[\/\-\.]\b[0-9]{4}\b/g, ' $1'); // Creates a short date by removing "/YYYY" or ".YYYY" or "-YYYY" - https://stackoverflow.com/a/12704805/1177153
-        var weekday = moment.unix( data["daily"]["data"][i]["time"] ).utcOffset($moment_js_utc_offset).format( "$obs.label.time_darksky_forecast_date" );
+        // Add 7200 (2 hours) to the epoch to get an hour well into the day to avoid any DST issues. This way it'll either be 1am or 2am. Without it, we get 12am or 11pm (the previous day).
+        var weekday = moment.unix( data["forecast"][0]["response"][0]["periods"][i]["timestamp"] + 7200 ).utcOffset($moment_js_utc_offset).format( "$obs.label.time_forecast_date" );
         output_html += '<span id="weekday">'+weekday+'</span>';
         output_html += '<br>';
         output_html += '<div class="forecast-conditions">';
         output_html += '<img id="icon" src="'+image_url+'">';
         output_html += '<span class="forecast-condition-text">'+condition_text+'</span>';
         output_html += '</div>';
-        output_html += '<span class="forecast-high">'+ parseFloat( data["daily"]["data"][i]["temperatureHigh"] ).toFixed(0) +'°</span> | <span class="forecast-low">'+ parseFloat( data["daily"]["data"][i]["temperatureLow"] ).toFixed(0) +'°</span>';
+        output_html += '<span class="forecast-high">'+ parseFloat( maxTemp ).toFixed(0) +'&deg;</span> | <span class="forecast-low">'+ parseFloat( minTemp ).toFixed(0) +'&deg;</span>';
         output_html += '<br>';
         output_html += '<div class="forecast-precip">';
-        if ( data["daily"]["data"][i].hasOwnProperty("precipType") && data["daily"]["data"][i]["precipType"] == "snow" ) {
+        if ( ( data["forecast"][0]["response"][0]["periods"][i]["snowCM"] > 0 ) || ( data["forecast"][0]["response"][0]["periods"][i]["snowIN"] > 0 ) ) {
+            // Determine snow unit
+            if ( ( "$Extras.forecast_units" == "si" ) || ( "$Extras.forecast_units" == "ca" ) || ( "$Extras.forecast_units" == "uk2" ) ) {
+                snow_depth = data["forecast"][0]["response"][0]["periods"][i]["snowCM"];
+                snow_unit = "cm";
+            } else {
+                snow_depth = data["forecast"][0]["response"][0]["periods"][i]["snowIN"];
+                snow_unit = "in";
+            }
             output_html += '<div class="snow-precip">';
-            // Relative URL with .
-            output_html += '<img src="'+get_relative_url()+'/images/snowflake-icon-15px.png"> <span>'+ parseFloat( data["daily"]["data"][i]["precipAccumulation"] ).toFixed(0) +'<span> in';
+            output_html += '<img src="'+get_relative_url()+'/images/snowflake-icon-15px.png"> <span>'+ parseFloat( snow_depth ).toFixed(0) +'<span> ' + snow_unit;
             output_html += '</div>';
-        } else if ( data["daily"]["data"][i].hasOwnProperty("precipType") && data["daily"]["data"][i]["precipType"] == "rain" ) {
-            output_html += '<i class="wi wi-raindrop wi-rotate-45 rain-precip"></i> <span>'+ parseFloat( data["daily"]["data"][i]["precipProbability"] * 100 ).toFixed(0) +'%</span>';
+        } else if ( data["forecast"][0]["response"][0]["periods"][i]["pop"] > 0 ) {
+            output_html += '<i class="wi wi-raindrop wi-rotate-45 rain-precip"></i> <span>'+ parseFloat( data["forecast"][0]["response"][0]["periods"][i]["pop"] ).toFixed(0) +'%</span>';
         } else {
-            output_html += '<i class="wi wi-raindrop wi-rotate-45 rain-no-precip"></i> <span >0%</span>';
+            output_html += '<i class="wi wi-raindrop wi-rotate-45 rain-no-precip"></i> <span>0%</span>';
         }
         output_html += '</div>';
         output_html += '<div class="forecast-wind">';
-        output_html += '<i class="wi wi-strong-wind"></i> <span>'+ parseFloat( data["daily"]["data"][i]["windSpeed"] ).toFixed(0) +'</span> | <span> '+ parseFloat( data["daily"]["data"][i]["windGust"] ).toFixed(0) +'$unit.label.windSpeed';
+        output_html += '<i class="wi wi-strong-wind"></i> <span>'+ parseFloat( windSpeed ).toFixed(0) +'</span> | <span> '+ parseFloat( windGust ).toFixed(0) +'$unit.label.windSpeed';        
         output_html += '</div>';
-        var darksky_link_units = data["flags"]["units"].toLowerCase().concat("12"); // Currently the DarkSky forecast link uses a "{unit}12" string in the URL.
-        output_html += '<a href="https://darksky.net/details/'+data["latitude"]+','+data["longitude"]+'/'+moment.unix( data["daily"]["data"][i]["time"] ).utcOffset($moment_js_utc_offset).format( "YYYY-M-D" )+'/'+darksky_link_units+'/$Extras.darksky_lang" target="_blank">$obs.label.daily_forecast</a>';
+        #if $Extras.has_key("forecast_show_daily_forecast_link") and $Extras.forecast_show_daily_forecast_link == '1'
+        var forecast_link = "$Extras.forecast_daily_forecast_link".replace("YYYY", moment.unix( data["forecast"][0]["response"][0]["periods"][i]["timestamp"] + 7200 ).utcOffset($moment_js_utc_offset).format( "YYYY" )).replace("MM", moment.unix( data["forecast"][0]["response"][0]["periods"][i]["timestamp"] + 7200 ).utcOffset($moment_js_utc_offset).format( "MM" )).replace("DD", moment.unix( data["forecast"][0]["response"][0]["periods"][i]["timestamp"] + 7200 ).utcOffset($moment_js_utc_offset).format( "DD" ));
+        output_html += '<a href="'+forecast_link+'" target="_blank">$obs.label.daily_forecast</a>';
+        #end if
         output_html += '</div>';
     }
-    forecast_subtitle = moment.unix( data["currently"]["time"] ).utcOffset($moment_js_utc_offset).format( '$obs.label.time_forecast_last_updated' );
+    forecast_subtitle = moment.unix( data["timestamp"] ).utcOffset($moment_js_utc_offset).format( '$obs.label.time_forecast_last_updated' );
     jQuery(".forecast-subtitle").html( "$obs.label.forecast_last_updated " + forecast_subtitle );
     jQuery(".forecasts").html( output_html );
 }
@@ -669,8 +900,11 @@ function ajaximages(section=false, reload_timer_interval_seconds=false) {
             belchertown_debug("Updating radar image");
             // Reload images
             if ( document.querySelectorAll(".radar-map img").length > 0 ) {
-                var radar_html = jQuery('.radar-map').children('img').attr('src').split('?')[0] // Get the img src and remove everything after "?" so we don't stack ?'s onto the image during updates
-                jQuery('.radar-map').children('img').attr('src', radar_html + "?" + Math.floor(Math.random() * 999999999));
+                var radar_img = document.querySelectorAll(".radar-map img")[0].src;
+                var new_radar_img = radar_img + "&t=" + Math.floor(Math.random() * 999999999);
+                document.querySelectorAll(".radar-map img")[0].src = new_radar_img;
+                //var radar_html = jQuery('.radar-map').children('img').attr('src').split('?')[0] // Get the img src and remove everything after "?" so we don't stack ?'s onto the image during updates
+                //jQuery('.radar-map').children('img').attr('src', radar_html + "?" + Math.floor(Math.random() * 999999999));
             }
             // Reload iframe - https://stackoverflow.com/a/4249946/1177153
             if ( document.querySelectorAll(".radar-map iframe").length > 0 ) {
@@ -703,7 +937,11 @@ var inactive_timestamp = "";
 
 // MQTT connect
 function connect() {
-    belchertown_debug( "MQTT: Connecting to MQTT" );
+    #if $Extras.has_key("mqtt_websockets_ssl") and $Extras.mqtt_websockets_ssl == '1'
+    belchertown_debug( "MQTT: Connecting to MQTT Websockets: $Extras.mqtt_websockets_host $Extras.mqtt_websockets_port (SSL Enabled)" );
+    #else
+    belchertown_debug( "MQTT: Connecting to MQTT Websockets: $Extras.mqtt_websockets_host $Extras.mqtt_websockets_port (SSL Disabled)" );
+    #end if
     if ( reconnect_using_inactive_timestamp ) {
         updated = moment.unix( inactive_timestamp ).utcOffset( $moment_js_utc_offset ).format( "$obs.label.time_last_updated" );
     } else { 
@@ -903,43 +1141,43 @@ function update_current_wx(data) {
         // No toLocaleString() here since there is no float decimal needed.
         rotateThis( data["windDir"] );
         //jQuery(".wind-arrow").css( "transform", "rotate(" + data["windDir"] + "deg)" );
-        jQuery(".curwinddeg").text( parseFloat( data["windDir"] ).toFixed(0) + "°" );
-        jQuery(".curwinddir").text( highcharts_tooltip_factory( parseFloat( data["windDir"] ).toFixed(0), "windDir" ) );
+        jQuery(".curwinddeg").html( parseFloat( data["windDir"] ).toFixed(0) + "&deg;" );
+        jQuery(".curwinddir").html( highcharts_tooltip_factory( parseFloat( data["windDir"] ).toFixed(0), "windDir" ) );
     }
     // Windspeed US
     if ( data.hasOwnProperty("windSpeed_mph") ) {
-        jQuery(".curwindspeed").text( parseFloat(parseFloat(data["windSpeed_mph"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["windSpeed"], maximumFractionDigits: unit_rounding_array["windSpeed"]}) );
+        jQuery(".curwindspeed").html( parseFloat(parseFloat(data["windSpeed_mph"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["windSpeed"], maximumFractionDigits: unit_rounding_array["windSpeed"]}) );
     }
     // Windspeed Metric
     if ( data.hasOwnProperty("windSpeed_kph") ) {
-        jQuery(".curwindspeed").text( parseFloat(parseFloat(data["windSpeed_kph"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["windSpeed"], maximumFractionDigits: unit_rounding_array["windSpeed"]}) );
+        jQuery(".curwindspeed").html( parseFloat(parseFloat(data["windSpeed_kph"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["windSpeed"], maximumFractionDigits: unit_rounding_array["windSpeed"]}) );
     }
     // Windspeed METRICWX
     if ( data.hasOwnProperty("windSpeed_mps") ) {
-        jQuery(".curwindspeed").text( parseFloat(parseFloat(data["windSpeed_mps"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["windSpeed"], maximumFractionDigits: unit_rounding_array["windSpeed"]}) );
+        jQuery(".curwindspeed").html( parseFloat(parseFloat(data["windSpeed_mps"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["windSpeed"], maximumFractionDigits: unit_rounding_array["windSpeed"]}) );
     }
     
     // Wind Gust US
     // May not be provided in mqtt, but just in case.
     if ( data.hasOwnProperty("windGust_mph") ) {
-        jQuery(".curwindgust").text( parseFloat(parseFloat(data["windGust_mph"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["windGust"], maximumFractionDigits: unit_rounding_array["windGust"]}) );
+        jQuery(".curwindgust").html( parseFloat(parseFloat(data["windGust_mph"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["windGust"], maximumFractionDigits: unit_rounding_array["windGust"]}) );
     }
     // Wind Gust Metric
     if ( data.hasOwnProperty("windGust_kph") ) {
-        jQuery(".curwindgust").text( parseFloat(parseFloat(data["windGust_kph"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["windGust"], maximumFractionDigits: unit_rounding_array["windGust"]}) );
+        jQuery(".curwindgust").html( parseFloat(parseFloat(data["windGust_kph"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["windGust"], maximumFractionDigits: unit_rounding_array["windGust"]}) );
     }
     // Wind Gust METRICWX
     if ( data.hasOwnProperty("windGust_mps") ) {
-        jQuery(".curwindgust").text( parseFloat(parseFloat(data["windGust_mps"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["windGust"], maximumFractionDigits: unit_rounding_array["windGust"]}) );
+        jQuery(".curwindgust").html( parseFloat(parseFloat(data["windGust_mps"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["windGust"], maximumFractionDigits: unit_rounding_array["windGust"]}) );
     }
     
     // Windchill US
     if ( data.hasOwnProperty("windchill") ) {
-        jQuery(".curwindchill").text( parseFloat(parseFloat(data["windchill"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["windchill"], maximumFractionDigits: unit_rounding_array["windchill"]}) + "$unit.label.outTemp" );
+        jQuery(".curwindchill").html( parseFloat(parseFloat(data["windchill"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["windchill"], maximumFractionDigits: unit_rounding_array["windchill"]}) + "$unit.label.outTemp" );
     }
     // Windchill Metric
     if ( data.hasOwnProperty("windchill_C") ) {
-        jQuery(".curwindchill").text( parseFloat(parseFloat(data["windchill_C"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["windchill"], maximumFractionDigits: unit_rounding_array["windchill"]}) + "$unit.label.outTemp" );
+        jQuery(".curwindchill").html( parseFloat(parseFloat(data["windchill_C"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["windchill"], maximumFractionDigits: unit_rounding_array["windchill"]}) + "$unit.label.outTemp" );
     }
 };
 #end if
@@ -991,7 +1229,25 @@ function showChart(json_file, prepend_renderTo=false) {
                 colors = obsname.split(","); 
                 return true;
             }
-            
+
+            // Set the chart credits, then return right away since this "plot" has no other options
+            if ( plotname == "credits" ) {
+                credits = obsname.split(",")[0];
+                return true;
+            }
+
+            // Set the chart credits url, then return right away since this "plot" has no other options
+            if ( plotname == "credits_url" ) {
+                credits_url = obsname.split(",")[0];
+                return true;
+            }
+
+            // Set the chart credits position, then return right away since this "plot" has no other options
+            if ( plotname == "credits_position" ) {
+                credits_position = obsname;
+                return true;
+            }
+
             // Loop through each chart options
             jQuery.each(data[plotname]["options"], function (optionName, optionVal) {
                 switch(optionName) {
@@ -1202,6 +1458,8 @@ function showChart(json_file, prepend_renderTo=false) {
                     },
                     split: true,
                 },
+                
+                credits: {},
 
                 series: [{}]
 
@@ -1393,7 +1651,13 @@ function showChart(json_file, prepend_renderTo=false) {
             
             // If windRose is present, configure a special chart to show that data
             if (observation_type == "windRose") {
+                #if isinstance($ordinate_names[1], str) is True:
+                ## Python 3 unicode string, don't change anything
                 var categories = $ordinate_names;
+                #else
+                ## Python 2 hack to convert backslash unicode to html char
+                var categories = #echo [x.encode('ascii', 'xmlcharrefreplace') for x in $ordinate_names] #;
+                #end if
                 options.chart.className = "highcharts-windRose"; // Used for dark mode
                 options.chart.type = "column";
                 options.chart.polar = true;
@@ -1406,6 +1670,7 @@ function showChart(json_file, prepend_renderTo=false) {
                 options.xAxis.crosshair = true;
                 options.xAxis.categories = categories;
                 options.xAxis.tickmarkPlacement = 'on';
+                options.xAxis.labels = { useHTML: true }
                 //options.legend.align = "right";
                 options.legend.verticalAlign = "top";
                 options.legend.x = 210;
@@ -1429,6 +1694,7 @@ function showChart(json_file, prepend_renderTo=false) {
                 options.tooltip.shared = true;
                 options.tooltip.valueSuffix = '%';
                 options.tooltip.followPointer = true;
+                options.tooltip.useHTML = true;
                 
                 // Since wind rose is a special observation, I did not re-do the JSON arrays to accomodate it as a separate array.
                 // So we need to grab the data array within the series and save it to a temporary array, delete the entire chart series, 
@@ -1552,6 +1818,18 @@ function showChart(json_file, prepend_renderTo=false) {
                 jQuery("#"+options.chart.renderTo).parent().css('width', css_width);
             }
             
+            if ( credits != "highcharts_default" ) {
+                options.credits.text = credits;
+            }
+            
+            if ( credits_url != "highcharts_default" ) {
+                options.credits.href = credits_url;
+            }
+
+            if ( credits_position != "highcharts_default" ) {
+                options.credits.position = JSON.parse(credits_position);
+            }
+
             // Finally all options are done, now show the chart
             var chart = new Highcharts.chart(options);
             

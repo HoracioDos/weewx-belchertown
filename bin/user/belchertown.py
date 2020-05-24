@@ -103,7 +103,7 @@ except ImportError:
         logmsg(syslog.LOG_ERR, msg)
     
 # Print version in syslog for easier troubleshooting
-VERSION = "1.1b8"
+VERSION = "1.2b3"
 loginf("version %s" % VERSION)
 
 class getData(SearchList):
@@ -133,10 +133,10 @@ class getData(SearchList):
 
         # Find the right HTML ROOT
         if 'HTML_ROOT' in self.generator.skin_dict:
-            local_root = os.path.join(self.generator.config_dict['WEEWX_ROOT'],
+            html_root = os.path.join(self.generator.config_dict['WEEWX_ROOT'],
                                       self.generator.skin_dict['HTML_ROOT'])
         else:
-            local_root = os.path.join(self.generator.config_dict['WEEWX_ROOT'],
+            html_root = os.path.join(self.generator.config_dict['WEEWX_ROOT'],
                                       self.generator.config_dict['StdReport']['HTML_ROOT'])
         
         # Setup UTC offset hours for moment.js in index.html
@@ -202,6 +202,10 @@ class getData(SearchList):
         default_ordinate_names = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW', 'N/A']
         try:
             ordinate_names = weeutil.weeutil.option_as_list(self.generator.skin_dict['Units']['Ordinates']['directions'])
+            try:
+                ordinate_names = [unicode(x, "utf-8") for x in ordinate_names] # Python 2, convert to unicode
+            except:
+                pass
         except KeyError:
             ordinate_names = default_ordinate_names
             
@@ -408,7 +412,12 @@ class getData(SearchList):
         if year_rainiest_month_query is not None:
             year_rainiest_month_tuple = (year_rainiest_month_query[1], rain_unit, 'group_rain')
             year_rainiest_month_converted = rain_round % self.generator.converter.convert(year_rainiest_month_tuple)[0]
-            year_rainiest_month = [ calendar.month_name[ int( year_rainiest_month_query[0] ) ], locale.format("%g", float(year_rainiest_month_converted)) ]
+            # Python 2/3 hack
+            try:
+                year_rainiest_month_name = calendar.month_name[ int( year_rainiest_month_query[0] ) ].decode('utf-8') # Python 2
+            except:
+                year_rainiest_month_name = calendar.month_name[ int( year_rainiest_month_query[0] ) ]
+            year_rainiest_month = [ year_rainiest_month_name, locale.format("%g", float(year_rainiest_month_converted)) ]
         else:
             year_rainiest_month = [ "N/A", 0.0 ]
 
@@ -416,8 +425,13 @@ class getData(SearchList):
         at_rainiest_month_query = wx_manager.getSql( at_rainiest_month_sql )
         at_rainiest_month_tuple = (at_rainiest_month_query[2], rain_unit, 'group_rain')
         at_rainiest_month_converted = rain_round % self.generator.converter.convert(at_rainiest_month_tuple)[0]
+        # Python 2/3 hack
+        try:
+            at_rainiest_month_name = calendar.month_name[ int( at_rainiest_month_query[0] ) ].decode('utf-8') # Python 2
+        except:
+            at_rainiest_month_name = calendar.month_name[ int( at_rainiest_month_query[0] ) ]
         at_rainiest_month = [ 
-            "%s, %s" % (calendar.month_name[ int( at_rainiest_month_query[0] ) ], at_rainiest_month_query[1]),
+            "%s, %s" % (at_rainiest_month_name, at_rainiest_month_query[1]),
             locale.format("%g", float(at_rainiest_month_converted))
         ]
         
@@ -483,8 +497,14 @@ class getData(SearchList):
             at_days_with_rain_output[row[0]] = at_days_with_rain_total
             at_days_without_rain_output[row[0]] = at_days_without_rain_total
 
-        at_days_with_rain = max( zip( at_days_with_rain_output.values(), at_days_with_rain_output.keys() ) )
-        at_days_without_rain = max( zip( at_days_without_rain_output.values(), at_days_without_rain_output.keys() ) )
+        if len(at_days_with_rain_output) > 0:
+            at_days_with_rain = max( zip( at_days_with_rain_output.values(), at_days_with_rain_output.keys() ) )
+        else:
+            at_days_with_rain = (0,0)
+        if len(at_days_without_rain_output) > 0:
+            at_days_without_rain = max( zip( at_days_without_rain_output.values(), at_days_without_rain_output.keys() ) )
+        else:
+            at_days_without_rain = (0,0)        
 
         """
         This portion is right from the weewx sample http://www.weewx.com/docs/customizing.htm
@@ -498,7 +518,7 @@ class getData(SearchList):
         # Get the unit label from the skin dict for speed. 
         windSpeed_unit = self.generator.skin_dict["Units"]["Groups"]["group_speed"]
         windSpeed_unit_label = self.generator.skin_dict["Units"]["Labels"][windSpeed_unit]
-                
+       
         """
         Get STATS Data
         """
@@ -680,19 +700,239 @@ class getData(SearchList):
         """
         Forecast Data
         """
-        if self.generator.skin_dict['Extras']['forecast_enabled'] == "1":
-            forecast_file = local_root + "/json/darksky_forecast.json"
-            #forecast_json_url = belchertown_root_url + "/json/darksky_forecast.json"
-            darksky_secret_key = self.generator.skin_dict['Extras']['darksky_secret_key']
-            darksky_units = self.generator.skin_dict['Extras']['darksky_units'].lower()
-            darksky_lang = self.generator.skin_dict['Extras']['darksky_lang'].lower()
+        if self.generator.skin_dict['Extras']['forecast_enabled'] == "1" and self.generator.skin_dict['Extras']['forecast_api_id'] != "" or 'forecast_dev_file' in self.generator.skin_dict['Extras']:
+        
+            forecast_file = html_root + "/json/forecast.json"
+            forecast_api_id = self.generator.skin_dict['Extras']['forecast_api_id']
+            forecast_api_secret = self.generator.skin_dict['Extras']['forecast_api_secret']
+            forecast_units = self.generator.skin_dict['Extras']['forecast_units'].lower()
             latitude = self.generator.config_dict['Station']['latitude']
             longitude = self.generator.config_dict['Station']['longitude']
             forecast_stale_timer = self.generator.skin_dict['Extras']['forecast_stale']
             forecast_is_stale = False
-            
-            forecast_url = "https://api.darksky.net/forecast/%s/%s,%s?units=%s&lang=%s" % ( darksky_secret_key, latitude, longitude, darksky_units, darksky_lang )
-            
+        
+            def aeris_coded_weather( data ):
+                # https://www.aerisweather.com/support/docs/api/reference/weather-codes/
+                output = ""
+                coverage_code = data.split(":")[0]
+                intensity_code = data.split(":")[1]
+                weather_code = data.split(":")[2]
+                    
+                cloud_dict = {
+                    "CL": label_dict["forecast_cloud_code_CL"],
+                    "FW": label_dict["forecast_cloud_code_FW"],
+                    "SC": label_dict["forecast_cloud_code_SC"],
+                    "BK": label_dict["forecast_cloud_code_BK"],
+                    "OV": label_dict["forecast_cloud_code_OV"]
+                }
+                
+                coverage_dict = {
+                    "AR": label_dict["forecast_coverage_code_AR"],
+                    "BR": label_dict["forecast_coverage_code_BR"],
+                    "C": label_dict["forecast_coverage_code_C"],
+                    "D": label_dict["forecast_coverage_code_D"],
+                    "FQ": label_dict["forecast_coverage_code_FQ"],
+                    "IN": label_dict["forecast_coverage_code_IN"],
+                    "IS": label_dict["forecast_coverage_code_IS"],
+                    "L": label_dict["forecast_coverage_code_L"],
+                    "NM": label_dict["forecast_coverage_code_NM"],
+                    "O": label_dict["forecast_coverage_code_O"],
+                    "PA": label_dict["forecast_coverage_code_PA"],
+                    "PD": label_dict["forecast_coverage_code_PD"],
+                    "S": label_dict["forecast_coverage_code_S"],
+                    "SC": label_dict["forecast_coverage_code_SC"],
+                    "VC": label_dict["forecast_coverage_code_VC"],
+                    "WD": label_dict["forecast_coverage_code_WD"]
+                }
+                
+                intensity_dict = {
+                    "VL": label_dict["forecast_intensity_code_VL"],
+                    "L": label_dict["forecast_intensity_code_L"],
+                    "H": label_dict["forecast_intensity_code_H"],
+                    "VH": label_dict["forecast_intensity_code_VH"]
+                }
+                
+                weather_dict = {
+                    "A": label_dict["forecast_weather_code_A"],
+                    "BD": label_dict["forecast_weather_code_BD"],
+                    "BN": label_dict["forecast_weather_code_BN"],
+                    "BR": label_dict["forecast_weather_code_BR"],
+                    "BS": label_dict["forecast_weather_code_BS"],
+                    "BY": label_dict["forecast_weather_code_BY"],
+                    "F": label_dict["forecast_weather_code_F"],
+                    "FR": label_dict["forecast_weather_code_FR"],
+                    "H": label_dict["forecast_weather_code_H"],
+                    "IC": label_dict["forecast_weather_code_IC"],
+                    "IF": label_dict["forecast_weather_code_IF"],
+                    "IP": label_dict["forecast_weather_code_IP"],
+                    "K": label_dict["forecast_weather_code_K"],
+                    "L": label_dict["forecast_weather_code_L"],
+                    "R": label_dict["forecast_weather_code_R"],
+                    "RW": label_dict["forecast_weather_code_RW"],
+                    "RS": label_dict["forecast_weather_code_RS"],
+                    "SI": label_dict["forecast_weather_code_SI"],
+                    "WM": label_dict["forecast_weather_code_WM"],
+                    "S": label_dict["forecast_weather_code_S"],
+                    "SW": label_dict["forecast_weather_code_SW"],
+                    "T": label_dict["forecast_weather_code_T"],
+                    "UP": label_dict["forecast_weather_code_UP"],
+                    "VA": label_dict["forecast_weather_code_VA"],
+                    "WP": label_dict["forecast_weather_code_WP"],
+                    "ZF": label_dict["forecast_weather_code_ZF"],
+                    "ZL": label_dict["forecast_weather_code_ZL"],
+                    "ZR": label_dict["forecast_weather_code_ZR"],
+                    "ZY": label_dict["forecast_weather_code_ZY"]
+                }
+                
+                # Check if the weather_code is in the cloud_dict and use that if it's there. If not then it's a combined weather code.
+                if weather_code in cloud_dict: 
+                    return cloud_dict[weather_code];
+                else:
+                    # Add the coverage if it's present, and full observation forecast is requested
+                    if coverage_code:
+                        output += coverage_dict[coverage_code] + " "
+                    # Add the intensity if it's present
+                    if intensity_code:
+                        output += intensity_dict[intensity_code] + " "
+                    # Weather output
+                    output += weather_dict[weather_code];
+                return output
+                
+            def aeris_icon( data ):
+                # https://www.aerisweather.com/support/docs/api/reference/icon-list/
+                icon_name = data.split(".")[0]; # Remove .png
+                
+                icon_dict = {
+                    "blizzard": "snow",
+                    "blizzardn": "snow",
+                    "blowingsnow": "snow",
+                    "blowingsnown": "snow",
+                    "clear": "clear-day",
+                    "clearn": "clear-night",
+                    "cloudy": "cloudy",
+                    "cloudyn": "cloudy",
+                    "cloudyw": "cloudy",
+                    "cloudywn": "cloudy",
+                    "cold": "clear-day",
+                    "coldn": "clear-night",
+                    "drizzle": "rain",
+                    "drizzlen": "rain",
+                    "dust": "fog",
+                    "dustn": "fog",
+                    "fair": "clear-day",
+                    "fairn": "clear-night",
+                    "drizzlef": "rain",
+                    "fdrizzlen": "rain",
+                    "flurries": "sleet",
+                    "flurriesn": "sleet",
+                    "flurriesw": "sleet",
+                    "flurrieswn": "sleet",
+                    "fog": "fog",
+                    "fogn": "fog",
+                    "freezingrain": "rain",
+                    "freezingrainn": "rain",
+                    "hazy": "fog",
+                    "hazyn": "fog",
+                    "hot": "clear-day",
+                    "N/A ": "unknown",
+                    "mcloudy": "partly-cloudy-day",
+                    "mcloudyn": "partly-cloudy-night",
+                    "mcloudyr": "rain",
+                    "mcloudyrn": "rain",
+                    "mcloudyrw": "rain",
+                    "mcloudyrwn": "rain",
+                    "mcloudys": "snow",
+                    "mcloudysn": "snow",
+                    "mcloudysf": "snow",
+                    "mcloudysfn": "snow",
+                    "mcloudysfw": "snow",
+                    "mcloudysfwn": "snow",
+                    "mcloudysw": "partly-cloudy-day",
+                    "mcloudyswn": "partly-cloudy-night",
+                    "mcloudyt": "thunderstorm",
+                    "mcloudytn": "thunderstorm",
+                    "mcloudytw": "thunderstorm",
+                    "mcloudytwn": "thunderstorm",
+                    "mcloudyw": "partly-cloudy-day",
+                    "mcloudywn": "partly-cloudy-night",
+                    "na": "unknown",
+                    "na": "unknown",
+                    "pcloudy": "partly-cloudy-day",
+                    "pcloudyn": "partly-cloudy-night",
+                    "pcloudyr": "rain",
+                    "pcloudyrn": "rain",
+                    "pcloudyrw": "rain",
+                    "pcloudyrwn": "rain",
+                    "pcloudys": "snow",
+                    "pcloudysn": "snow",
+                    "pcloudysf": "snow",
+                    "pcloudysfn": "snow",
+                    "pcloudysfw": "snow",
+                    "pcloudysfwn": "snow",
+                    "pcloudysw": "partly-cloudy-day",
+                    "pcloudyswn": "partly-cloudy-night",
+                    "pcloudyt": "thunderstorm",
+                    "pcloudytn": "thunderstorm",
+                    "pcloudytw": "thunderstorm",
+                    "pcloudytwn": "thunderstorm",
+                    "pcloudyw": "partly-cloudy-day",
+                    "pcloudywn": "partly-cloudy-night",
+                    "rain": "rain",
+                    "rainn": "rain",
+                    "rainandsnow": "rain",
+                    "rainandsnown": "rain",
+                    "raintosnow": "rain",
+                    "raintosnown": "rain",
+                    "rainw": "rain",
+                    "rainw": "rain",
+                    "showers": "rain",
+                    "showersn": "rain",
+                    "showersw": "rain",
+                    "showersw": "rain",
+                    "sleet": "sleet",
+                    "sleetn": "sleet",
+                    "sleetsnow": "sleet",
+                    "sleetsnown": "sleet",
+                    "smoke": "fog",
+                    "smoken": "fog",
+                    "snow": "snow",
+                    "snown": "snow",
+                    "snoww": "snow",
+                    "snowwn": "snow",
+                    "snowshowers": "snow",
+                    "snowshowersn": "snow",
+                    "snowshowersw": "snow",
+                    "snowshowerswn": "snow",
+                    "snowtorain": "snow",
+                    "snowtorainn": "snow",
+                    "sunny": "partly-cloudy-day",
+                    "sunnyn": "partly-cloudy-night",
+                    "sunnyw": "partly-cloudy-day",
+                    "sunnywn": "partly-cloudy-night",
+                    "tstorm": "thunderstorm",
+                    "tstormn": "thunderstorm",
+                    "tstorms": "thunderstorm",
+                    "tstormsn": "thunderstorm",
+                    "tstormsw": "thunderstorm",
+                    "tstormswn": "thunderstorm",
+                    "wind": "wind",
+                    "wind": "wind",
+                    "wintrymix": "sleet",
+                    "wintrymixn": "sleet"
+                }
+                return icon_dict[icon_name]   
+                        
+            forecast_current_url = "https://api.aerisapi.com/observations/%s,%s?&format=json&filter=allstations&filter=metar&limit=1&client_id=%s&client_secret=%s" % ( latitude, longitude, forecast_api_id, forecast_api_secret )
+            forecast_url = "https://api.aerisapi.com/forecasts/%s,%s?&format=json&filter=day&limit=7&client_id=%s&client_secret=%s" % ( latitude, longitude, forecast_api_id, forecast_api_secret )
+
+            if self.generator.skin_dict['Extras']['forecast_alert_enabled'] == "1":
+                if self.generator.skin_dict['Extras']['forecast_alert_limit']:
+                    forecast_alert_limit = self.generator.skin_dict['Extras']['forecast_alert_limit']
+                    forecast_alerts_url = "https://api.aerisapi.com/alerts/%s,%s?&format=json&limit=%s&client_id=%s&client_secret=%s" % ( latitude, longitude, forecast_alert_limit, forecast_api_id, forecast_api_secret )
+                else:
+                    # Default to 1 alerts to show if the option is missing. Can go up to 10
+                    forecast_alerts_url = "https://api.aerisapi.com/alerts/%s,%s?&format=json&limit=1&client_id=%s&client_secret=%s" % ( latitude, longitude, forecast_api_id, forecast_api_secret )
+
             # Determine if the file exists and get it's modified time
             if os.path.isfile( forecast_file ):
                 if ( int( time.time() ) - int( os.path.getmtime( forecast_file ) ) ) > int( forecast_stale_timer ):
@@ -712,17 +952,48 @@ class getData(SearchList):
                         from urllib2 import Request, urlopen
                     user_agent = 'Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_4; en-US) AppleWebKit/534.3 (KHTML, like Gecko) Chrome/6.0.472.63 Safari/534.3'
                     headers = { 'User-Agent' : user_agent }
-                    req = Request( forecast_url, None, headers )
-                    response = urlopen( req )
-                    page = response.read()
-                    response.close()
+                    if 'forecast_dev_file' in self.generator.skin_dict['Extras']:
+                        # Hidden option to use a pre-downloaded forecast file rather than using API calls for no reason
+                        dev_forecast_file = self.generator.skin_dict['Extras']['forecast_dev_file']
+                        req = Request( dev_forecast_file, None, headers )
+                        response = urlopen( req )
+                        forecast_file_result = response.read()
+                        response.close()
+                    else:
+                        # Current conditions
+                        req = Request( forecast_current_url, None, headers )
+                        response = urlopen( req )
+                        current_page = response.read()
+                        response.close()
+                        # Forecast
+                        req = Request( forecast_url, None, headers )
+                        response = urlopen( req )
+                        forecast_page = response.read()
+                        response.close()
+                        if self.generator.skin_dict['Extras']['forecast_alert_enabled'] == "1":
+                            # Alerts
+                            req = Request( forecast_alerts_url, None, headers )
+                            response = urlopen( req )
+                            alerts_page = response.read()
+                            response.close()
+                        
+                        # Combine all into 1 file
+                        if self.generator.skin_dict['Extras']['forecast_alert_enabled'] == "1":
+                            forecast_file_result = json.dumps( {"timestamp": int(time.time()), "current": [json.loads(current_page)], "forecast": [json.loads(forecast_page)], "alerts": [json.loads(alerts_page)]} )
+                        else:
+                            forecast_file_result = json.dumps( {"timestamp": int(time.time()), "current": [json.loads(current_page)], "forecast": [json.loads(forecast_page)]} )
+                            
                 except Exception as error:
                     raise Warning( "Error downloading forecast data. Check the URL in your configuration and try again. You are trying to use URL: %s, and the error is: %s" % ( forecast_url, error ) )
                     
                 # Save forecast data to file. w+ creates the file if it doesn't exist, and truncates the file and re-writes it everytime
                 try:
                     with open( forecast_file, 'wb+' ) as file:
-                        file.write( page )
+                        # Python 2/3
+                        try:
+                            file.write( forecast_file_result.encode('utf-8') )
+                        except:
+                            file.write( forecast_file_result )
                         loginf( "New forecast file downloaded to %s" % forecast_file )
                 except IOError as e:
                     raise Warning( "Error writing forecast info to %s. Reason: %s" % ( forecast_file, e) )
@@ -730,32 +1001,30 @@ class getData(SearchList):
             # Process the forecast file
             with open( forecast_file, "r" ) as read_file:
                 data = json.load( read_file )
-            
-            current_obs_summary = label_dict[ data["currently"]["summary"].lower() ]
-            visibility = locale.format("%g", float( data["currently"]["visibility"] ) )
-            
-            if data["currently"]["icon"] == "partly-cloudy-night":
-                #current_obs_icon = '<img id="wxicon" src="./images/partly-cloudy-night.png">'
-                current_obs_icon = 'partly-cloudy-night.png'
-            else:
-                #current_obs_icon = '<img id="wxicon" src="./images/'+data["currently"]["icon"]+'.png">'
-                current_obs_icon = data["currently"]["icon"]+'.png'
-
-            # Even though we specify the DarkSky unit as darksky_units, if the user selects "auto" as their unit
-            # then we don't know what DarkSky will return for visibility. So always use the DarkSky output to 
-            # tell us what unit they are using. This fixes the guessing game for what label to use for the DarkSky "auto" unit
-            if ( data["flags"]["units"].lower() == "us" ) or ( data["flags"]["units"].lower() == "uk2" ):
-                visibility_unit = "miles"
-            elif ( data["flags"]["units"].lower() == "si" ) or ( data["flags"]["units"].lower() == "ca" ):
-                visibility_unit = "km"
-            else:
-                visibility_unit = ""
                 
+            current_obs_summary = aeris_coded_weather( data["current"][0]["response"]["ob"]["weatherPrimaryCoded"] )
+
+            current_obs_icon = aeris_icon( data["current"][0]["response"]["ob"]["icon"] ) + ".png"
+            
+            if forecast_units == "si" or forecast_units == "ca":
+                if data["current"][0]["response"]["ob"]["visibilityKM"] is not None:
+                    visibility = locale.format("%g", data["current"][0]["response"]["ob"]["visibilityKM"] )
+                    visibility_unit = "km"
+                else:
+                    visibility = "N/A"
+                    visibility_unit = ""
+            else:
+                # us, uk2 and default to miles per hour
+                if  data["current"][0]["response"]["ob"]["visibilityMI"] is not None:
+                    visibility = locale.format("%g", float( data["current"][0]["response"]["ob"]["visibilityMI"] ) )
+                    visibility_unit = "miles"
+                else:
+                    visibility = "N/A"
+                    visibility_unit = ""
         else:
-            #forecast_json_url = ""
             current_obs_icon = ""
             current_obs_summary = ""
-            visibility = ""
+            visibility = "N/A"
             visibility_unit = ""
         
         
@@ -764,7 +1033,7 @@ class getData(SearchList):
         """
         # Only process if Earthquake data is enabled
         if self.generator.skin_dict['Extras']['earthquake_enabled'] == "1":
-            earthquake_file = local_root + "/json/earthquake.json"
+            earthquake_file = html_root + "/json/earthquake.json"
             earthquake_stale_timer = self.generator.skin_dict['Extras']['earthquake_stale']
             latitude = self.generator.config_dict['Station']['latitude']
             longitude = self.generator.config_dict['Station']['longitude']
@@ -858,7 +1127,7 @@ class getData(SearchList):
         Version Update Data
         """
         if self.generator.skin_dict['Extras']['check_for_updates'] == "1":
-            github_version_file = local_root + "/json/github_version.json"
+            github_version_file = html_root + "/json/github_version.json"
             github_version_is_stale = False
             
             github_version_url = "https://api.github.com/repos/poblabs/weewx-belchertown/releases/latest"
@@ -921,6 +1190,7 @@ class getData(SearchList):
         """
         Get Current Station Observation Data for the table html
         """
+        station_obs_binding = None
         station_obs_json = OrderedDict()
         station_obs_html = ""
         station_observations = self.generator.skin_dict['Extras']['station_observations']
@@ -928,13 +1198,21 @@ class getData(SearchList):
         if isinstance(station_observations, list) is False:
             station_observations = station_observations.split()
         current_stamp = manager.lastGoodStamp()
-        current = weewx.tags.CurrentObj(db_lookup, None, current_stamp, self.generator.formatter, self.generator.converter)
+        current = weewx.tags.CurrentObj(db_lookup, station_obs_binding, current_stamp, self.generator.formatter, self.generator.converter)
         for obs in station_observations:
+            if "data_binding" in obs:
+                station_obs_binding = obs[obs.find("(")+1:obs.rfind(")")].split("=")[1] # Thanks https://stackoverflow.com/a/40811994/1177153
+                obs = obs.split("(")[0]
+            if station_obs_binding is not None:
+                obs_binding_manager = self.generator.db_binder.get_manager(station_obs_binding)
+                current_stamp = obs_binding_manager.lastGoodStamp()
+                current = weewx.tags.CurrentObj(db_lookup, station_obs_binding, current_stamp, self.generator.formatter, self.generator.converter)
+            
             if obs == "visibility":
                 try:
                     obs_output = str(visibility) + " " + str(visibility_unit)
                 except:
-                    raise Warning( "Error adding visiblity to station observations table. Check that you have DarkSky forecast data, or remove visibility from your station_observations Extras option." )
+                    raise Warning( "Error adding visiblity to station observations table. Check that you have forecast data, or remove visibility from your station_observations Extras option." )
             elif obs == "rainWithRainRate":
                 # rainWithRainRate Rain shows rain daily sum and rain rate
                 obs_binder = weewx.tags.ObservationBinder("rain", archiveDaySpan(current_stamp), db_lookup, None, "day", self.generator.formatter, self.generator.converter)
@@ -986,10 +1264,11 @@ class getData(SearchList):
         """
         all_obs_rounding_json = OrderedDict()
         all_obs_unit_labels_json = OrderedDict()
-        for obs, group in sorted(weewx.units.obs_group_dict.items()):
+        for obs in sorted(weewx.units.obs_group_dict):
             try:
                 # Find the unit from group (like group_temperature = degree_F)
-                obs_unit = self.generator.converter.group_unit_dict[group]
+                obs_group = weewx.units.obs_group_dict[obs]
+                obs_unit = self.generator.converter.group_unit_dict[obs_group]
             except:
                 # Something's wrong. Continue this loop to ignore this group (like group_dust or something non-standard)
                 continue
@@ -1005,7 +1284,7 @@ class getData(SearchList):
                 obs_unit_label = self.generator.skin_dict['Units']['Labels'].get(obs_unit, "")
             # Add to label array and strip whitespace if possible
             if obs not in all_obs_unit_labels_json:
-                all_obs_unit_labels_json[obs] = str(obs_unit_label)
+                all_obs_unit_labels_json[obs] = obs_unit_label
             
             # Special handling items
             if visibility:
@@ -1015,8 +1294,6 @@ class getData(SearchList):
                 all_obs_rounding_json["visibility"] = ""
                 all_obs_unit_labels_json["visibility"] = ""
                 
-
-            
         """
         Social Share
         """
@@ -1067,10 +1344,18 @@ class getData(SearchList):
                 social_html += twitter_html
             social_html += "</div>"
 
+        """
+        Include custom.css if it exists in the HTML_ROOT folder
+        """
+        custom_css_file = html_root + "/custom.css"
+        # Determine if the file exists
+        if os.path.isfile( custom_css_file ):
+            custom_css_exists = True
+        else:
+            custom_css_exists = False
             
         # Build the search list with the new values
         search_list_extension = { 'belchertown_version': VERSION,
-                                  #'belchertown_root_url': belchertown_root_url,
                                   'belchertown_debug': belchertown_debug,
                                   'moment_js_utc_offset': moment_js_utc_offset,
                                   'highcharts_timezoneoffset': highcharts_timezoneoffset,
@@ -1104,7 +1389,6 @@ class getData(SearchList):
                                   'windSpeedUnitLabel': windSpeed_unit_label,
                                   'stats_header_html': stats_header_html,
                                   'default_stats_file': default_stats_file,
-                                  #'forecast_json_url': forecast_json_url,
                                   'current_obs_icon': current_obs_icon,
                                   'current_obs_summary': current_obs_summary,
                                   'visibility': visibility,
@@ -1120,7 +1404,8 @@ class getData(SearchList):
                                   'earthquake_lat': eqlat,
                                   'earthquake_lon': eqlon,
                                   'github_version': github_version,
-                                  'social_html': social_html }
+                                  'social_html': social_html,
+                                  'custom_css_exists': custom_css_exists }
 
         # Finally, return our extension as a list:
         return [search_list_extension]
@@ -1205,6 +1490,18 @@ class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
             # Define the default tooltip datetime format from the global options
             tooltip_date_format = chart_options.get('tooltip_date_format', "LLLL")
             output[chart_group]["tooltip_date_format"] = tooltip_date_format
+            
+            # Credits Text
+            credits = chart_options.get("credits", "highcharts_default") 
+            output[chart_group]["credits"] = credits
+
+            # Credits URL
+            credits_url = chart_options.get("credits_url", "highcharts_default") 
+            output[chart_group]["credits_url"] = credits_url
+            
+            # Credits position
+            credits_position = chart_options.get("credits_position", "highcharts_default") 
+            output[chart_group]["credits_position"] = credits_position
             
             # Check if there are any user override on generation periods.
             # Takes the crontab approach. If the words hourly, daily, monthly, yearly are present use them, otherwise use an integer interval if available.
@@ -1402,7 +1699,11 @@ class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
                     yAxisLabel_config = line_options.get('yAxis_label', None)
                     # Set a default yAxis label if graphs.conf yAxis_label is none and there's a unit_label - e.g. Temperature (F)
                     if yAxisLabel_config is None and unit_label:
-                        yAxis_label = name + " (" + unit_label.strip() + ")"
+                        # Python 2/3 hack
+                        try:
+                            yAxis_label = name + " (" + unit_label.strip().encode("utf-8") + ")" # Python 2.
+                        except:
+                            yAxis_label = name + " (" + unit_label.strip() + ")" # Python 3
                     elif yAxisLabel_config:
                         yAxis_label = yAxisLabel_config
                     else:
@@ -1550,94 +1851,95 @@ class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
             # Sort by beaufort wind speeds
             group_0_windDir, group_0_windSpeed, group_1_windDir, group_1_windSpeed, group_2_windDir, group_2_windSpeed, group_3_windDir, group_3_windSpeed, group_4_windDir, group_4_windSpeed, group_5_windDir, group_5_windSpeed, group_6_windDir, group_6_windSpeed = ([] for i in range(14))
             for windData in merged:
-                if windSpeed_unit == "mile_per_hour" or windSpeed_unit == "mile_per_hour2":
-                    if windData[1] < 1:
-                        group_0_windDir.append( windData[0] )
-                        group_0_windSpeed.append( windData[1] )
-                    elif 1 <= windData[1] <= 3:
-                        group_1_windDir.append( windData[0] )
-                        group_1_windSpeed.append( windData[1] )
-                    elif 4 <= windData[1] <= 7:
-                        group_2_windDir.append( windData[0] )
-                        group_2_windSpeed.append( windData[1] )
-                    elif 8 <= windData[1] <= 12:
-                        group_3_windDir.append( windData[0] )
-                        group_3_windSpeed.append( windData[1] )
-                    elif 13 <= windData[1] <= 18:
-                        group_4_windDir.append( windData[0] )
-                        group_4_windSpeed.append( windData[1] )
-                    elif 19 <= windData[1] <= 24:
-                        group_5_windDir.append( windData[0] )
-                        group_5_windSpeed.append( windData[1] )
-                    elif windData[1] >= 25:
-                        group_6_windDir.append( windData[0] )
-                        group_6_windSpeed.append( windData[1] )
-                elif windSpeed_unit == "km_per_hour" or windSpeed_unit == "km_per_hour2":
-                    if windData[1] < 2:
-                        group_0_windDir.append( windData[0] )
-                        group_0_windSpeed.append( windData[1] )
-                    elif 2 <= windData[1] <= 5:
-                        group_1_windDir.append( windData[0] )
-                        group_1_windSpeed.append( windData[1] )
-                    elif 6 <= windData[1] <= 11:
-                        group_2_windDir.append( windData[0] )
-                        group_2_windSpeed.append( windData[1] )
-                    elif 12 <= windData[1] <= 19:
-                        group_3_windDir.append( windData[0] )
-                        group_3_windSpeed.append( windData[1] )
-                    elif 20 <= windData[1] <= 28:
-                        group_4_windDir.append( windData[0] )
-                        group_4_windSpeed.append( windData[1] )
-                    elif 29 <= windData[1] <= 38:
-                        group_5_windDir.append( windData[0] )
-                        group_5_windSpeed.append( windData[1] )
-                    elif windData[1] >= 39:
-                        group_6_windDir.append( windData[0] )
-                        group_6_windSpeed.append( windData[1] )
-                elif windSpeed_unit == "meter_per_second" or windSpeed_unit == "meter_per_second2":
-                    if windData[1] < 0.5:
-                        group_0_windDir.append( windData[0] )
-                        group_0_windSpeed.append( windData[1] )
-                    elif 0.5 <= windData[1] <= 1.5:
-                        group_1_windDir.append( windData[0] )
-                        group_1_windSpeed.append( windData[1] )
-                    elif 1.6 <= windData[1] <= 3.3:
-                        group_2_windDir.append( windData[0] )
-                        group_2_windSpeed.append( windData[1] )
-                    elif 3.4 <= windData[1] <= 5.5:
-                        group_3_windDir.append( windData[0] )
-                        group_3_windSpeed.append( windData[1] )
-                    elif 5.6 <= windData[1] <= 7.9:
-                        group_4_windDir.append( windData[0] )
-                        group_4_windSpeed.append( windData[1] )
-                    elif 8 <= windData[1] <= 10.7:
-                        group_5_windDir.append( windData[0] )
-                        group_5_windSpeed.append( windData[1] )
-                    elif windData[1] >= 10.8:
-                        group_6_windDir.append( windData[0] )
-                        group_6_windSpeed.append( windData[1] )
-                elif windSpeed_unit == "knot" or windSpeed_unit == "knot2":
-                    if windData[1] < 1:
-                        group_0_windDir.append( windData[0] )
-                        group_0_windSpeed.append( windData[1] )
-                    elif 1 <= windData[1] <= 3:
-                        group_1_windDir.append( windData[0] )
-                        group_1_windSpeed.append( windData[1] )
-                    elif 4 <= windData[1] <= 6:
-                        group_2_windDir.append( windData[0] )
-                        group_2_windSpeed.append( windData[1] )
-                    elif 7 <= windData[1] <= 10:
-                        group_3_windDir.append( windData[0] )
-                        group_3_windSpeed.append( windData[1] )
-                    elif 11 <= windData[1] <= 16:
-                        group_4_windDir.append( windData[0] )
-                        group_4_windSpeed.append( windData[1] )
-                    elif 17 <= windData[1] <= 21:
-                        group_5_windDir.append( windData[0] )
-                        group_5_windSpeed.append( windData[1] )
-                    elif windData[1] >= 22:
-                        group_6_windDir.append( windData[0] )
-                        group_6_windSpeed.append( windData[1] )
+                if windData[0] is not None and windData[1] is not None:
+                    if windSpeed_unit == "mile_per_hour" or windSpeed_unit == "mile_per_hour2":
+                        if windData[1] < 1:
+                            group_0_windDir.append( windData[0] )
+                            group_0_windSpeed.append( windData[1] )
+                        elif 1 <= windData[1] <= 3:
+                            group_1_windDir.append( windData[0] )
+                            group_1_windSpeed.append( windData[1] )
+                        elif 4 <= windData[1] <= 7:
+                            group_2_windDir.append( windData[0] )
+                            group_2_windSpeed.append( windData[1] )
+                        elif 8 <= windData[1] <= 12:
+                            group_3_windDir.append( windData[0] )
+                            group_3_windSpeed.append( windData[1] )
+                        elif 13 <= windData[1] <= 18:
+                            group_4_windDir.append( windData[0] )
+                            group_4_windSpeed.append( windData[1] )
+                        elif 19 <= windData[1] <= 24:
+                            group_5_windDir.append( windData[0] )
+                            group_5_windSpeed.append( windData[1] )
+                        elif windData[1] >= 25:
+                            group_6_windDir.append( windData[0] )
+                            group_6_windSpeed.append( windData[1] )
+                    elif windSpeed_unit == "km_per_hour" or windSpeed_unit == "km_per_hour2":
+                        if windData[1] < 2:
+                            group_0_windDir.append( windData[0] )
+                            group_0_windSpeed.append( windData[1] )
+                        elif 2 <= windData[1] <= 5:
+                            group_1_windDir.append( windData[0] )
+                            group_1_windSpeed.append( windData[1] )
+                        elif 6 <= windData[1] <= 11:
+                            group_2_windDir.append( windData[0] )
+                            group_2_windSpeed.append( windData[1] )
+                        elif 12 <= windData[1] <= 19:
+                            group_3_windDir.append( windData[0] )
+                            group_3_windSpeed.append( windData[1] )
+                        elif 20 <= windData[1] <= 28:
+                            group_4_windDir.append( windData[0] )
+                            group_4_windSpeed.append( windData[1] )
+                        elif 29 <= windData[1] <= 38:
+                            group_5_windDir.append( windData[0] )
+                            group_5_windSpeed.append( windData[1] )
+                        elif windData[1] >= 39:
+                            group_6_windDir.append( windData[0] )
+                            group_6_windSpeed.append( windData[1] )
+                    elif windSpeed_unit == "meter_per_second" or windSpeed_unit == "meter_per_second2":
+                        if windData[1] < 0.5:
+                            group_0_windDir.append( windData[0] )
+                            group_0_windSpeed.append( windData[1] )
+                        elif 0.5 <= windData[1] <= 1.5:
+                            group_1_windDir.append( windData[0] )
+                            group_1_windSpeed.append( windData[1] )
+                        elif 1.6 <= windData[1] <= 3.3:
+                            group_2_windDir.append( windData[0] )
+                            group_2_windSpeed.append( windData[1] )
+                        elif 3.4 <= windData[1] <= 5.5:
+                            group_3_windDir.append( windData[0] )
+                            group_3_windSpeed.append( windData[1] )
+                        elif 5.6 <= windData[1] <= 7.9:
+                            group_4_windDir.append( windData[0] )
+                            group_4_windSpeed.append( windData[1] )
+                        elif 8 <= windData[1] <= 10.7:
+                            group_5_windDir.append( windData[0] )
+                            group_5_windSpeed.append( windData[1] )
+                        elif windData[1] >= 10.8:
+                            group_6_windDir.append( windData[0] )
+                            group_6_windSpeed.append( windData[1] )
+                    elif windSpeed_unit == "knot" or windSpeed_unit == "knot2":
+                        if windData[1] < 1:
+                            group_0_windDir.append( windData[0] )
+                            group_0_windSpeed.append( windData[1] )
+                        elif 1 <= windData[1] <= 3:
+                            group_1_windDir.append( windData[0] )
+                            group_1_windSpeed.append( windData[1] )
+                        elif 4 <= windData[1] <= 6:
+                            group_2_windDir.append( windData[0] )
+                            group_2_windSpeed.append( windData[1] )
+                        elif 7 <= windData[1] <= 10:
+                            group_3_windDir.append( windData[0] )
+                            group_3_windSpeed.append( windData[1] )
+                        elif 11 <= windData[1] <= 16:
+                            group_4_windDir.append( windData[0] )
+                            group_4_windSpeed.append( windData[1] )
+                        elif 17 <= windData[1] <= 21:
+                            group_5_windDir.append( windData[0] )
+                            group_5_windSpeed.append( windData[1] )
+                        elif windData[1] >= 22:
+                            group_6_windDir.append( windData[0] )
+                            group_6_windSpeed.append( windData[1] )
 
             # Get the windRose data
             group_0_series_data = self.create_windrose_data( group_0_windDir, group_0_windSpeed )

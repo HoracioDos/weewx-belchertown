@@ -1,11 +1,15 @@
 #encoding UTF-8
 <div class="wx-stn-info-container">
     <div class="row">
-        #if $Extras.has_key("enable_weather_icon") and $Extras.enable_weather_icon == '1'
-           <div class="col-sm-1 wx-stn-info-current-obs">
-               <span class="obs-header-icon"><img src="$relative_url/images/$current_obs_icon"></span>
-               <span class="obs-header-outtemp">$current.outTemp</span>
-           </div>
+       #if $Extras.has_key("enable_weather_icon") and $Extras.enable_weather_icon == '1'
+        <div class="col-sm-1 wx-stn-info-current-obs">
+            <span class="obs-header-icon">
+                #if $Extras.has_key("forecast_enabled") and $Extras.forecast_enabled == '1'
+                <img id="wxicon" src="$relative_url/images/$current_obs_icon">
+                #end if
+            </span>
+            <span class="obs-header-outtemp">$current.outTemp</span>
+        </div>
         #end if
         #if $Extras.has_key("enable_unwrapped_titles") and $Extras.enable_unwrapped_titles == '1'
                 <div class="wx-stn-name">
