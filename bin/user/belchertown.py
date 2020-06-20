@@ -49,7 +49,8 @@ except:
 
 def get_alert(xpath, html_tree):
     try:
-        alert = html_tree.xpath(xpath)[0].encode('utf-8')
+        # alert = html_tree.xpath(xpath)[0].encode('utf-8')
+        alert = html_tree.xpath(xpath)[0]
         return alert
     except:
         alert = ""
@@ -586,7 +587,6 @@ class getData(SearchList):
             smn_alert_loop = self.generator.skin_dict['Extras']['smn_alert_loop']
             smn_incfile = self.generator.skin_dict['Extras']['smn_incfile']
             html_file = local_root + "/" + smn_incfile
-            # html_file = local_skin_root + "/" + smn_incfile
             smn_stale_timer = self.generator.skin_dict['Extras']['smn_stale']
             smn_is_stale = False
 
@@ -613,11 +613,17 @@ class getData(SearchList):
                                 loginf( "SMN alerts found for %s" % smn_region[a])
                                 alert_head_xp = '//*[@id="block-system-main"]/div[' + str(i) + ']/div[1]/h2/text()'
                                 alert_dat_xp = '//*[@id="block-system-main"]/div[' + str(i) + ']/ul[2]/li[1]/text()'
+                                # html_body_alerts.append('<span class="alerts"><i class="fa fa-exclamation-triangle"></i></span><a href="' + \
+                                #                 smn_url_alerts + '" target="_blank" title="Alertas SMN"><span class="alerts_text">' + \
+                                #                 get_alert(alert_head_xp, tree).encode('utf-8') + \
+                                #                 '</span></a><span class="alerts"><i class="fa fa-calendar"></i></span><span class="alerts_text">' + \
+                                #                 get_alert(alert_dat_xp, tree).encode('utf-8') + '</span>\n')
+
                                 html_body_alerts.append('<span class="alerts"><i class="fa fa-exclamation-triangle"></i></span><a href="' + \
                                                 smn_url_alerts + '" target="_blank" title="Alertas SMN"><span class="alerts_text">' + \
-                                                get_alert(alert_head_xp, tree).encode('utf-8') + \
+                                                get_alert(alert_head_xp, tree) + \
                                                 '</span></a><span class="alerts"><i class="fa fa-calendar"></i></span><span class="alerts_text">' + \
-                                                get_alert(alert_dat_xp, tree).encode('utf-8') + '</span>\n')
+                                                get_alert(alert_dat_xp, tree) + '</span>\n')
 
                 # Download new report data
                 tree = get_tree(smn_url_reports,"Reports")
@@ -634,11 +640,17 @@ class getData(SearchList):
                                 i += 1
                                 alert_dat_xp = '//*[@id="block-system-main"]/div/ul[' + str(i) + ']/li/text()'
                                 i -= 1
+                                # html_body_reports.append('<span class="alerts"><i class="fa fa-exclamation-triangle"></i></span><a href="' + \
+                                #                 smn_url_reports + '" target="_blank" title="Reportes SMN"><span class="alerts_text">' + \
+                                #                 get_alert(alert_head_xp, tree).encode('utf-8') + \
+                                #                 '</span></a><span class="alerts"><i class="fa fa-calendar"></i></span><span class="alerts_text">' + \
+                                #                 get_alert(alert_dat_xp, tree).encode('utf-8') + '</span>\n')
                                 html_body_reports.append('<span class="alerts"><i class="fa fa-exclamation-triangle"></i></span><a href="' + \
                                                 smn_url_reports + '" target="_blank" title="Reportes SMN"><span class="alerts_text">' + \
-                                                get_alert(alert_head_xp, tree).encode('utf-8') + \
+                                                get_alert(alert_head_xp, tree) + \
                                                 '</span></a><span class="alerts"><i class="fa fa-calendar"></i></span><span class="alerts_text">' + \
-                                                get_alert(alert_dat_xp, tree).encode('utf-8') + '</span>\n')
+                                                get_alert(alert_dat_xp, tree) + '</span>\n')
+
 
                 # Download new acp data
                 tree = get_tree(smn_url_acp, "ACP")
@@ -661,11 +673,17 @@ class getData(SearchList):
                                     # alert_dat_xp = '//*[@id="block-system-main"]/div[1]/ul[' + str(i) + ']/li[1]/text()'
                                     alert_dat_xp = '//*[@id="block-system-main"]/div[' + str(i) + ']/ul[2]/li[1]/text()'
                                     # i -= 1
+                                    # html_body_acp.append('<span class="alerts"><i class="fa fa-exclamation-triangle"></i></span><a href="' + \
+                                    #                 smn_url_acp + '" target="_blank" title="ACP SMN"><span class="alerts_text">' + \
+                                    #                 get_alert(alert_head_xp, tree).encode('utf-8') + \
+                                    #                 '</span></a><span class="alerts"><i class="fa fa-calendar"></i></span><span class="alerts_text">' + \
+                                    #                 get_alert(alert_dat_xp, tree).encode('utf-8') + '</span>\n')
                                     html_body_acp.append('<span class="alerts"><i class="fa fa-exclamation-triangle"></i></span><a href="' + \
                                                     smn_url_acp + '" target="_blank" title="ACP SMN"><span class="alerts_text">' + \
-                                                    get_alert(alert_head_xp, tree).encode('utf-8') + \
+                                                    get_alert(alert_head_xp, tree) + \
                                                     '</span></a><span class="alerts"><i class="fa fa-calendar"></i></span><span class="alerts_text">' + \
-                                                    get_alert(alert_dat_xp, tree).encode('utf-8') + '</span>\n')
+                                                    get_alert(alert_dat_xp, tree) + '</span>\n')
+
 
                 f = open(html_file, "w")
 
