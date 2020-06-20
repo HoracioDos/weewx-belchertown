@@ -103,7 +103,7 @@ except ImportError:
         logmsg(syslog.LOG_ERR, msg)
     
 # Print version in syslog for easier troubleshooting
-VERSION = "1.2b3"
+VERSION = "1.2b6"
 loginf("version %s" % VERSION)
 
 class getData(SearchList):
@@ -702,6 +702,7 @@ class getData(SearchList):
         """
         if self.generator.skin_dict['Extras']['forecast_enabled'] == "1" and self.generator.skin_dict['Extras']['forecast_api_id'] != "" or 'forecast_dev_file' in self.generator.skin_dict['Extras']:
         
+            forecast_provider = self.generator.skin_dict['Extras']['forecast_provider']
             forecast_file = html_root + "/json/forecast.json"
             forecast_api_id = self.generator.skin_dict['Extras']['forecast_api_id']
             forecast_api_secret = self.generator.skin_dict['Extras']['forecast_api_secret']
@@ -905,8 +906,8 @@ class getData(SearchList):
                     "snowshowerswn": "snow",
                     "snowtorain": "snow",
                     "snowtorainn": "snow",
-                    "sunny": "partly-cloudy-day",
-                    "sunnyn": "partly-cloudy-night",
+                    "sunny": "clear-day",
+                    "sunnyn": "clear-night",
                     "sunnyw": "partly-cloudy-day",
                     "sunnywn": "partly-cloudy-night",
                     "tstorm": "thunderstorm",
@@ -922,17 +923,20 @@ class getData(SearchList):
                 }
                 return icon_dict[icon_name]   
                         
-            forecast_current_url = "https://api.aerisapi.com/observations/%s,%s?&format=json&filter=allstations&filter=metar&limit=1&client_id=%s&client_secret=%s" % ( latitude, longitude, forecast_api_id, forecast_api_secret )
-            forecast_url = "https://api.aerisapi.com/forecasts/%s,%s?&format=json&filter=day&limit=7&client_id=%s&client_secret=%s" % ( latitude, longitude, forecast_api_id, forecast_api_secret )
-
-            if self.generator.skin_dict['Extras']['forecast_alert_enabled'] == "1":
+                        
+            if forecast_provider == "aeris":
+                forecast_current_url = "https://api.aerisapi.com/observations/%s,%s?&format=json&filter=allstations&filter=metar&limit=1&client_id=%s&client_secret=%s" % ( latitude, longitude, forecast_api_id, forecast_api_secret )
+                forecast_url = "https://api.aerisapi.com/forecasts/%s,%s?&format=json&filter=day&limit=7&client_id=%s&client_secret=%s" % ( latitude, longitude, forecast_api_id, forecast_api_secret )
                 if self.generator.skin_dict['Extras']['forecast_alert_limit']:
                     forecast_alert_limit = self.generator.skin_dict['Extras']['forecast_alert_limit']
                     forecast_alerts_url = "https://api.aerisapi.com/alerts/%s,%s?&format=json&limit=%s&client_id=%s&client_secret=%s" % ( latitude, longitude, forecast_alert_limit, forecast_api_id, forecast_api_secret )
                 else:
                     # Default to 1 alerts to show if the option is missing. Can go up to 10
                     forecast_alerts_url = "https://api.aerisapi.com/alerts/%s,%s?&format=json&limit=1&client_id=%s&client_secret=%s" % ( latitude, longitude, forecast_api_id, forecast_api_secret )
-
+            elif forecast_provider == "darksky":
+                forecast_lang = self.generator.skin_dict['Extras']['forecast_lang'].lower()
+                forecast_url = "https://api.darksky.net/forecast/%s/%s,%s?units=%s&lang=%s" % ( forecast_api_secret, latitude, longitude, forecast_units, forecast_lang )
+                
             # Determine if the file exists and get it's modified time
             if os.path.isfile( forecast_file ):
                 if ( int( time.time() ) - int( os.path.getmtime( forecast_file ) ) ) > int( forecast_stale_timer ):
@@ -960,28 +964,41 @@ class getData(SearchList):
                         forecast_file_result = response.read()
                         response.close()
                     else:
-                        # Current conditions
-                        req = Request( forecast_current_url, None, headers )
-                        response = urlopen( req )
-                        current_page = response.read()
-                        response.close()
-                        # Forecast
-                        req = Request( forecast_url, None, headers )
-                        response = urlopen( req )
-                        forecast_page = response.read()
-                        response.close()
-                        if self.generator.skin_dict['Extras']['forecast_alert_enabled'] == "1":
-                            # Alerts
-                            req = Request( forecast_alerts_url, None, headers )
+                        if forecast_provider == "aeris":
+                            # Current conditions
+                            req = Request( forecast_current_url, None, headers )
                             response = urlopen( req )
-                            alerts_page = response.read()
+                            current_page = response.read()
                             response.close()
-                        
-                        # Combine all into 1 file
-                        if self.generator.skin_dict['Extras']['forecast_alert_enabled'] == "1":
-                            forecast_file_result = json.dumps( {"timestamp": int(time.time()), "current": [json.loads(current_page)], "forecast": [json.loads(forecast_page)], "alerts": [json.loads(alerts_page)]} )
-                        else:
-                            forecast_file_result = json.dumps( {"timestamp": int(time.time()), "current": [json.loads(current_page)], "forecast": [json.loads(forecast_page)]} )
+                            # Forecast
+                            req = Request( forecast_url, None, headers )
+                            response = urlopen( req )
+                            forecast_page = response.read()
+                            response.close()
+                            if self.generator.skin_dict['Extras']['forecast_alert_enabled'] == "1":
+                                # Alerts
+                                req = Request( forecast_alerts_url, None, headers )
+                                response = urlopen( req )
+                                alerts_page = response.read()
+                                response.close()
+                            
+                            # Combine all into 1 file
+                            if self.generator.skin_dict['Extras']['forecast_alert_enabled'] == "1":
+                                try:
+                                    forecast_file_result = json.dumps( {"timestamp": int(time.time()), "current": [json.loads(current_page)], "forecast": [json.loads(forecast_page)], "alerts": [json.loads(alerts_page)]} )
+                                except:
+                                    forecast_file_result = json.dumps( {"timestamp": int(time.time()), "current": [json.loads(current_page.decode('utf-8'))], "forecast": [json.loads(forecast_page.decode('utf-8'))], "alerts": [json.loads(alerts_page.decode('utf-8'))]} )
+                            else:
+                                try:
+                                    forecast_file_result = json.dumps( {"timestamp": int(time.time()), "current": [json.loads(current_page)], "forecast": [json.loads(forecast_page)]} )
+                                except:
+                                    forecast_file_result = json.dumps( {"timestamp": int(time.time()), "current": [json.loads(current_page.decode('utf-8'))], "forecast": [json.loads(forecast_page.decode('utf-8'))]} )
+                        elif forecast_provider == "darksky":
+                            req = Request( forecast_url, None, headers )
+                            response = urlopen( req )
+                            forecast_file_result = response.read()
+                            response.close()
+                            
                             
                 except Exception as error:
                     raise Warning( "Error downloading forecast data. Check the URL in your configuration and try again. You are trying to use URL: %s, and the error is: %s" % ( forecast_url, error ) )
@@ -1002,24 +1019,43 @@ class getData(SearchList):
             with open( forecast_file, "r" ) as read_file:
                 data = json.load( read_file )
                 
-            current_obs_summary = aeris_coded_weather( data["current"][0]["response"]["ob"]["weatherPrimaryCoded"] )
+            if forecast_provider == "aeris":
+                current_obs_summary = aeris_coded_weather( data["current"][0]["response"]["ob"]["weatherPrimaryCoded"] )
 
-            current_obs_icon = aeris_icon( data["current"][0]["response"]["ob"]["icon"] ) + ".png"
-            
-            if forecast_units == "si" or forecast_units == "ca":
-                if data["current"][0]["response"]["ob"]["visibilityKM"] is not None:
-                    visibility = locale.format("%g", data["current"][0]["response"]["ob"]["visibilityKM"] )
+                current_obs_icon = aeris_icon( data["current"][0]["response"]["ob"]["icon"] ) + ".png"
+                
+                if forecast_units == "si" or forecast_units == "ca":
+                    if data["current"][0]["response"]["ob"]["visibilityKM"] is not None:
+                        visibility = locale.format("%g", data["current"][0]["response"]["ob"]["visibilityKM"] )
+                        visibility_unit = "km"
+                    else:
+                        visibility = "N/A"
+                        visibility_unit = ""
+                else:
+                    # us, uk2 and default to miles per hour
+                    if  data["current"][0]["response"]["ob"]["visibilityMI"] is not None:
+                        visibility = locale.format("%g", float( data["current"][0]["response"]["ob"]["visibilityMI"] ) )
+                        visibility_unit = "miles"
+                    else:
+                        visibility = "N/A"
+                        visibility_unit = ""
+            elif forecast_provider == "darksky":
+                current_obs_summary = label_dict[ data["currently"]["summary"].lower() ]
+                visibility = locale.format("%g", float( data["currently"]["visibility"] ) )
+                
+                if data["currently"]["icon"] == "partly-cloudy-night":
+                    current_obs_icon = 'partly-cloudy-night.png'
+                else:
+                    current_obs_icon = data["currently"]["icon"]+'.png'
+
+                # Even though we specify the DarkSky unit as darksky_units, if the user selects "auto" as their unit
+                # then we don't know what DarkSky will return for visibility. So always use the DarkSky output to 
+                # tell us what unit they are using. This fixes the guessing game for what label to use for the DarkSky "auto" unit
+                if ( data["flags"]["units"].lower() == "us" ) or ( data["flags"]["units"].lower() == "uk2" ):
+                    visibility_unit = "miles"
+                elif ( data["flags"]["units"].lower() == "si" ) or ( data["flags"]["units"].lower() == "ca" ):
                     visibility_unit = "km"
                 else:
-                    visibility = "N/A"
-                    visibility_unit = ""
-            else:
-                # us, uk2 and default to miles per hour
-                if  data["current"][0]["response"]["ob"]["visibilityMI"] is not None:
-                    visibility = locale.format("%g", float( data["current"][0]["response"]["ob"]["visibilityMI"] ) )
-                    visibility_unit = "miles"
-                else:
-                    visibility = "N/A"
                     visibility_unit = ""
         else:
             current_obs_icon = ""
@@ -1085,7 +1121,11 @@ class getData(SearchList):
                 # Save earthquake data to file. w+ creates the file if it doesn't exist, and truncates the file and re-writes it everytime
                 try:
                     with open( earthquake_file, 'wb+' ) as file:
-                        file.write( page )
+                        # Python 2/3
+                        try:
+                            file.write( page.encode('utf-8') )
+                        except:
+                            file.write( page )
                         if weewx.debug:
                             logdbg( "Earthquake data saved to %s" % earthquake_file )
                 except IOError as e:
@@ -1122,70 +1162,6 @@ class getData(SearchList):
             eqlat = ""
             eqlon = ""
             
-       
-        """
-        Version Update Data
-        """
-        if self.generator.skin_dict['Extras']['check_for_updates'] == "1":
-            github_version_file = html_root + "/json/github_version.json"
-            github_version_is_stale = False
-            
-            github_version_url = "https://api.github.com/repos/poblabs/weewx-belchertown/releases/latest"
-            
-            # Determine if the file exists and get it's modified time. If it's older than an hour then it's stale
-            if os.path.isfile( github_version_file ):
-                if ( int( time.time() ) - int( os.path.getmtime( github_version_file ) ) ) > 21600:
-                    github_version_is_stale = True
-            else:
-                # File doesn't exist, download a new copy
-                github_version_is_stale = True
-            
-            # File is stale, download a new copy
-            if github_version_is_stale:
-                # Download new GitHub data
-                try:
-                    try:
-                        # Python 3
-                        from urllib.request import Request, urlopen
-                    except ImportError:
-                        # Python 2
-                        from urllib2 import Request, urlopen
-                    user_agent = 'Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_4; en-US) AppleWebKit/534.3 (KHTML, like Gecko) Chrome/6.0.472.63 Safari/534.3'
-                    headers = { 'User-Agent' : user_agent }
-                    req = Request( github_version_url, None, headers )
-                    response = urlopen( req )
-                    #page = response.read()
-                    page = json.load( response )
-                    response.close()
-                except Exception as error:
-                    logerr( "Update Checker: Error downloading GitHub Version data. The error is: %s" % error )
-                    
-                try:
-                    # Only save the tag_name. Typical tag is weewx-belchertown-x.y where x.y is the version number. So split on "-" and save the version number only
-                    tag_name = page["tag_name"].split("-")[2]
-                    try:
-                        # Save data to file. w+ creates the file if it doesn't exist, and truncates the file and re-writes it everytime
-                        with open( github_version_file, 'wb+' ) as file:
-                            file.write( tag_name )
-                            loginf( "Update Checker: New GitHub Version file downloaded to %s" % github_version_file )
-                    except IOError as e:
-                        logerr( "Update Checker: Error writing GitHub Version info to %s. Reason: %s" % ( github_version_file, e) )
-                except:
-                    pass
-                
-            try:
-                # Process the file
-                with open( github_version_file, "r" ) as read_file:
-                    data = read_file.read()
-            except IOError as e:
-                logerr( "Update Checker: Unable to open %s. Reason: %s" % ( github_version_file, e) )
-                data = ""
-            
-            github_version = data
-        else:
-            # Empty default
-            github_version = ""
-
         
         """
         Get Current Station Observation Data for the table html
@@ -1403,7 +1379,6 @@ class getData(SearchList):
                                   'earthquake_magnitude': eqmag,
                                   'earthquake_lat': eqlat,
                                   'earthquake_lon': eqlon,
-                                  'github_version': github_version,
                                   'social_html': social_html,
                                   'custom_css_exists': custom_css_exists }
 
@@ -2187,10 +2162,16 @@ class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
                 aggregate_type = "sum"
                 
             if driver == "weedb.sqlite":
-                sql_lookup = 'SELECT strftime("{0}", datetime(dateTime, "unixepoch", "localtime")) as {1}, IFNULL({2}({3}),0) as obs FROM archive WHERE dateTime >= {4} AND dateTime <= {5} GROUP BY {6};'.format( strformat, xAxis_groupby, aggregate_type, obs_lookup, start_ts, end_ts, xAxis_groupby )
+                if isinstance(time_length, int):
+                    sql_lookup = 'SELECT strftime("{0}", datetime(dateTime, "unixepoch", "localtime")) as {1}, IFNULL({2}({3}),0) as obs, dateTime FROM archive WHERE dateTime >= {4} AND dateTime <= {5} GROUP BY {6} ORDER BY dateTime ASC;'.format( strformat, xAxis_groupby, aggregate_type, obs_lookup, start_ts, end_ts, xAxis_groupby )
+                else:
+                    sql_lookup = 'SELECT strftime("{0}", datetime(dateTime, "unixepoch", "localtime")) as {1}, IFNULL({2}({3}),0) as obs FROM archive WHERE dateTime >= {4} AND dateTime <= {5} GROUP BY {6};'.format( strformat, xAxis_groupby, aggregate_type, obs_lookup, start_ts, end_ts, xAxis_groupby )
             elif driver == "weedb.mysql":
-                sql_lookup = 'SELECT FROM_UNIXTIME( dateTime, "%{0}" ) AS {1}, IFNULL({2}({3}),0) as obs FROM archive WHERE dateTime >= {4} AND dateTime <= {5} GROUP BY {6};'.format( strformat, xAxis_groupby, aggregate_type, obs_lookup, start_ts, end_ts, xAxis_groupby )
-            
+                if isinstance(time_length, int):
+                    sql_lookup = 'SELECT FROM_UNIXTIME( dateTime, "%{0}" ) AS {1}, IFNULL({2}({3}),0) as obs, dateTime FROM archive WHERE dateTime >= {4} AND dateTime <= {5} GROUP BY {6} ORDER BY dateTime ASC;'.format( strformat, xAxis_groupby, aggregate_type, obs_lookup, start_ts, end_ts, xAxis_groupby )
+                else:
+                    sql_lookup = 'SELECT FROM_UNIXTIME( dateTime, "%{0}" ) AS {1}, IFNULL({2}({3}),0) as obs FROM archive WHERE dateTime >= {4} AND dateTime <= {5} GROUP BY {6};'.format( strformat, xAxis_groupby, aggregate_type, obs_lookup, start_ts, end_ts, xAxis_groupby )
+                        
             # Setup values for the converter
             try:
                 obs_group = weewx.units.obs_group_dict[obs_lookup]
@@ -2225,7 +2206,7 @@ class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
             (time_start_vt, time_stop_vt, obs_vt) = archive.getSqlVectors(TimeSpan(start_ts, end_ts), obs_lookup, aggregate_type, aggregate_interval)
         except Exception as e:
             raise Warning( "Error trying to use database binding %s to graph observation %s. Error was: %s." % (binding, obs_lookup, e) )
-        
+            
         obs_vt = self.converter.convert(obs_vt)
                 
         # Special handling for the rain.

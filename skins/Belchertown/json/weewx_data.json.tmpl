@@ -10,12 +10,6 @@
     "serverLocale": "$system_locale",
     "serverLocaleJS": "$system_locale_js",
     "localeEncoding": "$locale_encoding",
-    #if $Extras.has_key("check_for_updates") and $Extras.check_for_updates == '1'
-    "version": {
-        "installed": "$belchertown_version",
-        "github_version": "$github_version"
-    },
-    #end if
     "extras": {
         "belchertown_theme": "$Extras.theme",
         "theme_toggle_enabled": "$Extras.theme_toggle_enabled",
@@ -405,22 +399,22 @@
     "almanac": {
         "sunrise": "$almanac.sunrise",
         "sunrise_epoch": "$almanac.sunrise.raw",
-		#if $almanac.sunrise.raw is not None
+        #if $almanac.sunrise.raw is not None
         "sunrise_hour": "#echo datetime.datetime.fromtimestamp($almanac.sunrise.raw).strftime('%H')#",
         "sunrise_minute": "#echo datetime.datetime.fromtimestamp($almanac.sunrise.raw).strftime('%M')#",
-		#else 
+        #else 
         "sunrise_hour": "0",
         "sunrise_minute": "0",
-		#end if
+        #end if
         "sunset": "$almanac.sunset",
         "sunset_epoch": "$almanac.sunset.raw",
-		#if $almanac.sunset.raw is not None
+        #if $almanac.sunset.raw is not None
         "sunset_hour": "#echo datetime.datetime.fromtimestamp($almanac.sunset.raw).strftime('%H')#",
         "sunset_minute": "#echo datetime.datetime.fromtimestamp($almanac.sunset.raw).strftime('%M')#",
-		#else
+        #else
         "sunset_hour": "0",
         "sunset_minute": "0",
-		#end if
+        #end if
         "moon": {
             "moon_fullness": "$almanac.moon_fullness",
             "moon_phase": "$almanac.moon_phase",

@@ -341,14 +341,16 @@ For ease of readability I have broken them out into separate tables. However you
 | Name | Default | Description
 | ---- | ------- | -----------
 | forecast_enabled | 0 | 1 = enable, 0 = disable. Enables the forecast data from Aeris Weather Forecast API.
+| forecast_provider | "aeris" | The weather forecast provider. Options currently are "aeris" or "darksky"
 | forecast_api_id | "" | Your Aeris Weather API ID
 | forecast_api_secret | "" | Your Aeris Weather API secret
 | forecast_units | "us" | The units to use for the Aeris Weather forecast. I have chosen to keep the Dark Sky unit system going forward with the skin. Other unit options options are: `us`, `si`, `ca` and `uk2`. Check the [Forecast Units](#forecast-units) section for an explanation of the differences.
+| forecast_lang | "en" | **Only applies to DarkSky Weather** Change the language used in the DarkSky forecast. Read the DarkSky API for valid language options.
 | forecast_stale | 3540 | The number of seconds before the skin will download a new forecast update. Default is 59 minutes so that on the next archive interval at 60 minutes it will download a new file (based on 5 minute archive intervals (see weewx.conf, archive_interval)). ***WARNING*** 1 hour is recommended. Setting this too low will result in being blocked by Aeris Weather. Their free tier gives you 1,000 downloads a day, but **the skin uses 3 downloads per interval to download all the data it needs**. Use at your own risk. 3540 seconds = 59 minutes. 3600 seconds = 1 hour. 1800 seconds = 30 minutes. 900 = 15 minutes.
-| forecast_alert_enabled | 0 | **Weather Alerts are only supported for USA and Canada**. Set to 1 to enable weather alerts that are included with the Aeris Weather data. If you are using MQTT for automatic page updates, the alerts will appear and disappear as they are refreshed with the forecast update interval via `forecast_stale`. 
-| forecast_alert_limit | 1 | **Weather Alerts are only supported for USA and Canada**. The number of alerts to show for your location. Max of 10.
+| forecast_alert_enabled | 0 | **Aeris Weather Alerts are only supported for USA and Canada**. Set to 1 to enable weather alerts that are included with the Aeris Weather or DarkSky data. If you are using MQTT for automatic page updates, the alerts will appear and disappear as they are refreshed with the forecast update interval via `forecast_stale`. 
+| forecast_alert_limit | 1 | **Only applies to Aeris Weather Alerts**. The number of alerts to show for your location. Max of 10.
 | forecast_show_daily_forecast_link | 0 | Show a link beneath each forecast day to an external website with more details of the forecast.
-| forecast_daily_forecast_link | "" | The actual link to the external detailed forecast site of your choosing. You must provide all relevant URL links like location, lat/lon, etc., but you can use `YYYY` to specify the 4 digit year, `MM` to specify the 2 digit month and `DD` to specify the 2 digit day of the forecast link. For example: `https://wx.aerisweather.com/local/us/ma/belchertown/forecast/YYYY/MM/DD`
+| forecast_daily_forecast_link | "" | **Only applies to Aeris Weather Alerts**. The actual link to the external detailed forecast site of your choosing. You must provide all relevant URL links like location, lat/lon, etc., but you can use `YYYY` to specify the 4 digit year, `MM` to specify the 2 digit month and `DD` to specify the 2 digit day of the forecast link. For example: `https://wx.aerisweather.com/local/us/ma/belchertown/forecast/YYYY/MM/DD`
 
 
 ### Earthquake Options
@@ -370,7 +372,10 @@ These are the options for the social media sharing section at the top right of e
 | twitter_enabled | 0 | Enable the Twitter Share button
 | twitter_owner | "" | Your Twitter handle which will be mentioned when the share button is pressed
 | twitter_hashtags | "weewx #weather" | The hashtags to include in the share button's text. 
-
+| social_share_html | "" | This is the URL which users who click on your social share will be sent back to. Typically set this to your homepage.
+| twitter_text | "Check out my website: My Weather Website Weather Conditions" | **Located under the labels section** - This is the text which will get auto-generated for the Twitter share button
+| twitter_owner | "YourTwitterUsernameHere" | **Located under the labels section** - This is the username or owner of the Twitter account that will be mentioned in shares
+| twitter_hashtags | "weewx #weather" | **Located under the labels section** - The hashtags to include in the Twitter share. Do not include the first hashtag since it is already provided as part of the share code.
 
 ## Creating About Page and Records Page
 
