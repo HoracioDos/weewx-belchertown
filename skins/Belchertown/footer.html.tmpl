@@ -7,28 +7,17 @@
                     <div class="col-sm-4 footerLeft">
                         $obs.label.copyright &copy; $current.dateTime.format("%Y") $obs.label.footer_copyright_text
                     </div>
-                    #if $Extras.has_key("enable_theme_by") and $Extras.enable_theme_by == '1'
-                       <div class="col-sm-5 footerCenter">
-                           <strong>$obs.label.footer_disclaimer_text</strong>
-                       </div>
-                       <div class="col-sm-3 footerRight">
-                           weewx theme by <a href="https://obrienlabs.net" target="_blank">Pat O'Brien</a>
-                           <span class="updateavailable" style="display:none;"><br><a class="alert-link lookatme" href="https://github.com/poblabs/weewx-belchertown/releases" target="_blank">(Update available!)</a></span>
-                       </div>
-                    #else
-                       <div class="col-sm-3 footerCenter">
-                           <span class="updateavailable" style="display:none;"><br><a class="alert-link lookatme" href="https://github.com/poblabs/weewx-belchertown/releases" target="_blank">(Update available!)</a></span>                      
-                       </div>
-                       <div class="col-sm-5 footerRight">
-                           <strong>$obs.label.footer_disclaimer_text</strong>
-                       </div>
-                    #end if
+                    <div class="col-sm-5 footerCenter">
+                        <strong>$obs.label.footer_disclaimer_text</strong>
+                    </div>
+                    <div class="col-sm-3 footerRight">
+                        weewx theme by <a href="https://obrienlabs.net" target="_blank">Pat O'Brien</a>
+                    </div>
                 </div>
 			</div>
 		</footer>
 		
 		<script type='text/javascript' src='$relative_url/js/responsive-menu.js'></script>
-		<script type='text/javascript' src='//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js'></script>
 		
 		<!-- Belchertown Skin Version: $belchertown_version -->
         <!-- Page Generated: $current.dateTime -->

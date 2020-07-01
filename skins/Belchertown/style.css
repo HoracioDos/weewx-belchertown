@@ -1516,13 +1516,15 @@ p.entry-meta {
 
 .stn-high-low-table td {
 	text-align:center;
+    width:50%;
 }
 
 .windrow {
     /* margin-top: 25px; */
     border-top: 1px solid #D7D7D7;
     padding-top: 10px;
-    margin: 0 -15px 0 -15px;
+    /* margin: 0 -15px 0 -15px; */
+    margin: 0 0 0 0;
 }
 
 .curwind {
@@ -1567,6 +1569,7 @@ p.entry-meta {
     border: solid #808080 5px;
     margin-left: 60px;
     /* margin-top: -10px; */
+    margin: 0 auto;
 }
 
 .compass:before {
@@ -1619,7 +1622,8 @@ p.entry-meta {
     border-left: 7px solid transparent;
     border-right: 7px solid transparent;
     /* border-bottom: 21px solid red; */
-    border-top: 21px solid red;
+    /* border-top: 21px solid red; */
+    border-top: 21px solid #c50a1d;
     position: absolute;
     top: -10px;
     left: 38px;
@@ -1629,12 +1633,11 @@ p.entry-meta {
 
 .wind-table td {
 	text-align:center !important;
-	width: 50%; /* Fix CC */
+    width:50%;
 }
 
 .windtext {
-	font-size:18px; /* Fix CC */
-	/* font-size:20px; */
+	font-size:20px;
 }
 
 .curwindspeed, .curwindgust {

@@ -281,10 +281,11 @@ function highcharts_tooltip_factory(obsvalue, point_obsType, highchartsReturn=fa
 }
 
 // Handle wind arrow rotation with the ability to "rollover" past 0 
-// without spinning back around. e.g 350 to 3 would spin back around
+// without spinning back around. e.g 350 to 3 would normally spin back around
 // https://stackoverflow.com/a/19872672/1177153
 function rotateThis(newRotation) {
     if ( newRotation == "N/A") { return; }
+    belchertown_debug("rotateThis: rotating to " + newRotation);
     var currentRotation;
     finalRotation = finalRotation || 0; // if finalRotation undefined or 0, make 0, else finalRotation
     currentRotation = finalRotation % 360;
@@ -379,6 +380,9 @@ function changeTheme(themeName, toggleOverride=false) {
         jQuery("#themeSwitch").prop( "checked", true );
         #end if
         sessionStorage.setItem('currentTheme', 'dark');
+        #if $Extras.has_key('logo_image_dark') and $Extras.logo_image_dark != ""
+        jQuery("#logo_image").attr("src","$Extras.logo_image_dark" );
+        #end if
     } else if ( themeName == "light" ) {
         // Apply light theme
         jQuery('body').addClass("light");
@@ -387,6 +391,9 @@ function changeTheme(themeName, toggleOverride=false) {
         jQuery("#themeSwitch").prop( "checked", false );
         #end if
         sessionStorage.setItem('currentTheme', 'light');
+        #if $Extras.has_key('logo_image') and $Extras.logo_image != ""
+        jQuery("#logo_image").attr("src", "$Extras.logo_image");
+        #end if
     }
 }
 
@@ -480,6 +487,13 @@ function update_weewx_data( data ) {
     }
     jQuery(".moon-phase").html( titleCase( data["almanac"]["moon"]["moon_phase"] ) ); // Javascript function above
     jQuery(".moon-visible").html( "<strong>" + data["almanac"]["moon"]["moon_fullness"] + "%</strong> $obs.label.moon_visible" );
+    #if $almanac.hasExtras
+    // Close current modal if open
+    jQuery('#almanac').modal('hide');
+    jQuery(".almanac-extras-modal-body").html( data["almanac"]["almanac_extras_modal_html"] );
+    almanac_updated = "$obs.label.header_last_updated " + moment.unix( data["current"]["datetime_raw"] ).utcOffset( $moment_js_utc_offset ).format( "$obs.label.time_last_updated" );
+    jQuery(".almanac_last_updated").html( almanac_updated );
+    #end if
 }
 
 #if $Extras.has_key("forecast_enabled") and $Extras.forecast_enabled == '1'
@@ -926,7 +940,7 @@ function update_forecast_data( data ) {
             var weekday = moment.unix( data["forecast"][0]["response"][0]["periods"][i]["timestamp"] + 7200 ).utcOffset($moment_js_utc_offset).format( "$obs.label.time_forecast_date" );
 
             // Determine temperature units
-            if ( ( "$Extras.forecast_units" == "ca" ) || ( "$Extras.forecast_units" == "uk" ) || ( "$Extras.forecast_units" == "si" ) ) {
+            if ( ( "$Extras.forecast_units" == "ca" ) || ( "$Extras.forecast_units" == "uk2" ) || ( "$Extras.forecast_units" == "si" ) ) {
                 minTemp = data["forecast"][0]["response"][0]["periods"][i]["minTempC"];
                 maxTemp = data["forecast"][0]["response"][0]["periods"][i]["maxTempC"];
             } else {
@@ -1468,6 +1482,9 @@ function showChart(json_file, prepend_renderTo=false) {
                     case "css_width":
                         css_width = optionVal;
                         break;
+                    case "legend":
+                        legend_enabled = optionVal;
+                        break;
                     case "exporting":
                         exporting_enabled = optionVal;
                         break;
@@ -1501,7 +1518,7 @@ function showChart(json_file, prepend_renderTo=false) {
                 },
 
                 legend: {
-                    enabled: true
+                    enabled: JSON.parse( String( legend_enabled ) ) // Convert string to bool
                 },
 
                 xAxis: {
@@ -1881,6 +1898,91 @@ function showChart(json_file, prepend_renderTo=false) {
                 });
             }
             
+            // If Hays chart is present, configure a special chart to show that data
+            if (observation_type == "haysChart") {
+                options.chart.type = "arearange"
+                options.chart.polar = true;
+                options.plotOptions = {
+                    turboThreshold: 0,
+                    series: {
+         //               states: {
+         //                   hover: {
+         //                       enabled: false 
+         //                   }
+         //               },
+                        marker: {
+                            enabled: false
+                        }
+                    }
+                };
+
+                // Find min and max of the series data for the yAxis min and max
+                var maximum_flattened = [];
+                options.series[0].data.forEach( seriesData => {
+                    maximum_flattened.push(seriesData[2]);
+                });
+                var range_max = Math.max(...maximum_flattened);
+                
+                options.legend = { "enabled": false }
+
+                options.yAxis = {
+                    showFirstLabel: false,
+                    tickInterval: 2,
+                    tickmarkPlacement: 'on',
+                    min: -1,
+                    softMax: 15,
+                    title: {
+                        text: options.series[0].yAxis_label,
+                    },
+                    labels: {
+                        align: 'center',
+                        x: 0,
+                        y: 0
+                    },
+                }
+
+                options.tooltip = {
+                    split: false,
+                    shared: true,
+                    followPointer: true,
+                    useHTML: true,
+                    formatter: function (tooltip) {
+                        return this.points.map(function (point) {
+                            var rounding = point.series.userOptions.rounding;
+                            var mirrored = point.series.userOptions.mirrored_value;
+                            var numberFormat = point.series.userOptions.numberFormat ? point.series.userOptions.numberFormat : "";
+                            return "<strong>" + moment.unix( point.x / 1000).utcOffset($moment_js_utc_offset).format( tooltip_date_format ) + "</strong><br><span style='color:" + color + "'>\u25CF</span> $obs.label.highest_temperature: " + highcharts_tooltip_factory( point.point.high, observation_type, true, rounding, mirrored, numberFormat ) + "<br><span style='color:" + color + "'>\u25CF</span> $obs.label.lowest_temperature: " + highcharts_tooltip_factory( point.point.low, observation_type, true, rounding, mirrored, numberFormat );
+                        });
+                    }
+                }
+
+                var currentSeries = options.series;
+                var currentSeriesData = options.series[0].data;
+                var range_unit = options.series[0].range_unit;
+                var newSeriesData = [];
+                var color = "#ff4500";
+                currentSeriesData.forEach( seriesData => {
+                    // If a data point is from the future, max/min are set to null. For some reason Highcharts draws a glitchy connection between the end and beginning of the data set on the radial graph (i.e. when the day is only half over and the graph only half filled), even if connectEnds is turned off. Until that's fixed, set null values to 0 so the chart renders cleanly all the way through 360 degrees 
+                    if ( seriesData[1] == null ) {
+                        seriesData[1] = 0;
+                        seriesData[2] = 0;
+                    };
+                    newSeriesData.push({
+                        x: seriesData[0],
+                        low: seriesData[1],
+                        high: seriesData[2],
+                    });
+                });
+                options.series = [];
+                options.series.push({
+                    data: newSeriesData,
+                    obsType: "haysChart",
+                    obsUnit: range_unit,
+                    color: color,
+                    fillColor: color,
+                });
+            }
+
             // If weather range is present, configure a special chart to show that data
             // https://www.highcharts.com/blog/tutorials/209-the-art-of-the-chart-weather-radials/
             if (observation_type == "weatherRange") {

@@ -1659,6 +1659,14 @@ class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
                 output[chart_group][plotname]["options"]["css_width"] = plot_options.get('width', "")
                 output[chart_group][plotname]["options"]["css_height"] = plot_options.get('height', "")
                 
+                # Setup legend option
+                legend = plot_options.get("legend", None)
+                if legend is None:
+                    # Default to true if the option is missing
+                    output[chart_group][plotname]["options"]["legend"] = "true"
+                else:
+                    output[chart_group][plotname]["options"]["legend"] = legend
+                
                 # Setup exporting option
                 exporting = plot_options.get('exporting', None)
                 if exporting is not None and to_bool(exporting):
@@ -1689,6 +1697,8 @@ class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
                         minstamp, maxstamp = archiveMonthSpan( timespan.stop )
                     elif time_length == "year":
                         minstamp, maxstamp = archiveYearSpan( timespan.stop )
+                    elif time_length == "year_to_now":
+                        minstamp, maxstamp = self.timespan_year_to_now( timespan.stop )
                     elif time_length == "days_ago":
                         minstamp, maxstamp = archiveDaySpan( timespan.stop, days_ago=time_ago )
                     elif time_length == "weeks_ago":
@@ -1765,6 +1775,12 @@ class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
                             yAxis_label = name + " (" + unit_label.strip().encode("utf-8") + ")" # Python 2.
                         except:
                             yAxis_label = name + " (" + unit_label.strip() + ")" # Python 3
+                    elif yAxisLabel_config and unit_label:
+                        # Python 2/3 hack
+                        try:
+                            yAxis_label = yAxisLabel_config + " (" + unit_label.strip().encode("utf-8") + ")" # Python 2.
+                        except:
+                            yAxis_label = yAxisLabel_config + " (" + unit_label.strip() + ")" # Python 3
                     elif yAxisLabel_config:
                         yAxis_label = yAxisLabel_config
                     else:
@@ -1830,9 +1846,19 @@ class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
                     except:
                         # Not a valid weewx schema name - maybe this is windRose or something?
                         output[chart_group][plotname]["series"][line_name]["rounding"] = "-1"
+
+                    # Set default colors, unless the user has specified otherwise in graphs.conf
+                    wind_rose_color = {}
+                    wind_rose_color[0] = line_options.get('beauford0', "#7cb5ec")
+                    wind_rose_color[1] = line_options.get('beauford1', "#b2df8a")
+                    wind_rose_color[2] = line_options.get('beauford2', "#f7a35c")
+                    wind_rose_color[3] = line_options.get('beauford3', "#8c6bb1")
+                    wind_rose_color[4] = line_options.get('beauford4', "#dd3497")
+                    wind_rose_color[5] = line_options.get('beauford5', "#e4d354")
+                    wind_rose_color[6] = line_options.get('beauford6', "#268bd2")
                     
                     # Build series data
-                    series_data = self.get_observation_data(binding, archive, observation_type, minstamp, maxstamp, aggregate_type, aggregate_interval, time_length, xAxis_groupby, xAxis_categories, mirrored_value, weatherRange_obs_lookup)
+                    series_data = self.get_observation_data(binding, archive, observation_type, minstamp, maxstamp, aggregate_type, aggregate_interval, time_length, xAxis_groupby, xAxis_categories, mirrored_value, weatherRange_obs_lookup, wind_rose_color)
 
                     # Build the final series data JSON
                     if isinstance(series_data, dict):
@@ -1864,7 +1890,7 @@ class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
             with open(chart_json_filename, mode='w') as cjf:
                 cjf.write( json.dumps( self.chart_dict ) )
 
-    def get_observation_data(self, binding, archive, observation, start_ts, end_ts, aggregate_type, aggregate_interval, time_length, xAxis_groupby, xAxis_categories, mirrored_value, weatherRange_obs_lookup):
+    def get_observation_data(self, binding, archive, observation, start_ts, end_ts, aggregate_type, aggregate_interval, time_length, xAxis_groupby, xAxis_categories, mirrored_value, weatherRange_obs_lookup, wind_rose_color):
         """Get the SQL vectors for the observation, the aggregate type and the interval of time"""
         
         if observation == "windRose":
@@ -1878,7 +1904,7 @@ class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
             # Force no aggregate_interval
             if aggregate_interval:
                 aggregate_interval = None
-            
+ 
             # Get windDir observations.
             obs_lookup = "windDir"
             (time_start_vt, time_stop_vt, windDir_vt) = archive.getSqlVectors(TimeSpan(start_ts, end_ts), obs_lookup, aggregate_type, aggregate_interval)
@@ -2084,10 +2110,10 @@ class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
             group_4_name = "%s %s" % (group_4_speedRange, windSpeed_unit_label)
             group_5_name = "%s %s" % (group_5_speedRange, windSpeed_unit_label)
             group_6_name = "%s %s" % (group_6_speedRange, windSpeed_unit_label)
-                                        
+
             group_0 = { "name": group_0_name,            
                         "type": "column",
-                        "_colorIndex": 0,
+                        "color": wind_rose_color[0],
                         "zIndex": 106, 
                         "stacking": "normal", 
                         "fillOpacity": 0.75, 
@@ -2095,7 +2121,7 @@ class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
                       }
             group_1 = { "name": group_1_name,            
                         "type": "column",
-                        "_colorIndex": 1,
+                        "color": wind_rose_color[1],
                         "zIndex": 105, 
                         "stacking": "normal", 
                         "fillOpacity": 0.75, 
@@ -2103,7 +2129,7 @@ class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
                       }
             group_2 = { "name": group_2_name,            
                         "type": "column",
-                        "_colorIndex": 2,
+                        "color": wind_rose_color[2],
                         "zIndex": 104,
                         "stacking": "normal", 
                         "fillOpacity": 0.75, 
@@ -2111,7 +2137,7 @@ class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
                       }
             group_3 = { "name": group_3_name,            
                         "type": "column",
-                        "_colorIndex": 3,
+                        "color": wind_rose_color[3],
                         "zIndex": 103, 
                         "stacking": "normal", 
                         "fillOpacity": 0.75, 
@@ -2119,7 +2145,7 @@ class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
                       }
             group_4 = { "name": group_4_name,            
                         "type": "column",
-                        "_colorIndex": 4,
+                        "color": wind_rose_color[4],
                         "zIndex": 102, 
                         "stacking": "normal", 
                         "fillOpacity": 0.75, 
@@ -2127,7 +2153,7 @@ class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
                       }
             group_5 = { "name": group_5_name,            
                         "type": "column",
-                        "_colorIndex": 5,
+                        "color": wind_rose_color[5],
                         "zIndex": 101, 
                         "stacking": "normal", 
                         "fillOpacity": 0.75, 
@@ -2135,7 +2161,7 @@ class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
                       }
             group_6 = { "name": group_6_name,            
                         "type": "column",
-                        "_colorIndex": 6,
+                        "color": wind_rose_color[6],
                         "zIndex": 100, 
                         "stacking": "normal", 
                         "fillOpacity": 0.75, 
@@ -2195,6 +2221,51 @@ class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
             output_data = zip(time_ms, min_obs_vt[0], max_obs_vt[0], avg_obs_vt[0])
             
             data = {"weatherRange": True, "obsdata": output_data, "range_unit": obs_unit, "range_unit_label": obs_unit_label}
+            
+            return data
+
+        # Hays chart
+        if observation == "haysChart":
+
+            start_ts = int(start_ts)
+            end_ts = int(end_ts)
+
+            # Set aggregate interval based on timespan and make sure it is between 5 minutes and 1 day
+            logging.debug("Start time is %s and end time is %s" % (start_ts, end_ts))
+            aggregate_interval = (end_ts - start_ts)/360
+            if (aggregate_interval < 300):
+                aggregate_interval = 300
+            elif (aggregate_interval > 86400):
+                aggregate_interval = 86400
+            logging.debug("Interval is: %s" % aggregate_interval)
+            
+            aggregate_type = "max"
+            # Get min values
+            obs_lookup = "windSpeed" 
+            try:
+                (time_start_vt, time_stop_vt, obs_vt) = archive.getSqlVectors(TimeSpan(start_ts, end_ts), obs_lookup, aggregate_type, aggregate_interval)
+            except Exception as e:
+                raise Warning( "Error trying to use database binding %s to graph observation %s. Error was: %s." % (binding, obs_lookup, e) )
+            
+            min_obs_vt = self.converter.convert(obs_vt)
+            
+            # Get max values
+            obs_lookup = "windGust" 
+            try:
+                (time_start_vt, time_stop_vt, obs_vt) = archive.getSqlVectors(TimeSpan(start_ts, end_ts), obs_lookup, aggregate_type, aggregate_interval)
+            except Exception as e:
+                raise Warning( "Error trying to use database binding %s to graph observation %s. Error was: %s." % (binding, obs_lookup, e) )
+            
+            max_obs_vt = self.converter.convert(obs_vt)
+            
+            obs_unit = max_obs_vt[1]
+            obs_unit_label = self.skin_dict['Units']['Labels'].get(obs_unit, "")
+            
+            # Convert to millis and zip all together
+            time_ms = [float(x) * 1000 for x in time_start_vt[0]]            
+            output_data = zip(time_ms, min_obs_vt[0], max_obs_vt[0]) 
+
+            data = {"haysChart": True, "obsdata": output_data, "range_unit": obs_unit, "range_unit_label": obs_unit_label}
             
             return data
 
@@ -2303,7 +2374,10 @@ class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
             for rain in obs_vt[0]:
                 # If the rain value is None or "", add it as 0.0
                 if rain is None or rain == "":
-                    rain = 0.0
+                    #rain = 0.0
+                    # Do not keep adding None or empty results, so that full-length charts (like weewx v4 archiveYearSpan) don't have a line that continues past the last actual plot
+                    obs_round_vt.append( rain )
+                    continue
                 rain_count = rain_count + rain
                 obs_round_vt.append( round( rain_count, 2 ) )
         else:
@@ -2342,6 +2416,20 @@ class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
             except:
                 value = None
         return value
+
+    def timespan_year_to_now(self, time_ts, grace=1, years_ago=0):
+        """In weewx 4 the get_series() for archiveYearSpan returns the full 365 day chart.
+           if users do not want a full year (with empty data) and would rather a Jan 1 to "now", then
+           they can use this custom timespan
+           
+           This is taken right from weewx, but adapted to end at the current timestamp, and not the following Jan 1.
+        """
+        if time_ts is None:
+            return None
+        time_ts -= grace
+        _day_date = datetime.date.fromtimestamp(time_ts)
+        return TimeSpan(int(time.mktime((_day_date.year - years_ago, 1, 1, 0, 0, 0, 0, 0, -1))),
+                        int(float(time_ts)))
 
     def create_windrose_data(self, windDir_list, windSpeed_list):
         # List comprehension borrowed from weewx-wd extension
