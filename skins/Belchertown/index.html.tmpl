@@ -157,13 +157,13 @@
                         <div class="updated"></div><!-- AJAX moment.js -->
                     </div>
                     #if $social_html != ""
-                    $social_html
+                        $social_html
                     #end if
                     <div class="clear"></div>
                     <div class="last-updated-alert" style="display:none;"></div><!-- AJAX moment.js -->
-                    #if $Extras.has_key("forecast_alert_enabled") and $Extras.forecast_alert_enabled == '1'
+                    #if $Extras.has_key("forecast_alert_enabled") and $Extras.forecast_alert_enabled != ""
                         <div class="wx-stn-alert"><span class="wx-stn-alert-text"></span></div><!-- AJAX -->
-                        #if $Extras.has_key("smn_alert_enabled") and $Extras.smn_alert_enabled == '1'
+                        #if $Extras.has_key("smn_alert_enabled") and $Extras.smn_alert_enabled != ""
                            #if os.path.exists("alerts.inc")
                               #include "alerts.inc"
                            #end if

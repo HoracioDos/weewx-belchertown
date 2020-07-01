@@ -526,7 +526,7 @@ class getData(SearchList):
         years = []
         stats_header_html = ""
         default_stats_file = ""
-        stats_dir = local_root + "/stats/"
+        stats_dir = html_root + "/stats/"
         
         try:
             stats_file_list = os.listdir( stats_dir )
@@ -579,6 +579,8 @@ class getData(SearchList):
         Alerts Data
         """
         if self.generator.skin_dict['Extras']['smn_alert_enabled'] == "1":
+
+            smn_root = self.generator.skin_dict['Extras']['smn_root']
             smn_url_alerts = self.generator.skin_dict['Extras']['smn_url_alerts']
             smn_url_reports = self.generator.skin_dict['Extras']['smn_url_reports']
             smn_url_acp = self.generator.skin_dict['Extras']['smn_url_acp']
@@ -586,13 +588,13 @@ class getData(SearchList):
             smn_source = self.generator.skin_dict['Extras']['smn_source']
             smn_alert_loop = self.generator.skin_dict['Extras']['smn_alert_loop']
             smn_incfile = self.generator.skin_dict['Extras']['smn_incfile']
-            html_file = local_root + "/" + smn_incfile
+            smn_file = smn_root + "/" + smn_incfile
             smn_stale_timer = self.generator.skin_dict['Extras']['smn_stale']
             smn_is_stale = False
 
             # Determine if the file exists and get it's modified time
-            if os.path.isfile( html_file ):
-                if ( int( time.time() ) - int( os.path.getmtime( html_file ) ) ) > int( smn_stale_timer ):
+            if os.path.isfile( smn_file ):
+                if ( int( time.time() ) - int( os.path.getmtime( smn_file ) ) ) > int( smn_stale_timer ):
                     smn_is_stale = True
             else:
                 # File doesn't exist, download a new copy
@@ -613,6 +615,7 @@ class getData(SearchList):
                                 loginf( "SMN alerts found for %s" % smn_region[a])
                                 alert_head_xp = '//*[@id="block-system-main"]/div[' + str(i) + ']/div[1]/h2/text()'
                                 alert_dat_xp = '//*[@id="block-system-main"]/div[' + str(i) + ']/ul[2]/li[1]/text()'
+
                                 # html_body_alerts.append('<span class="alerts"><i class="fa fa-exclamation-triangle"></i></span><a href="' + \
                                 #                 smn_url_alerts + '" target="_blank" title="Alertas SMN"><span class="alerts_text">' + \
                                 #                 get_alert(alert_head_xp, tree).encode('utf-8') + \
@@ -640,17 +643,18 @@ class getData(SearchList):
                                 i += 1
                                 alert_dat_xp = '//*[@id="block-system-main"]/div/ul[' + str(i) + ']/li/text()'
                                 i -= 1
+
                                 # html_body_reports.append('<span class="alerts"><i class="fa fa-exclamation-triangle"></i></span><a href="' + \
                                 #                 smn_url_reports + '" target="_blank" title="Reportes SMN"><span class="alerts_text">' + \
                                 #                 get_alert(alert_head_xp, tree).encode('utf-8') + \
                                 #                 '</span></a><span class="alerts"><i class="fa fa-calendar"></i></span><span class="alerts_text">' + \
                                 #                 get_alert(alert_dat_xp, tree).encode('utf-8') + '</span>\n')
+
                                 html_body_reports.append('<span class="alerts"><i class="fa fa-exclamation-triangle"></i></span><a href="' + \
                                                 smn_url_reports + '" target="_blank" title="Reportes SMN"><span class="alerts_text">' + \
                                                 get_alert(alert_head_xp, tree) + \
                                                 '</span></a><span class="alerts"><i class="fa fa-calendar"></i></span><span class="alerts_text">' + \
                                                 get_alert(alert_dat_xp, tree) + '</span>\n')
-
 
                 # Download new acp data
                 tree = get_tree(smn_url_acp, "ACP")
@@ -685,7 +689,7 @@ class getData(SearchList):
                                                     get_alert(alert_dat_xp, tree) + '</span>\n')
 
 
-                f = open(html_file, "w")
+                f = open(smn_file, "w+")
 
                 if len(html_body_alerts) != 0 or len(html_body_reports) != 0 or len(html_body_acp) != 0:
                     f.write('<!DOCTYPE html>\n')
@@ -714,6 +718,70 @@ class getData(SearchList):
                 f.close()
         else:
             loginf("SMN alerts, reports & acp disabled")
+
+        """
+        Sat IMG Download
+        """
+
+        if self.generator.skin_dict['Extras']['sat_img_enabled'] == "1":
+            sat_url_image1 = self.generator.skin_dict['Extras']['sat_url_image1']
+            sat_url_image2 = self.generator.skin_dict['Extras']['sat_url_image2']
+            sat_img_file1 = self.generator.skin_dict['Extras']['sat_img_file1']
+            sat_img_file2 = self.generator.skin_dict['Extras']['sat_img_file2']
+            sat_img_credits = self.generator.skin_dict['Extras']['sat_img_credits']
+
+
+            sat_img_name1 = html_root + "/sat/" + sat_img_file1
+            sat_img_name2 = html_root + "/sat/" + sat_img_file2
+
+            sat_stale_timer1 = self.generator.skin_dict['Extras']['sat_stale_time1']
+            sat_stale_timer2 = self.generator.skin_dict['Extras']['sat_stale_time2']
+
+            sat_img1_is_stale = False
+            sat_img2_is_stale = False
+
+            # Determine if radar img1 file exists and get it's modified time
+            if os.path.isfile( sat_img_name1 ):
+                if ( int( time.time() ) - int( os.path.getmtime( sat_img_name1 ) ) ) > int( sat_stale_timer1 ):
+                    sat_img1_is_stale = True
+            else:
+                # File doesn't exist, download a new copy
+                sat_img1_is_stale = True
+
+                # File is stale, download a new copy
+            if sat_img1_is_stale:
+                # Download new radar image 1
+                response = requests.get(sat_url_image1)
+                file = open(sat_img_name1, "wb+")
+                file.write(response.content)
+                file.close()
+                loginf('Aeris Sat Image1 Download was successful')
+                os_cmd = 'convert ' + sat_img_name1 + ' -fill white -undercolor "#00000080" -gravity South -annotate +0+5 ' + sat_img_credits + ' ' + sat_img_name1
+                loginf(os_cmd)
+                out = os.popen(os_cmd,'w',1)
+
+            # Determine if radar img1 file exists and get it's modified time
+            if os.path.isfile( sat_img_name2 ):
+                if ( int( time.time() ) - int( os.path.getmtime( sat_img_name2 ) ) ) > int( sat_stale_timer2 ):
+                    sat_img2_is_stale = True
+            else:
+                # File doesn't exist, download a new copy
+                sat_img2_is_stale = True
+
+                # File is stale, download a new copy
+            if sat_img2_is_stale:
+                # Download new radar image 2
+                response = requests.get(sat_url_image2)
+                file = open(sat_img_name2, "wb+")
+                file.write(response.content)
+                file.close()
+                loginf('Aeris Sat Image2 Download was successful')
+                os_cmd = 'convert ' + sat_img_name2 + ' -fill white -undercolor "#00000080" -gravity South -annotate +0+5 ' + sat_img_credits + ' ' + sat_img_name2
+                loginf(os_cmd)
+                out = os.popen(os_cmd,'w',1)
+                
+        else:
+            loginf("Radar Image download is disabled")
 
         """
         Forecast Data

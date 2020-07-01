@@ -45,14 +45,13 @@
 #else
   <p>Estación meteorológica experimental modelo: $station.hardware situada en el barrio de <a href="https://es.wikipedia.org/wiki/Colegiales_(Buenos_Aires)" target="_blank"> Colegiales</a> , CABA - Argentina.
 #end if  
-<br>
+ <br>
 #if $Extras.has_key("sensors_review") and $Extras.sensors_review == '1'
-<strong>Se han incorporado los sensores que estaban desconectados. El sensor lumínico se encuentra bajo observación. Actualmente está orientado en dirección Norte.</strong>
-<br>
+  <strong>El sensor lumínico se encuentra bajo observación. Actualmente está orientado en dirección Norte. Se añadira un segundo sensor de temperatura a la sombra para realizar un promedio ponderado de temperaturas.</strong>
 #end if
-Debido a la geografia urbana donde se encuentra instalada la estación, la misma no adhiere completamente a las recomendaciones establecidas por la WMO (World Meteorological Organization) para su emplazamiento. Las observaciones  meteorológicas se calculan con el fin de lograr la mayor exactitud posible.
-<br>Este sitio es de libre acceso, no desarrolla ninguna actividad comercial y no tiene fin de lucro alguno. Tampoco realiza ninguna explotación comercial sobre la información de las visitas recibidas.
-<br><span class="boxed">Se recuerda a los visitantes que no deben tomar ninguna decisión basada en este sitio que pueda poner en riesgo vidas humanas o bienes materiales.</span>
+ <br>Debido a la geografia urbana donde se encuentra instalada la estación, la misma no adhiere completamente a las recomendaciones establecidas por la WMO (World Meteorological Organization) para su emplazamiento. Las observaciones meteorológicas se obtienen y procesan con el fin de lograr la mayor exactitud posible.
+ <br>Este sitio es de libre acceso, no desarrolla ninguna actividad comercial y no tiene fin de lucro alguno. Tampoco realiza ninguna explotación comercial sobre la información de las visitas recibidas.
+ <br><span class="boxed">Se recuerda a los visitantes que no deben tomar ninguna decisión basada en este sitio que pueda poner en riesgo vidas humanas o bienes materiales.</span>
   </p>
 
 <div class="col-sm-4">
@@ -153,40 +152,40 @@ Debido a la geografia urbana donde se encuentra instalada la estación, la misma
         <p>Especificaciones:</p>
     </div>
     <table>
-      <tr><th>Temperatura</th><th></th></tr>
+      <tr><th>Temperatura:</th><th></th></tr>
         <tr>
-          <td>Rango de Temperatura exterior</td>
+          <td>Rango de Temperatura exterior:</td>
           <td>-40°C ~ 65°C</td>
         </tr>
         <tr>
-          <td>Precisión de Temperatura</td>
+          <td>Precisión de Temperatura:</td>
           <td>± 1,0°C</td>
         </tr>
-      <tr><th>Humedad</th><th></th></tr>
+      <tr><th>Humedad:</th><th></th></tr>
         <tr>
-          <td>Rango de Humedad</td>
+          <td>Rango de Humedad:</td>
           <td>1% RH-99%</td>
         </tr>        
         <tr>
-          <td>Precisión de Humedad</td>
+          <td>Precisión de Humedad:</td>
           <td> ± 5% bajo -20°C a 65°C & 20%-98%</td>
         </tr>  
-      <tr><th>Velocidad del Viento</th><th></th></tr>
+      <tr><th>Velocidad del Viento:</th><th></th></tr>
         <tr>
-          <td>Rango de Velocidad del Viento</td>
+          <td>Rango de Velocidad del Viento:</td>
           <td>0 ~ 50,0 m/s</td>
         </tr>
         <tr>
-          <td>Precisión de Velocidad del Viento</td>
+          <td>Precisión de Velocidad del Viento:</td>
           <td>± 1 m/s (velocidad del viento <10 m/s), ± 10% (velocidad del viento >10 m/s)</td>
         </tr>
-      <tr><th>Pluviosidad</th><th></th></tr>
+      <tr><th>Pluviosidad:</th><th></th></tr>
         <tr>
-          <td>Rango de Pluviosidad</td>
+          <td>Rango de Pluviosidad:</td>
           <td>0 ~ 99,999 mm</td>
         </tr>
         <tr>
-          <td>Precisión de Pluviosidad</td>
+          <td>Precisión de Pluviosidad:</td>
           <td>± 1,5 mm</td>
         </tr>
     </table>  
@@ -196,12 +195,12 @@ Debido a la geografia urbana donde se encuentra instalada la estación, la misma
   <p>Esta estación sube datos a los siguientes sitios:</p>
 </div>
 <ul>
-    <li><a href="http://www.wunderground.com/personal-weather-station/dashboard?ID=KMABELCH13" target="_blank">TEST123 </a>en Weather Underground utilizando rapid fire.</li>
-    <li><a href="http://www.wunderground.com/personal-weather-station/dashboard?ID=KMABELCH13" target="_blank">TEST123 </a>en Windy.com.</li>
-    <li><a href="http://www.findu.com/cgi-bin/wxpage.cgi?last=24&amp;call=EW8484" target="_blank">TEST123</a> en CWOP</li>
-    <li><a href="http://pwsweather.com/obs/KMABELCH13.html" target="_blank">TEST123</a> en PWSWeather.com</li>
-    <li><a href="https://openweathermap.org/city" target="_blank">TEST123</a> en OpenWeatherMap.org</li>
-    <li><a href="https://app.weathercloud.net/d0882834506" target="_blank">TEST123</a> en Weathercloud.net</li>
+    <li><a href="https://www.wunderground.com/dashboard/pws/ICOMUN25" target="_blank">Clima Colegiales - ICOMUN25</a> en Weather Underground utilizando rapid fire.</li>
+    <li><a href="https://www.windy.com/station/pws-f079541c" target="_blank">Clima Colegiales</a> en Windy.com.</li>
+    ## <li><a href="http://www.findu.com/cgi-bin/wxpage.cgi?last=24&amp;call=EW8484" target="_blank">TEST123</a> en CWOP</li>
+    <li><a href="https://pwsweather.com/station/pws/colegiales" target="_blank">COLEGIALES</a> en PWSWeather.com</li>
+    ## <li><a href="https://openweathermap.org/city" target="_blank">TEST123</a> en OpenWeatherMap.org</li>
+    <li><a href="https://app.weathercloud.net/d1505859713" target="_blank">Clima Colegiales</a> en Weathercloud.net</li>
 </ul>
 #end if
 <div class="about-title">
@@ -212,9 +211,10 @@ Debido a la geografia urbana donde se encuentra instalada la estación, la misma
     <li><a href="https://github.com/poblabs/weewx-belchertown" target="_blank">Belchertown Skin Version $belchertown_version</a> - Thanks to Pat O'Brien for creating such a wonderful skin.</li><a href="https://obrienlabs.net/donate" rel="nofollow"><img src="https://camo.githubusercontent.com/4d7238795f7751518467c2fddc2efc1313e24dd3/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f446f6e6174652d537570706f72742532306279253230446f6e6174696e672532306f72253230427579696e672532306d6525323061253230436f666665652d626c75652e737667" alt="Donate" data-canonical-src="https://img.shields.io/badge/Donate-Support%20by%20Donating%20or%20Buying%20me%20a%20Coffee-blue.svg" style="max-width:100%;"></a>
     <li><a href="http://www.highcharts.com/" target="_blank">HighCharts</a> - Interactive JavaScript charts for web pages.</li>
     <li><a href="https://windy.com/" target="_blank">Windy radar map.</a> - Interactive Weather forecasting services.</li>
-    <li><a href="https://darksky.net/poweredby/" target="_blank">Darksky forecast data and maps</a> - Weather forecasting and visualization services.</li>
-    <li><a href="https://www.meteored.com.ar" target="_blank">Meteored Weather Services</a> - Thanks for providing an easy way to access SMN Images.</li>
-    <li><a href="https://www.smn.gob.ar" target="_blank">Imágenes Satelitales y Alertas</a> - Gracias al Servicio Meteorologico Nacional - Argentina.<br>¡Exitos por el nuevo sitio web!</li>
+    <li><a href="https://aerisweather.com" target="_blank">Aeris Weather forecast data and maps</a> - Weather forecasting and visualization services.</li>
+    ## <li><a href="https://darksky.net/poweredby/" target="_blank">Darksky forecast data and maps</a> - Weather forecasting and visualization services.</li>
+    ## <li><a href="https://www.meteored.com.ar" target="_blank">Meteored Weather Services</a> - Thanks for providing an easy way to access SMN Images.</li>
+    <li><a href="https://www.smn.gob.ar" target="_blank">Alertas Meteorológicas</a> - Gracias al Servicio Meteorologico Nacional - Argentina.<br></li>
     <li>Earthquake data from <a href="http://earthquake.usgs.gov/fdsnws/event/1/" target="_blank">USGS.gov</a> - Earthquake Catalog Developer API.</li>
 </ul>
 </div>
