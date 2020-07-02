@@ -39,20 +39,28 @@
     #set $have_voltage = 1
   #end if
 #end for
-
+<div class="about-title">
+     <p>Ubicación:</p>
+</div>
 #if $Extras.has_key("show_gps_location") and $Extras.show_gps_location == '1'
-  <p>Estación meteorológica experimental modelo: $station.hardware situada en el barrio de <a href="https://es.wikipedia.org/wiki/Colegiales_(Buenos_Aires)" target="_blank"> Colegiales</a> , CABA - Argentina ($station.latitude[0]&deg;$station.latitude[1]' $station.latitude[2], $station.longitude[0]&deg;$station.longitude[1]' $station.longitude[2] a $station.altitude de altura.)
+ Estación meteorológica experimental modelo: $station.hardware situada en el barrio de <a href="https://es.wikipedia.org/wiki/Colegiales_(Buenos_Aires)" target="_blank"> Colegiales</a> , CABA - Argentina ($station.latitude[0]&deg;$station.latitude[1]' $station.latitude[2], $station.longitude[0]&deg;$station.longitude[1]' $station.longitude[2] a $station.altitude de altura.)
 #else
-  <p>Estación meteorológica experimental modelo: $station.hardware situada en el barrio de <a href="https://es.wikipedia.org/wiki/Colegiales_(Buenos_Aires)" target="_blank"> Colegiales</a> , CABA - Argentina.
+ Estación meteorológica experimental modelo: $station.hardware situada en el barrio de <a href="https://es.wikipedia.org/wiki/Colegiales_(Buenos_Aires)" target="_blank"> Colegiales</a> , CABA - Argentina.
 #end if  
- <br>
-#if $Extras.has_key("sensors_review") and $Extras.sensors_review == '1'
-  <strong>El sensor lumínico se encuentra bajo observación. Actualmente está orientado en dirección Norte. Se añadira un segundo sensor de temperatura a la sombra para realizar un promedio ponderado de temperaturas.</strong>
+#if $Extras.has_key("enable_news") and $Extras.enable_news == '1'
+    <div class="about-title">
+        <p>Noticias:</p>
+    </div>
+    <strong>$Extras.station_news<br></strong>
 #end if
- <br>Debido a la geografia urbana donde se encuentra instalada la estación, la misma no adhiere completamente a las recomendaciones establecidas por la WMO (World Meteorological Organization) para su emplazamiento. Las observaciones meteorológicas se obtienen y procesan con el fin de lograr la mayor exactitud posible.
- <br>Este sitio es de libre acceso, no desarrolla ninguna actividad comercial y no tiene fin de lucro alguno. Tampoco realiza ninguna explotación comercial sobre la información de las visitas recibidas.
- <br><span class="boxed">Se recuerda a los visitantes que no deben tomar ninguna decisión basada en este sitio que pueda poner en riesgo vidas humanas o bienes materiales.</span>
-  </p>
+    <div class="about-title">
+        <p>Descargo de Responsabilidad:</p>
+    </div>
+    <p>
+    Debido a la geografia urbana donde se encuentra instalada la estación, la misma no adhiere completamente a las recomendaciones establecidas por la WMO (World Meteorological Organization) para su emplazamiento. Las observaciones meteorológicas se obtienen y procesan con el fin de lograr la mayor exactitud posible.
+    Este sitio es de libre acceso, no desarrolla ninguna actividad comercial y no tiene fin de lucro alguno. Tampoco realiza ninguna explotación comercial sobre la información de las visitas recibidas.
+    <br><span class="boxed">Se recuerda a los visitantes que no deben tomar ninguna decisión basada en este sitio que pueda poner en riesgo vidas humanas o bienes materiales.</span></br>
+    </p>
 
 <div class="col-sm-4">
     #if $Extras.has_key("station_photo") and $Extras.station_photo != ''

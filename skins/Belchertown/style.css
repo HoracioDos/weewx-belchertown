@@ -1678,7 +1678,7 @@ p.entry-meta {
 
 .sunrise-set-image {
 	width:20px;
-	margin-right:5px;
+	margin-right:10px;
 }
 
 .sun-moon-title {
@@ -1751,6 +1751,7 @@ table.celestial td.label {
 
 .moon-icon {
 	font-size:20px;
+        padding-right:5px;
 }
 
 .radar-map {
@@ -1783,7 +1784,7 @@ table.celestial td.label {
 .about-title {
         text-align:left;
         font-size:25px;
-        margin-bottom:5px;
+        margin-bottom:-5px;
 }
 
 .station-photo{
