@@ -39,33 +39,75 @@
     #set $have_voltage = 1
   #end if
 #end for
-<div class="about-title">
-     <p>Ubicación:</p>
+<div class="col-sm-4">
+    <div class="about-title">
+         <p>Ubicación:</p>
+    </div>
+    <table>
+       <tr>
+       #if $Extras.has_key("show_gps_location") and $Extras.show_gps_location == '1'
+         <td>
+           <p>La estación esta situada en la Comuna 13 del barrio de <a href="https://es.wikipedia.org/wiki/Colegiales_(Buenos_Aires)" target="_blank"> COLEGIALES</a> , CABA - Argentina ($station.latitude[0]&deg;$station.latitude[1]' $station.latitude[2], $station.longitude[0]&deg;$station.longitude[1]' $station.longitude[2] a $station.altitude de altura.)</p>
+         </td>
+       #else
+         <td>
+           <p>La estación esta situada en la Comuna 13 del barrio de <a href="https://es.wikipedia.org/wiki/Colegiales_(Buenos_Aires)" target="_blank"> COLEGIALES</a> , CABA - Argentina.<p> 
+         </td>
+        #end if   
+       </tr>
+    </table>
+    <table>
+       <tr>
+         <td>
+            <iframe width="425" height="350" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" src="https://www.openstreetmap.org/export/embed.html?bbox=-58.48434448242188%2C-34.590753172020555%2C-58.429584503173835%2C-34.558562117075745&amp;layer=mapnik" style="border: 1px solid black"></iframe><br/><small><a href="https://www.openstreetmap.org/#map=15/-34.5747/-58.4570" target="_blank">Ver Mapa Grande</a></small>
+         </td>
+       </tr>
+    </table>
 </div>
-#if $Extras.has_key("show_gps_location") and $Extras.show_gps_location == '1'
- Estación meteorológica experimental modelo: $station.hardware situada en el barrio de <a href="https://es.wikipedia.org/wiki/Colegiales_(Buenos_Aires)" target="_blank"> Colegiales</a> , CABA - Argentina ($station.latitude[0]&deg;$station.latitude[1]' $station.latitude[2], $station.longitude[0]&deg;$station.longitude[1]' $station.longitude[2] a $station.altitude de altura.)
-#else
- Estación meteorológica experimental modelo: $station.hardware situada en el barrio de <a href="https://es.wikipedia.org/wiki/Colegiales_(Buenos_Aires)" target="_blank"> Colegiales</a> , CABA - Argentina.
-#end if  
+
+<div class="col-sm-8">
+    <div class="about-title">
+         <p>Modelo:</p>
+    </div>
+<table>
+<tr>
+<td>
+ Estación meteorológica experimental modelo: $station.hardware.
+</td>
+</tr>
+</table>
 #if $Extras.has_key("enable_news") and $Extras.enable_news == '1'
     <div class="about-title">
-        <p>Noticias:</p>
+        <p>Noticias de la Estación:</p>
     </div>
-    <strong>$Extras.station_news<br></strong>
+<table>
+<tr>
+<td>
+    <strong>$Extras.station_news</strong>
+</td>
+</tr>
+</table>
 #end if
     <div class="about-title">
         <p>Descargo de Responsabilidad:</p>
     </div>
+<table>
+<tr>
+<td>
     <p>
     Debido a la geografia urbana donde se encuentra instalada la estación, la misma no adhiere completamente a las recomendaciones establecidas por la WMO (World Meteorological Organization) para su emplazamiento. Las observaciones meteorológicas se obtienen y procesan con el fin de lograr la mayor exactitud posible.
     Este sitio es de libre acceso, no desarrolla ninguna actividad comercial y no tiene fin de lucro alguno. Tampoco realiza ninguna explotación comercial sobre la información de las visitas recibidas.
     <br><span class="boxed">Se recuerda a los visitantes que no deben tomar ninguna decisión basada en este sitio que pueda poner en riesgo vidas humanas o bienes materiales.</span></br>
     </p>
+</td>
+</tr>
+</table>
+</div>
 
 <div class="col-sm-4">
     #if $Extras.has_key("station_photo") and $Extras.station_photo != ''
        <div class="about-title">
-          <p>Estación:</p>
+          <p>Foto:</p>
        </div>
        <img class="station-photo" src="$Extras.station_photo" alt=$station.hardware title=$station.hardware>
     #end if
