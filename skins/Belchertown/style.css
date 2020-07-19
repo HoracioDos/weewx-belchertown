@@ -1740,7 +1740,7 @@ table.celestial td.label {
 }
 
 .moon-container {
-	font-size:14.5px; /* Fix CC */
+	font-size:16px; /* Fix CC */
         padding-bottom: 10px; /* Fix CC */
    /*   color:#808080;  Fix CC */
 }

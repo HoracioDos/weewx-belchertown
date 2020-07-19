@@ -3,7 +3,7 @@
 #set $D="%d"
 #set $M="%b"
 #set $Time=" %H:%M"
-#set $NODAY=" N/A"
+#set $NODAY="ND"
 #set $Temp="%5.1f"
 #set $Hum="%4.0f"
 #set $Baro="%7.1f"
@@ -12,15 +12,13 @@
 #set $NONE=" "
 #set $TAB="\t"
 #set $Rain="%5.2f"
-#set $DayCount=0
-#set $TempAvgAmpl=0
-#set $BaroAvgAmpl=0
-$month_name $year_name $TAB $TAB $TAB RESUMEN DE TEMPERATURA($unit.label.outTemp.strip())
+#set $NOTIME ="   N/D"
+$month_name $year_name $TAB $TAB RESUMEN DE TEMPERATURA($unit.label.outTemp.strip())
                                                                                        
-                 HORA         HORA        HEAT  COOL     --DIST TEMPERATURA 24 HORAS---
-    TEMP  TEMP   TEMP  TEMP   TEMP  AMPL   DEG   DEG     >=     >=<    >=<    >=<     <
-DIA PROM   MAX    MAX   MIN    MIN  TERM  DAYS  DAYS     30   20-30  10-20   0-10     0
----------------------------------------------------------------------------------------
+                 HORA         HORA  --DIST TEMPERATURA 24 HORAS---
+    TEMP  TEMP   TEMP  TEMP   TEMP  >=     >=<    >=<    >=<     <
+DIA PROM   MAX    MAX   MIN    MIN  30   20-30  10-20   0-10     0
+------------------------------------------------------------------
 #for $day in $month.days
     #set $VeryHotCount=0
     #set $HotCount=0
@@ -28,16 +26,18 @@ DIA PROM   MAX    MAX   MIN    MIN  TERM  DAYS  DAYS     30   20-30  10-20   0-1
     #set $ColdCount=0
     #set $VeryColdCount=0
     #for $hour in $day.hours
-        #if $hour.outTemp.last.raw >= 30.0
-           #set $VeryHotCount +=1
-        #else if $hour.outTemp.last.raw >= 20.0 and $hour.outTemp.last.raw < 30.0 
-           #set $HotCount +=1
-        #else if $hour.outTemp.last.raw >= 10.0 and $hour.outTemp.last.raw < 20.0
-           #set $WarmCount +=1
-        #else if $hour.outTemp.last.raw >= 0.0 and $hour.outTemp.last.raw < 10.0
-           #set $ColdCount +=1
-        #else if $hour.outTemp.last.raw < 0.0 
-           #set $VeryColdCount +=1
+        #if $hour.outTemp.count.raw
+            #if $hour.outTemp.avg.raw >= 30.0
+                #set $VeryHotCount +=1
+            #else if $hour.outTemp.avg.raw >= 20.0 and $hour.outTemp.avg.raw < 30.0 
+                #set $HotCount +=1
+            #else if $hour.outTemp.avg.raw >= 10.0 and $hour.outTemp.avg.raw < 20.0
+                #set $WarmCount +=1
+            #else if $hour.outTemp.avg.raw >= 0.0 and $hour.outTemp.avg.raw < 10.0
+                #set $ColdCount +=1
+            #else if $hour.outTemp.avg.raw < 0.0 
+                #set $VeryColdCount +=1
+            #end if
         #end if
     #end for 
     #set $VeryHotC='{:2d}'.format($VeryHotCount)
@@ -46,26 +46,21 @@ DIA PROM   MAX    MAX   MIN    MIN  TERM  DAYS  DAYS     30   20-30  10-20   0-1
     #set $ColdC='{:2d}'.format($ColdCount)
     #set $VeryColdC='{:2d}'.format($VeryColdCount)
     #if $day.outTemp.count.raw
-     #set $TempAmpl= $day.outTemp.max.raw - $day.outTemp.min.raw
-     #set $TempAmpC='{:5.1f}'.format($TempAmpl)
-     #set $DayCount +=1
-     #set $TempAvgAmpl= $TempAvgAmpl + $TempAmpl
-$day.dateTime.format($D,NONE) $day.outTemp.avg.nolabel($Temp,$NONE) $day.outTemp.max.nolabel($Temp,$NONE) $day.outTemp.maxtime.format($Time,$NONE) $day.outTemp.min.nolabel($Temp,$NONE) $day.outTemp.mintime.format($Time) $TempAmpC $day.heatdeg.sum.nolabel($Temp,$NONE) $day.cooldeg.sum.nolabel($Temp,$NONE)     $VeryHotC      $HotC     $WarmC     $ColdC    $VeryColdC  
+$day.dateTime.format($D,NONE) $day.outTemp.avg.nolabel($Temp,$NONE) $day.outTemp.max.nolabel($Temp,$NONE) $day.outTemp.maxtime.format($Time,$NONE) $day.outTemp.min.nolabel($Temp,$NONE) $day.outTemp.mintime.format($Time,$NONE)  $VeryHotC      $HotC     $WarmC     $ColdC    $VeryColdC 
     #else 
 $day.dateTime.format($D)
     #end if
 #end for
 ---------------------------------------------------------------------------------------
-#set $TempAvgAmpl= $TempAvgAmpl / $DayCount
-#set $TempAvgAmpC = '{:5.1f}'.format($TempAvgAmpl)
-TOT$month.outTemp.avg.nolabel($Temp) $month.outTemp.max.nolabel($Temp)    $month.outTemp.maxtime.format($D)  $month.outTemp.min.nolabel($Temp)    $month.outTemp.mintime.format($D)  $TempAvgAmpC $month.heatdeg.sum.nolabel($Temp) $month.cooldeg.sum.nolabel($Temp)
+TOT$month.outTemp.avg.nolabel($Temp) $month.outTemp.max.nolabel($Temp) $month.outTemp.maxtime.format($Time) $month.outTemp.min.nolabel($Temp) $month.outTemp.mintime.format($Time)
+Distribucion 24 Hs = Promedio de temperaturas de cada hora.
 
 $month_name $year_name $TAB $TAB $TAB RESUMEN PRESION BAROMETRICA($unit.label.barometer.strip())
                                                                                              
-                     HORA           HORA          --------- DIST BAROMETRO 24 HORAS --------
-      BARO    BARO   BARO    BARO   BARO   BARO     >=       >=<       >=<       >=<       <
-DIA   PROM     MAX    MAX     MIN    MIN   AMPL   1030 1030-1020 1020-1010 1010-1000    1000
---------------------------------------------------------------------------------------------
+                     HORA           HORA   --------- DIST BAROMETRO 24 HORAS --------
+      BARO    BARO   BARO    BARO   BARO     >=       >=<       >=<       >=<       <
+DIA   PROM     MAX    MAX     MIN    MIN   1030 1020-1030 1010-1020 1000-1010    1000
+-------------------------------------------------------------------------------------
 #for $day in $month.days
     #set $VHBaroCount=0
     #set $HBaroCount=0
@@ -73,17 +68,19 @@ DIA   PROM     MAX    MAX     MIN    MIN   AMPL   1030 1030-1020 1020-1010 1010-
     #set $LBaroCount=0
     #set $VLBaroCount=0
     #for $hour in $day.hours
-        #if $hour.barometer.last.raw >= 1030.0
-           #set $VHBaroCount +=1
-        #else if $hour.barometer.last.raw >= 1020.0 and $hour.barometer.last.raw < 1030.0
-           #set $HBaroCount +=1
-        #else if $hour.barometer.last.raw >= 1010.0 and $hour.barometer.last.raw < 1020.0
-           #set $NBaroCount +=1
-        #else if $hour.barometer.last.raw >= 1000.0 and $hour.barometer.last.raw < 1010.0
-           #set $LBaroCount +=1
-        #else if $hour.barometer.last.raw < 1000.0
-	           #set $VLBaroCount +=1
-       #end if
+        #if $hour.barometer.count.raw
+            #if $hour.barometer.avg.raw >= 1030.0
+                #set $VHBaroCount +=1
+            #else if $hour.barometer.avg.raw >= 1020.0 and $hour.barometer.avg.raw < 1030.0
+                #set $HBaroCount +=1
+            #else if $hour.barometer.avg.raw >= 1010.0 and $hour.barometer.avg.raw < 1020.0
+                #set $NBaroCount +=1
+            #else if $hour.barometer.avg.raw >= 1000.0 and $hour.barometer.avg.raw < 1010.0
+                #set $LBaroCount +=1
+            #else if $hour.barometer.avg.raw < 1000.0
+	        #set $VLBaroCount +=1
+            #end if
+        #end if
     #end for
     #set $VHBaroC='{:2d}'.format($VHBaroCount)
     #set $HBaroC='{:2d}'.format($HBaroCount)
@@ -91,43 +88,43 @@ DIA   PROM     MAX    MAX     MIN    MIN   AMPL   1030 1030-1020 1020-1010 1010-
     #set $LBaroC='{:2d}'.format($LBaroCount)
     #set $VLBaroC='{:2d}'.format($VLBaroCount)
 #if $day.barometer.count.raw
-    #set $BaroAmpl = $day.barometer.max.raw - $day.barometer.min.raw
-    #set $BaroAmpC = '{:6.1f}'.format($BaroAmpl)
-    #set $DayCount +=1
-    #set $BaroAvgAmpl= $BaroAvgAmpl + $BaroAmpl
-$day.dateTime.format($D,$NONE) $day.barometer.avg.nolabel($Baro,$NONE) $day.barometer.max.nolabel($Baro,$NONE) $day.barometer.maxtime.format($Time,$NONE) $day.barometer.min.nolabel($Baro,$NONE) $day.barometer.mintime.format($Time,$NONE) $BaroAmpC     $VHBaroC        $HBaroC        $NBaroC        $LBaroC      $VLBaroC 
+$day.dateTime.format($D,$NONE) $day.barometer.avg.nolabel($Baro,$NONE) $day.barometer.max.nolabel($Baro,$NONE) $day.barometer.maxtime.format($Time,$NONE) $day.barometer.min.nolabel($Baro,$NONE) $day.barometer.mintime.format($Time,$NONE)     $VHBaroC        $HBaroC        $NBaroC        $LBaroC      $VLBaroC 
 #else
 $day.dateTime.format($D)
 #end if
 #end for
 -----------------------------------------------------------------------------------------------
-#set $BaroAvgAmpl= $BaroAvgAmpl / $DayCount
-#set $BaroAvgAmpC='{:5.1f}'.format($BaroAvgAmpl)
-TOT $month.barometer.avg.nolabel($Temp)  $month.barometer.max.nolabel($Temp)    $month.barometer.maxtime.format($D)    $month.barometer.min.nolabel($Temp)    $month.barometer.mintime.format($D)   $BaroAvgAmpC
+TOT $month.barometer.avg.nolabel($Temp)  $month.barometer.max.nolabel($Temp) $month.barometer.maxtime.format($Time)  $month.barometer.min.nolabel($Temp) $month.barometer.mintime.format($Time)
+Distribucion 24 Hs = Promedio de la presion atmosferica de cada hora.
 
-$month_name $year_name $TAB $TAB $TAB RESUMEN DE HUMEDAD($unit.label.outHumidity.strip()) Y PRECIPITACIONES($unit.label.rain.strip())
+$month_name $year_name $TAB $TAB RESUMEN DE HUMEDAD($unit.label.outHumidity.strip()) Y PRECIPITACIONES($unit.label.rain.strip())
                                                                       
-               HORA        HORA               HORA         HORA        --- DIST PRECIP 24 HORAS ---
-     HUM HUM    HUM  HUM    HUM  PREC  PREC   PREC  PREC   PREC  AMPL   >=    >=<   >=<   >=<     < 
-DIA PROM MAX    MAX  MIN    MIN   TOT   MAX    MAX   MIN    MIN  PREC  100 75-100 50-75 25-75    25
----------------------------------------------------------------------------------------------------
+               HORA        HORA        TASA   HORA  ------ DIST PRECIP 24 HORAS -------
+     HUM HUM    HUM  HUM    HUM  PREC  PREC   PREC   >=    >=<   >=<   >=<   > <      = 
+DIA PROM MAX    MAX  MIN    MIN  ACUM   MAX    MAX   20  15-20 10-15  5-10   0-5      0 
+---------------------------------------------------------------------------------------
 #for $day in $month.days
     #set $VHRainCount=0
     #set $HRainCount=0
     #set $NRainCount=0
     #set $LRainCount=0
     #set $VLRainCount=0
+    #set $NoRainCount=0
     #for $hour in $day.hours
-        #if $hour.rainRate.avg.raw >= 100.0
-            #set $VHRainCount +=1
-        #else if $hour.rainRate.avg.raw >= 75.0 and $hour.rainRate.avg.raw < 100.0
-            #set $HRainCount +=1
-        #else if $hour.rainRate.avg.raw >= 50.0 and $hour.rainRate.avg.raw < 75.0
-            #set $NRainCount +=1
-        #else if $hour.rainRate.avg.raw >= 25.0 and $hour.rainRate.avg.raw < 50.0
-           #set $LRainCount +=1
-        #else if $hour.rainRate.avg.raw < 25.0
-           #set $VLRainCount +=1
+        #if $hour.rain.count.raw
+            #if $hour.rain.sum.raw >= 20.0
+                #set $VHRainCount +=1
+            #else if $hour.rain.sum.raw >= 15.0 and $hour.rain.sum.raw < 20.0
+                #set $HRainCount +=1
+            #else if $hour.rain.sum.raw >= 10.0 and $hour.rain.sum.raw < 15.0
+                #set $NRainCount +=1
+            #else if $hour.rain.sum.raw >= 5.0 and $hour.rain.sum.raw < 10.0
+                #set $LRainCount +=1
+            #else if $hour.rain.sum.raw > 0.0 and $hour.rain.sum.raw < 5.0
+                #set $VLRainCount +=1
+            #else if $hour.rain.sum.raw == 0.0
+                #set $NoRainCount +=1
+            #end if
         #end if
     #end for
     #set $VHRainC='{:2d}'.format($VHRainCount)
@@ -135,23 +132,30 @@ DIA PROM MAX    MAX  MIN    MIN   TOT   MAX    MAX   MIN    MIN  PREC  100 75-10
     #set $NRainC='{:2d}'.format($NRainCount)
     #set $LRainC='{:2d}'.format($LRainCount)
     #set $VLRainC='{:2d}'.format($VLRainCount)
+    #set $NoRainC='{:2d}'.format($NoRainCount)
 #if $day.rain.count.raw
-    #set $RainAmpl = $day.rainRate.minmax.raw - $day.rainRate.maxmin.raw
-    #set $RainAmpC = '{:5.2f}'.format($RainAmpl)
-$day.dateTime.format($D,$NONE)  $day.outHumidity.avg.nolabel($Hum,$NONE)$day.outHumidity.max.nolabel($Hum,$NONE) $day.outHumidity.maxtime.format($Time,$NONE) $day.outHumidity.min.nolabel($Hum,$NONE) $day.outHumidity.mintime.format($Time,$NONE) $day.rain.sum.nolabel($Rain,$NONE) $day.rainRate.minmax.nolabel($Rain,$NONE) $day.rainRate.minmaxtime.format($Time,$NONE) $day.rainRate.maxmin.nolabel($Rain,$NONE) $day.rainRate.maxmintime.format($Time,$NONE) $RainAmpC   $VHRainC     $HRainC    $NRainC    $LRainC    $VLRainC
+    #if $day.rain.sum.raw == 0.0
+$day.dateTime.format($D,$NONE)  $day.outHumidity.avg.nolabel($Hum,$NONE)$day.outHumidity.max.nolabel($Hum,$NONE) $day.outHumidity.maxtime.format($Time,$NONE) $day.outHumidity.min.nolabel($Hum,$NONE) $day.outHumidity.mintime.format($Time,$NONE) $day.rain.sum.nolabel($Rain,$NONE) $day.rainRate.max.nolabel($Rain,$NONE) $day.rainRate.maxtime.format($NOTIME,$NONE)   $VHRainC     $HRainC    $NRainC    $LRainC    $VLRainC     $NoRainC
+    #else 
+$day.dateTime.format($D,$NONE)  $day.outHumidity.avg.nolabel($Hum,$NONE)$day.outHumidity.max.nolabel($Hum,$NONE) $day.outHumidity.maxtime.format($Time,$NONE) $day.outHumidity.min.nolabel($Hum,$NONE) $day.outHumidity.mintime.format($Time,$NONE) $day.rain.sum.nolabel($Rain,$NONE) $day.rainRate.max.nolabel($Rain,$NONE) $day.rainRate.maxtime.format($Time,$NONE)   $VHRainC     $HRainC    $NRainC    $LRainC    $VLRainC     $NoRainC
+    #end if
 #else
 $day.dateTime.format($D)
 #end if
 #end for
 ---------------------------------------------------------------------------------------------------
-TOT$month.outHumidity.avg.nolabel($Hum,$NONE) $month.outHumidity.max.nolabel($Hum,$NONE)    $month.outHumidity.maxtime.format($D)  $month.outHumidity.min.nolabel($Hum,$NONE)    $month.outHumidity.mintime.format($D)  $month.rain.sum.nolabel($Rain,$NONE) $month.rainRate.meanmax.nolabel($Rain,$NONE)        $month.rainRate.meanmin.nolabel($Rain,$NONE) 
+TOT $month.outHumidity.avg.nolabel($Hum,$NONE)$month.outHumidity.max.nolabel($Hum,$NONE) $month.outHumidity.maxtime.format($Time) $month.outHumidity.min.nolabel($Hum,$NONE) $month.outHumidity.mintime.format($Time) $month.rain.sum.nolabel($Rain,$NONE) $month.rainRate.max.nolabel($Rain,$NONE)      
+Distribucion 24 Hs = Valor acumulado de precipitaciones de cada hora.
+TASA PREC MAX = Valor maximo de la intensidad de la lluvia en el dia.
+PREC ACUM = Precipitacion acumulada del dia.
+N/D = No disponible.
 
-$month_name $year_name $TAB $TAB RESUMEN DE VELOCIDAD DEL VIENTO($unit.label.windSpeed.strip())
+$month_name $year_name $TAB RESUMEN DE VELOCIDAD DEL VIENTO($unit.label.windSpeed.strip())
 
-                   HORA          HORA        ----- DIST VIENTO 24 HORAS ----
-    VELOC  VELOC  VELOC  VELOC  VELOC  AMPL  >=    >=<   >=<   >=<    <  DOM
-DIA  PROM    MAX    MAX    MIN    MIN VELOC  40  40-30 30-20 20-10   10  DIR
-----------------------------------------------------------------------------
+                   HORA          HORA  ----- DIST VIENTO 24 HORAS -----
+    VELOC  VELOC  VELOC  VELOC  VELOC  >=    >=<   >=<   >=<    <   DIR
+DIA  PROM    MAX    MAX    MIN    MIN  20  15-20 10-15  5-10    5   DOM
+-----------------------------------------------------------------------
 #for $day in $month.days
     #set $VHWindCount=0
     #set $HWindCount=0
@@ -159,16 +163,18 @@ DIA  PROM    MAX    MAX    MIN    MIN VELOC  40  40-30 30-20 20-10   10  DIR
     #set $LWindCount=0
     #set $VLWindCount=0
     #for $hour in $day.hours
-        #if $hour.windSpeed.avg.raw >= 40.0
-           #set $VHWindCount +=1
-        #else if $hour.windSpeed.avg.raw >= 30.0 and $hour.windSpeed.avg.raw < 40.0
-           #set $HWindCount +=1
-        #else if $hour.windSpeed.avg.raw >= 20.0 and $hour.windSpeed.avg.raw < 30.0
-           #set $NWindCount +=1
-        #else if $hour.windSpeed.avg.raw >= 10.0 and $hour.windSpeed.avg.raw < 20.0
-           #set $LWindCount +=1
-        #else if $hour.windSpeed.avg.raw < 10.0
-           #set $VLWindCount +=1
+        #if $hour.windSpeed.count.raw 
+            #if $hour.windSpeed.avg.raw >= 20.0
+                #set $VHWindCount +=1
+            #else if $hour.windSpeed.avg.raw >= 15.0 and $hour.windSpeed.avg.raw < 20.0
+                #set $HWindCount +=1
+            #else if $hour.windSpeed.avg.raw >= 10.0 and $hour.windSpeed.avg.raw < 15.0
+                #set $NWindCount +=1
+            #else if $hour.windSpeed.avg.raw >= 5.0 and $hour.windSpeed.avg.raw < 10.0
+                #set $LWindCount +=1
+            #else if $hour.windSpeed.avg.raw < 5.0 
+                #set $VLWindCount +=1
+            #end if
         #end if
     #end for
     #set $VHWindC='{:2d}'.format($VHWindCount)
@@ -177,12 +183,16 @@ DIA  PROM    MAX    MAX    MIN    MIN VELOC  40  40-30 30-20 20-10   10  DIR
     #set $LWindC='{:2d}'.format($LWindCount)
     #set $VLWindC='{:2d}'.format($VLWindCount)
 #if $day.wind.count.raw
-    #set $WindAmpl = $day.wind.max.raw - $day.wind.min.raw
-    #set $WindAmpC = '{:4.1f}'.format($WindAmpl)
-$day.dateTime.format($D,$NONE) $day.wind.avg.nolabel($Wind,$NONE) $day.wind.max.nolabel($Wind,$NONE) $day.wind.maxtime.format($Time,$NONE) $day.wind.min.nolabel($Wind,$NONE) $day.wind.mintime.format($Time,$NONE)  $WindAmpC  $VHWindC     $HWindC    $NWindC    $LWindC   $VLWindC  $day.wind.vecdir.ordinal_compass
+    #if $day.wind.min.raw == 0.0
+$day.dateTime.format($D,$NONE) $day.wind.avg.nolabel($Wind,$NONE) $day.wind.max.nolabel($Wind,$NONE) $day.wind.maxtime.format($Time,$NONE) $day.wind.min.nolabel($Wind,$NONE) $day.wind.mintime.format($NOTIME,$NONE)  $VHWindC     $HWindC    $NWindC    $LWindC   $VLWindC   $day.wind.vecdir.ordinal_compass
+    #else
+$day.dateTime.format($D,$NONE) $day.wind.avg.nolabel($Wind,$NONE) $day.wind.max.nolabel($Wind,$NONE) $day.wind.maxtime.format($Time,$NONE) $day.wind.min.nolabel($Wind,$NONE) $day.wind.mintime.format($Time,$NONE)  $VHWindC     $HWindC    $NWindC    $LWindC   $VLWindC   $day.wind.vecdir.ordinal_compass
+    #end if 
 #else
 $day.dateTime.format($D)
 #end if
 #end for
 ----------------------------------------------------------------------------
-TOT$month.wind.avg.nolabel($Wind,$NONE) $month.wind.max.nolabel($Wind,$NONE)    $month.wind.maxtime.format($D)  $month.wind.min.nolabel($Wind,$NONE)    $month.wind.mintime.format($D)                                     $month.wind.vecdir.ordinal_compass
+TOT$month.wind.avg.nolabel($Wind,$NONE) $month.wind.max.nolabel($Wind,$NONE) $month.wind.maxtime.format($Time)                                             $month.wind.vecdir.ordinal_compass
+Distribucion 24 Hs = Valor promedio de velocidad del viento de cada hora.
+N/D = No disponible.
