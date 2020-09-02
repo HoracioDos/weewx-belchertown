@@ -1525,6 +1525,7 @@ p.entry-meta {
     padding-top: 10px;
     /* margin: 0 -15px 0 -15px; */
     margin: 0 0 0 0;
+    width: 105%;
 }
 
 .curwind {
@@ -1825,7 +1826,12 @@ table.celestial td.label {
 .earthquake-container {
 	font-size:18px;
 	text-align:center;
+    min-height: 180px;
 }
+
+.earthquake-container .earthquake-distance-outer {
+    min-height: 64px;
+}    
 
 .snapshot-records-text, .eq-title {
     font-size:24px;
