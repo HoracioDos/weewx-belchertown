@@ -106,7 +106,7 @@ except ImportError:
         logmsg(syslog.LOG_ERR, msg)
     
 # Print version in syslog for easier troubleshooting
-VERSION = "1.2rc2"
+VERSION = "1.2"
 loginf("version %s" % VERSION)
 
 class getData(SearchList):
@@ -980,7 +980,7 @@ class getData(SearchList):
                 
                 # Check if the weather_code is in the cloud_dict and use that if it's there. If not then it's a combined weather code.
                 if weather_code in cloud_dict: 
-                    return cloud_dict[weather_code];
+                    return cloud_dict[weather_code]
                 else:
                     # Add the coverage if it's present, and full observation forecast is requested
                     if coverage_code:
@@ -989,12 +989,12 @@ class getData(SearchList):
                     if intensity_code:
                         output += intensity_dict[intensity_code] + " "
                     # Weather output
-                    output += weather_dict[weather_code];
+                    output += weather_dict[weather_code]
                 return output
                 
             def aeris_icon( data ):
                 # https://www.aerisweather.com/support/docs/api/reference/icon-list/
-                icon_name = data.split(".")[0]; # Remove .png
+                icon_name = data.split(".")[0] # Remove .png
                 
                 icon_dict = {
                     "blizzard": "snow",
@@ -1013,8 +1013,8 @@ class getData(SearchList):
                     "drizzlen": "rain",
                     "dust": "fog",
                     "dustn": "fog",
-                    "fair": "clear-day",
-                    "fairn": "clear-night",
+                    "fair": "mostly-clear-day",
+                    "fairn": "mostly-clear-night",
                     "drizzlef": "rain",
                     "fdrizzlen": "rain",
                     "flurries": "sleet",
@@ -1029,8 +1029,8 @@ class getData(SearchList):
                     "hazyn": "fog",
                     "hot": "clear-day",
                     "N/A ": "unknown",
-                    "mcloudy": "partly-cloudy-day",
-                    "mcloudyn": "partly-cloudy-night",
+                    "mcloudy": "mostly-cloudy-day",
+                    "mcloudyn": "mostly-cloudy-night",
                     "mcloudyr": "rain",
                     "mcloudyrn": "rain",
                     "mcloudyrw": "rain",
@@ -1041,14 +1041,14 @@ class getData(SearchList):
                     "mcloudysfn": "snow",
                     "mcloudysfw": "snow",
                     "mcloudysfwn": "snow",
-                    "mcloudysw": "partly-cloudy-day",
-                    "mcloudyswn": "partly-cloudy-night",
+                    "mcloudysw": "mostly-cloudy-day",
+                    "mcloudyswn": "mostly-cloudy-night",
                     "mcloudyt": "thunderstorm",
                     "mcloudytn": "thunderstorm",
                     "mcloudytw": "thunderstorm",
                     "mcloudytwn": "thunderstorm",
-                    "mcloudyw": "partly-cloudy-day",
-                    "mcloudywn": "partly-cloudy-night",
+                    "mcloudyw": "mostly-cloudy-day",
+                    "mcloudywn": "mostly-cloudy-night",
                     "na": "unknown",
                     "na": "unknown",
                     "pcloudy": "partly-cloudy-day",
@@ -1099,10 +1099,10 @@ class getData(SearchList):
                     "snowshowerswn": "snow",
                     "snowtorain": "snow",
                     "snowtorainn": "snow",
-                    "sunny": "clear-day",
-                    "sunnyn": "clear-night",
-                    "sunnyw": "partly-cloudy-day",
-                    "sunnywn": "partly-cloudy-night",
+                    "sunny": "mostly-clear-day",
+                    "sunnyn": "mostly-clear-night",
+                    "sunnyw": "mostly-clear-day",
+                    "sunnywn": "mostly-clear-night",
                     "tstorm": "thunderstorm",
                     "tstormn": "thunderstorm",
                     "tstorms": "thunderstorm",
@@ -1118,7 +1118,10 @@ class getData(SearchList):
                         
                         
             if forecast_provider == "aeris":
-                forecast_current_url = "https://api.aerisapi.com/observations/%s,%s?&format=json&filter=allstations&filter=metar&limit=1&client_id=%s&client_secret=%s" % ( latitude, longitude, forecast_api_id, forecast_api_secret )
+                if self.generator.skin_dict['Extras']['forecast_aeris_use_metar'] == "1":
+                    forecast_current_url = "https://api.aerisapi.com/observations/%s,%s?&format=json&filter=allstations&filter=metar&limit=1&client_id=%s&client_secret=%s" % ( latitude, longitude, forecast_api_id, forecast_api_secret )
+                else:
+                    forecast_current_url = "https://api.aerisapi.com/observations/%s,%s?&format=json&filter=allstations&limit=1&client_id=%s&client_secret=%s" % ( latitude, longitude, forecast_api_id, forecast_api_secret )
                 forecast_url = "https://api.aerisapi.com/forecasts/%s,%s?&format=json&filter=day&limit=7&client_id=%s&client_secret=%s" % ( latitude, longitude, forecast_api_id, forecast_api_secret )
                 if self.generator.skin_dict['Extras']['forecast_alert_limit']:
                     forecast_alert_limit = self.generator.skin_dict['Extras']['forecast_alert_limit']
@@ -1213,7 +1216,13 @@ class getData(SearchList):
                 data = json.load( read_file )
                 
             if forecast_provider == "aeris":
-                if len(data["current"][0]["response"]) > 0:
+                if len(data["current"][0]["response"]) > 0 and self.generator.skin_dict['Extras']['forecast_aeris_use_metar'] == "0":
+                    # Non-metar responses do not contain these values. Set them to empty.
+                    current_obs_summary = ""
+                    current_obs_icon = ""
+                    visibility = "N/A"
+                    visibility_unit = ""
+                elif len(data["current"][0]["response"]) > 0 and self.generator.skin_dict['Extras']['forecast_aeris_use_metar'] == "1":
                     current_obs_summary = aeris_coded_weather( data["current"][0]["response"]["ob"]["weatherPrimaryCoded"] )
                     current_obs_icon = aeris_icon( data["current"][0]["response"]["ob"]["icon"] ) + ".png"
                     
@@ -1233,10 +1242,11 @@ class getData(SearchList):
                             visibility = "N/A"
                             visibility_unit = ""
                 else:
+                    # If the user selected to not use METAR, then these observations are null.
                     # If there's no data in the ob array then it's probably because of an error. Example:
                     # "code": "warn_no_data",
                     # "description": "Valid request. No results available based on your query parameters."
-                    current_obs_summary = "No data"
+                    current_obs_summary = ""
                     current_obs_icon = ""
                     visibility = "N/A"
                     visibility_unit = ""
