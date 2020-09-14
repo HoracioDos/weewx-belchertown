@@ -1719,7 +1719,7 @@ p.entry-meta {
 
 .celestial_body { 
     display:inline-block;
-    min-width:49%; /* Fix CC */
+    /* min-width:49%; */
 }
 
 table.celestial td.label { 
