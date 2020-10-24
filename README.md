@@ -1,6 +1,6 @@
 # **Customized** Belchertown Weewx Skin
 
-This fork from [weewx-belchertown skin](https://github.com/poblabs/weewx-belchertown) have been customized mainly to change some small aspects in the layout and style. Some other modifications are related to my own needs and interests. This is how it looks like online: https://climacolegiales.com.ar
+This fork from [weewx-belchertown skin](https://github.com/poblabs/weewx-belchertown) has been customized mainly to change some small aspects in the layout and style. Some other modifications are related to my own needs and interests. This is how it looks like online: https://climacolegiales.com.ar
 
 [poblabs/weewx-belchertown](https://github.com/poblabs/weewx-belchertown) Master branch - latest commit: [07452dc](https://github.com/poblabs/weewx-belchertown/commit/07452dc1593a4c69b13b38f18916cecb442e1dac)
 
