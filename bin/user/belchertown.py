@@ -1050,7 +1050,6 @@ class getData(SearchList):
                     "mcloudyw": "mostly-cloudy-day",
                     "mcloudywn": "mostly-cloudy-night",
                     "na": "unknown",
-                    "na": "unknown",
                     "pcloudy": "partly-cloudy-day",
                     "pcloudyn": "partly-cloudy-night",
                     "pcloudyr": "rain",
@@ -1078,10 +1077,8 @@ class getData(SearchList):
                     "raintosnow": "rain",
                     "raintosnown": "rain",
                     "rainw": "rain",
-                    "rainw": "rain",
                     "showers": "rain",
                     "showersn": "rain",
-                    "showersw": "rain",
                     "showersw": "rain",
                     "sleet": "sleet",
                     "sleetn": "sleet",
@@ -1110,13 +1107,13 @@ class getData(SearchList):
                     "tstormsw": "thunderstorm",
                     "tstormswn": "thunderstorm",
                     "wind": "wind",
-                    "wind": "wind",
                     "wintrymix": "sleet",
                     "wintrymixn": "sleet"
                 }
                 return icon_dict[icon_name]   
                         
                         
+            forecast_lang = self.generator.skin_dict['Extras']['forecast_lang'].lower()
             if forecast_provider == "aeris":
                 if self.generator.skin_dict['Extras']['forecast_aeris_use_metar'] == "1":
                     forecast_current_url = "https://api.aerisapi.com/observations/%s,%s?&format=json&filter=allstations&filter=metar&limit=1&client_id=%s&client_secret=%s" % ( latitude, longitude, forecast_api_id, forecast_api_secret )
@@ -1125,12 +1122,11 @@ class getData(SearchList):
                 forecast_url = "https://api.aerisapi.com/forecasts/%s,%s?&format=json&filter=day&limit=7&client_id=%s&client_secret=%s" % ( latitude, longitude, forecast_api_id, forecast_api_secret )
                 if self.generator.skin_dict['Extras']['forecast_alert_limit']:
                     forecast_alert_limit = self.generator.skin_dict['Extras']['forecast_alert_limit']
-                    forecast_alerts_url = "https://api.aerisapi.com/alerts/%s,%s?&format=json&limit=%s&client_id=%s&client_secret=%s" % ( latitude, longitude, forecast_alert_limit, forecast_api_id, forecast_api_secret )
+                    forecast_alerts_url = "https://api.aerisapi.com/alerts/%s,%s?&format=json&limit=%s&lang=%s&client_id=%s&client_secret=%s" % ( latitude, longitude, forecast_alert_limit, forecast_lang, forecast_api_id, forecast_api_secret )
                 else:
                     # Default to 1 alerts to show if the option is missing. Can go up to 10
-                    forecast_alerts_url = "https://api.aerisapi.com/alerts/%s,%s?&format=json&limit=1&client_id=%s&client_secret=%s" % ( latitude, longitude, forecast_api_id, forecast_api_secret )
+                    forecast_alerts_url = "https://api.aerisapi.com/alerts/%s,%s?&format=json&limit=1&lang=%s&client_id=%s&client_secret=%s" % ( latitude, longitude, forecast_lang, forecast_api_id, forecast_api_secret )
             elif forecast_provider == "darksky":
-                forecast_lang = self.generator.skin_dict['Extras']['forecast_lang'].lower()
                 forecast_url = "https://api.darksky.net/forecast/%s/%s,%s?units=%s&lang=%s" % ( forecast_api_secret, latitude, longitude, forecast_units, forecast_lang )
                 
             # Determine if the file exists and get it's modified time
@@ -1366,7 +1362,13 @@ class getData(SearchList):
                     eqtime = eqdata["features"][0]["properties"]["time"]
                     #convert time to UNIX format
                     eqtime = eqtime.replace("Z","")
-                    eqtime = datetime.datetime.fromisoformat(eqtime)
+                    try:
+                        # Python 3.7+
+                        eqtime = datetime.datetime.fromisoformat(eqtime)
+                    except:
+                        # Python 2/3.6:
+                        from dateutil import parser
+                        eqtime = parser.isoparse(eqtime)
                     eqtime = int(eqtime.replace(tzinfo=datetime.timezone.utc).timestamp())
                     equrl = ("https://www.geonet.org.nz/earthquake/" +
                             eqdata["features"][0]["properties"]["publicID"])
@@ -1499,9 +1501,9 @@ class getData(SearchList):
             if obs not in all_obs_rounding_json:
                 all_obs_rounding_json[obs] = str(obs_round)
             # Get the unit's label
-                obs_unit_label = self.generator.skin_dict['Units']['Labels'].get(obs_unit, "")
             # Add to label array and strip whitespace if possible
             if obs not in all_obs_unit_labels_json:
+                obs_unit_label = weewx.units.get_label_string(self.generator.formatter, self.generator.converter, obs)                
                 all_obs_unit_labels_json[obs] = obs_unit_label
             
             # Special handling items
